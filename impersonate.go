@@ -63,14 +63,25 @@ func ImpersonateHandler(w http.ResponseWriter, r *http.Request) {
     user.Username = newUsername[0]
     user.Groups = newGroups
     user.AuthProvider = authProvider[0]
-    setToken(user, w)
+    setToken(user, 0, w)
     w.WriteHeader(200)
 }
-
-func setToken(u *User, w http.ResponseWriter) {
-    ct := &http.Cookie{Name: "kuper-jwt", Value: u.GenerateJWT(),
-        Expires: time.Unix(u.ExpiresAt, 0),
+//setToken ..
+// expiresIn in milliseconds
+func setToken(u *User, expiresIn int64, w http.ResponseWriter) {
+    expireAt := MakeTimestampMillisecond()
+    if expiresIn == 0 {
+        expireAt += Config.DefaultTTL
+    } else {
+        expireAt += expiresIn
+    }
+    u.SetExpiresAt(expireAt)
+    ct := &http.Cookie{Path: "/", Name: "kuper-jwt", Value: u.GenerateJWT(),
+        Expires: time.Unix(u.ExpiresAt / 1000, 0),
         HttpOnly:true }
+    
+    ct.Domain = "." + Config.Host
+    
     if Config.Scheme == "https" {
         ct.Secure = true
     }
@@ -87,10 +98,10 @@ func checkImpersonatePermission(u *User, vc *vault.Config) {
     if err != nil {
         panic(PermissionError.Append(err.Error()).WithValue("user", u))
     }
-    if !((SliceStringContains(cap, "read"))  ||
-        (SliceStringContains(cap, "write"))  ||
+    if !((SliceStringContains(cap, "read")) ||
+        (SliceStringContains(cap, "write")) ||
         (SliceStringContains(cap, "update")) ||
-        (SliceStringContains(cap, "root"))){
+        (SliceStringContains(cap, "root"))) {
         panic(PermissionError.Append(err.Error()).WithValue("user", u))
     }
 }

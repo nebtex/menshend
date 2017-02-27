@@ -72,7 +72,8 @@ func TestCreateEditServiceHandler(t *testing.T) {
                 req, err := http.NewRequest("POST", u.String(),
                     bytes.NewReader(postBody))
                 So(err, ShouldBeNil)
-                user, err := NewUser("myroot", getNow() + 3600 * 1000)
+                user, err := NewUser("myroot")
+                user.SetExpiresAt(getNow() + 3600 * 1000)
                 So(err, ShouldBeNil)
                 user.GitHubLogin("criloz", "admin", "delos", "umbrella")
                 req.AddCookie(&http.Cookie{Name:"kuper-jwt", Value:user.GenerateJWT()})
@@ -104,7 +105,8 @@ func TestCreateEditServiceHandler(t *testing.T) {
                 u.WriteString("/admin_api/v1/mkService")
                 req, err := http.NewRequest("POST", u.String(), nil)
                 So(err, ShouldBeNil)
-                user, err := NewUser("myroot", getNow() + 3600 * 1000)
+                user, err := NewUser("myroot")
+                user.SetExpiresAt(getNow() + 3600 * 1000)
                 So(err, ShouldBeNil)
                 user.GitHubLogin("criloz", "admin", "delos", "umbrella")
                 req.AddCookie(&http.Cookie{Name:"kuper-jwt", Value:user.GenerateJWT()})
@@ -140,7 +142,8 @@ func TestCreateEditServiceHandler(t *testing.T) {
                 req, err := http.NewRequest("POST", u.String(),
                     bytes.NewReader(postBody))
                 So(err, ShouldBeNil)
-                user, err := NewUser("myroot", getNow() + 3600 * 1000)
+                user, err := NewUser("myroot")
+                user.SetExpiresAt(getNow() + 3600 * 1000)
                 So(err, ShouldBeNil)
                 user.GitHubLogin("criloz", "admin", "delos", "umbrella")
                 req.AddCookie(&http.Cookie{Name:"kuper-jwt",
@@ -194,7 +197,8 @@ func TestCreateEditServiceHandler_Permissions(t *testing.T) {
         req, err := http.NewRequest("POST", u.String(),
             bytes.NewReader(postBody))
         So(err, ShouldBeNil)
-        user, err := NewUser("test-acl", getNow() + 3600 * 1000)
+        user, err := NewUser("test-acl")
+        user.SetExpiresAt(getNow() + 3600 * 1000)
         So(err, ShouldBeNil)
         user.GitHubLogin("criloz", "admin", "delos", "umbrella")
         user.Token = secret.Auth.ClientToken
@@ -235,7 +239,8 @@ func Test_LoadLongDescriptionFromUrl(t *testing.T) {
         req, err := http.NewRequest("POST", u.String(),
             bytes.NewReader(postBody))
         So(err, ShouldBeNil)
-        user, err := NewUser("myroot", getNow() + 3600 * 1000)
+        user, err := NewUser("myroot")
+        user.SetExpiresAt(getNow() + 3600 * 1000)
         So(err, ShouldBeNil)
         user.GitHubLogin("criloz", "admin", "delos", "umbrella")
         req.AddCookie(&http.Cookie{Name:"kuper-jwt", Value:user.GenerateJWT()})
@@ -274,7 +279,8 @@ func Test_LoadLongDescriptionFromUrl(t *testing.T) {
         req, err := http.NewRequest("POST", u.String(),
             bytes.NewReader(postBody))
         So(err, ShouldBeNil)
-        user, err := NewUser("myroot", getNow() + 3600 * 1000)
+        user, err := NewUser("myroot")
+        user.SetExpiresAt(getNow() + 3600 * 1000)
         So(err, ShouldBeNil)
         user.GitHubLogin("criloz", "admin", "delos", "umbrella")
         req.AddCookie(&http.Cookie{Name:"kuper-jwt", Value:user.GenerateJWT()})
@@ -308,7 +314,8 @@ func Test_LoadLongDescriptionFromUrl(t *testing.T) {
         req, err := http.NewRequest("POST", u.String(),
             bytes.NewReader(postBody))
         So(err, ShouldBeNil)
-        user, err := NewUser("myroot", getNow() + 3600 * 1000)
+        user, err := NewUser("myroot")
+        user.SetExpiresAt(getNow() + 3600 * 1000)
         So(err, ShouldBeNil)
         user.GitHubLogin("criloz", "admin", "delos", "umbrella")
         req.AddCookie(&http.Cookie{Name:"kuper-jwt", Value:user.GenerateJWT()})
@@ -348,7 +355,8 @@ func TestDeleteServiceHandler(t *testing.T) {
                 req, err := http.NewRequest("POST", u.String(),
                     bytes.NewReader(postBody))
                 So(err, ShouldBeNil)
-                user, err := NewUser("myroot", getNow() + 3600 * 1000)
+                user, err := NewUser("myroot")
+                user.SetExpiresAt(getNow() + 3600 * 1000)
                 So(err, ShouldBeNil)
                 user.GitHubLogin("criloz", "admin", "delos", "umbrella")
                 req.AddCookie(&http.Cookie{Name:"kuper-jwt", Value:user.GenerateJWT()})
@@ -380,7 +388,8 @@ func TestDeleteServiceHandler(t *testing.T) {
                 u.WriteString("/admin_api/v1/deleteService")
                 req, err := http.NewRequest("POST", u.String(), nil)
                 So(err, ShouldBeNil)
-                user, err := NewUser("myroot", getNow() + 3600 * 1000)
+                user, err := NewUser("myroot")
+                user.SetExpiresAt(getNow() + 3600 * 1000)
                 So(err, ShouldBeNil)
                 user.GitHubLogin("criloz", "admin", "delos", "umbrella")
                 req.AddCookie(&http.Cookie{Name:"kuper-jwt", Value:user.GenerateJWT()})
@@ -415,7 +424,8 @@ func TestDeleteServiceHandler(t *testing.T) {
                 req, err := http.NewRequest("POST", u.String(),
                     bytes.NewReader(postBody))
                 So(err, ShouldBeNil)
-                user, err := NewUser("myroot", getNow() + 3600 * 1000)
+                user, err := NewUser("myroot")
+                user.SetExpiresAt(getNow() + 3600 * 1000)
                 So(err, ShouldBeNil)
                 user.GitHubLogin("criloz", "admin", "delos", "umbrella")
                 req.AddCookie(&http.Cookie{Name:"kuper-jwt",
@@ -469,7 +479,8 @@ func TestDeleteServiceHandler_Permissions(t *testing.T) {
         req, err := http.NewRequest("POST", u.String(),
             bytes.NewReader(postBody))
         So(err, ShouldBeNil)
-        user, err := NewUser("test-acl", getNow() + 3600 * 1000)
+        user, err := NewUser("test-acl")
+        user.SetExpiresAt(getNow() + 3600 * 1000)
         So(err, ShouldBeNil)
         user.GitHubLogin("criloz", "admin", "delos", "umbrella")
         user.Token = secret.Auth.ClientToken
@@ -505,7 +516,8 @@ func TestGetServiceHandler(t *testing.T) {
                 u.WriteString("/v1/api/admin/service/redis")
                 req, err := http.NewRequest("GET", u.String(), nil)
                 So(err, ShouldBeNil)
-                user, err := NewUser("myroot", getNow() + 3600 * 1000)
+                user, err := NewUser("myroot")
+                user.SetExpiresAt(getNow() + 3600 * 1000)
                 So(err, ShouldBeNil)
                 user.GitHubLogin("criloz", "admin", "delos", "umbrella")
                 req.AddCookie(&http.Cookie{Name:"kuper-jwt", Value:user.GenerateJWT()})
@@ -537,7 +549,8 @@ func TestGetServiceHandler(t *testing.T) {
                 u.WriteString("/v1/api/admin/service/redis")
                 req, err := http.NewRequest("GET", u.String(), nil)
                 So(err, ShouldBeNil)
-                user, err := NewUser("myroot", getNow() + 3600 * 1000)
+                user, err := NewUser("myroot")
+                user.SetExpiresAt(getNow() + 3600 * 1000)
                 So(err, ShouldBeNil)
                 user.GitHubLogin("criloz", "admin", "delos", "umbrella")
                 req.AddCookie(&http.Cookie{Name:"kuper-jwt", Value:user.GenerateJWT()})

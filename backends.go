@@ -10,7 +10,7 @@ import (
     vault "github.com/hashicorp/vault/api"
 )
 
-const DefaultScript = `function getBackend ()
+const DefaultScript = `function getBackend (Username, Groups, AuthProvider)
     return ""
 end`
 
@@ -73,7 +73,7 @@ func (s *Service)GetBackend(u *User) (string, merry.Error) {
     }
     
     l.SetGlobal("returnBackend", l.NewFunction(returnBackend))
-    script += "\nreturnBackend(getBackend())"
+    script += "\nreturnBackend(getBackend(username, groups, authProvider))"
     
     if err := l.DoString(script); err != nil {
         return "", LuaScriptFailed.Append(err.Error()).

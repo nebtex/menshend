@@ -1,93 +1,74 @@
 package kuper
-/*
+
 import (
-	"fmt"
-	"net/http"
-	oauth2 "github.com/goincremental/negroni-oauth2"
-	sessions "github.com/goincremental/negroni-sessions"
-	"github.com/goincremental/negroni-sessions/cookiestore"
-	"github.com/urfave/negroni"
-	"github.com/gorilla/mux"
-	"time"
+    "github.com/gorilla/mux"
+    "net/http"
+    "github.com/gorilla/csrf"
+    "github.com/gorilla/context"
+    
+    "fmt"
 )
-const PermissionErrorRedirect = "/?service=%s&&error=true&&errorType=permission"
-const BackendErrorRedirect = "/?service=%s&&error=true&&errorType=backend"
-const MySecretKey = "a"
-var BaseDomain = "test.local"
 
-func KuperServerHandlers(r *mux.Route) {
-	//r.Handler("/graphql", func(){})
-	//r.Handler("/ui/*", func(){})
-}
-func ProxyHandlers(r *mux.Route) {
-	r.Handler("/*", func(){})
+
+//CSRFHeader ...
+func CSRFHeader(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        
+        w.Header().Set("X-CSRF-Token", csrf.Token(r))
+        next.ServeHTTP(w, r)
+        
+    })
 }
 
-func Server(){
-	r := mux.NewRouter()
-	KuperServerHandlers(r.Host(BaseDomain).Subrouter())
-	KuperServerHandlers(r.Host("kuper." + BaseDomain).Subrouter())
-	ProxyHandlers(r.Host("{subdomain:.+}." + BaseDomain).Subrouter())
+func Server() {
+    r := mux.NewRouter()
+    fmt.Println(Config.Host)
+    //kuper app
+    kuperRouter := r.Host(Config.Host).Subrouter()
+    
+    //login api
+    kuperRouter.Path("/login/oauth/{provider}").HandlerFunc(OauthLoginHandler)
+    kuperRouter.Path("/login/oauth/{provider}/callback").HandlerFunc(OauthLoginCallback)
+    kuperRouter.Path("/login/token").HandlerFunc(TokenLoginHandler).Methods("POST")
+    kuperRouter.Path("/login/userpass").HandlerFunc(UserPasswordHandler).Methods("POST")
+    
+    //admin api
+    // this endpoints provide the CRUD operation to manage the services
+    kuperRouter.Path("/v1/api/admin/service/save").Handler(NeedLogin(NeedAdmin(http.HandlerFunc(CreateEditServiceHandler)))).Methods("POST")
+    kuperRouter.Path("/v1/api/admin/service/delete").Handler(NeedLogin(NeedAdmin(http.HandlerFunc(DeleteServiceHandler)))).Methods("POST")
+    kuperRouter.Path("/v1/api/admin/service/{subDomain}").Handler(NeedLogin(NeedAdmin(http.HandlerFunc(DeleteServiceHandler))))
+    
+    //client api
+    //provide basic features that allow to any user list the services in the ui
+    kuperRouter.Path("/v1/api/client/service/list").Handler(NeedLogin(http.HandlerFunc(ServiceListHandler)))
+    kuperRouter.Path("/v1/api/client/status").Handler(http.HandlerFunc(LoginStatusHandler))
+    
+    //flash message  api
+    kuperRouter.Path("/messages/flash").HandlerFunc(UserPasswordHandler)
+    
+    //impersonate api
+    //impersonate other users
+    kuperRouter.Path("/v1/api/impersonate").Handler(NeedLogin(http.HandlerFunc(ImpersonateHandler))).Methods("POST")
+    
+    //space api
+    //get info about the space
+    kuperRouter.Path("/v1/api/space").Handler(NeedLogin(http.HandlerFunc(ImpersonateHandler)))
+    
+    //static
+    kuperRouter.Path("/static").Handler(NeedLogin(http.HandlerFunc(ImpersonateHandler)))
+    
+    //KuperServerHandlers(r.Host("kuper." + BaseDomain).Subrouter())
+    //ProxyHandlers(r.Host("{subdomain:.+}." + BaseDomain).Subrouter())
+    
+    secure := true
+    if Config.Scheme == "http" {
+        secure = false
+    }
+    CSRF := csrf.Protect([]byte(Config.Salt), csrf.Secure(secure), csrf.Domain(Config.Host), csrf.Path("/"))
+    http.ListenAndServe(fmt.Sprintf(":%d", Config.ListenPort), context.ClearHandler(PanicHandler(CSRF(CSRFHeader(r)))))
+    
 }
+
 func main() {
-	
-/*	//load kuper server handlers
-	KuperServerHandlers(r.Host(BaseDomain).Subrouter())
-	KuperServerHandlers(r.Host("kuper." + BaseDomain).Subrouter())
-	
-	appR := mux.NewRouter()
-	appR.Host("{subdomain:.*}." + BaseDomain).Subrouter()
-	
-	secureMux := http.NewServeMux()
-	
-	// Routes that require a logged in user
-	// can be protected by using a separate route handler
-	// If the user is not authenticated, they will be
-	// redirected to the login path.
-	secureMux.HandleFunc("/restrict", func(w http.ResponseWriter, req *http.Request) {
-		token := oauth2.GetToken(req)
-		fmt.Fprintf(w, "OK: %s", token.Access())
-	})
-	
-	secure := negroni.New()
-	secure.Use(oauth2.LoginRequired())
-	secure.UseHandler(secureMux)
-	
-	n := negroni.New()
-	n.Use(sessions.Sessions("my_session", cookiestore.New([]byte("secret123"))))
-	n.Use(oauth2.Google(&oauth2.Config{
-		ClientID:     "client_id",
-		ClientSecret: "client_secret",
-		RedirectURL:  "refresh_url",
-		Scopes:       []string{"https://www.googleapis.com/auth/drive"},
-	}))
-	
-	router := http.NewServeMux()
-	
-	//routes added to mux do not require authentication
-	router.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
-		token := oauth2.GetToken(req)
-		if token == nil || !token.Valid() {
-			fmt.Fprintf(w, "not logged in, or the access token is expired")
-			return
-		}
-		fmt.Fprintf(w, "logged in")
-		return
-	})
-	
-	//There is probably a nicer way to handle this than repeat the restricted routes again
-	//of course, you could use something like gorilla/mux and define prefix / regex etc.
-	router.Handle("/restrict", secure)
-	
-	n.UseHandler(router)
-	srv := &http.Server{
-		Handler:      r,
-		Addr:         ":8000",
-		// Good practice: enforce timeouts for servers you create!
-		WriteTimeout: 15 * time.Second,
-		ReadTimeout:  15 * time.Second,
-	}
-	
-	
-	n.Run(":8080")
-}*/
+    Server()
+}

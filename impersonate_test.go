@@ -35,14 +35,16 @@ func TestCheckImpersonatePermission(t *testing.T) {
                         t.Fail()
                     }
                 }()
-                u, err := NewUser("test-acl", getNow() + 3600 * 1000)
+                u, err := NewUser("test-acl")
+                u.SetExpiresAt(getNow() + 3600 * 1000)
                 So(err, ShouldBeNil)
                 u.GitHubLogin("criloz", "delos", "umbrella")
                 checkImpersonatePermission(u, VaultConfigLocal)
             })
             Convey("If the impersonate path not exist it should not fail",
                 func() {
-                    u, err := NewUser("myroot", getNow() + 3600 * 1000)
+                    u, err := NewUser("myroot")
+                    u.SetExpiresAt(getNow() + 3600 * 1000)
                     So(err, ShouldBeNil)
                     u.GitHubLogin("criloz", "delos", "umbrella")
                     checkImpersonatePermission(u, VaultConfigLocal)
@@ -54,7 +56,8 @@ func TestCheckImpersonatePermission(t *testing.T) {
                         r := recover()
                         c.So(r, ShouldNotBeNil)
                     }()
-                    u, err := NewUser("test-acl", getNow() + 3600 * 1000)
+                    u, err := NewUser("test-acl")
+                    u.SetExpiresAt(getNow() + 3600 * 1000)
                     So(err, ShouldBeNil)
                     u.GitHubLogin("criloz", "delos", "umbrella")
                     u.Token = "test_token"
@@ -73,33 +76,34 @@ func TestSetToken(t *testing.T) {
             Convey("Cookie should has the same expiration date that the token",
                 func() {
                     Config.Scheme = "http"
-                    expTime := getNow() + 3600 * 1000
-                    u, err := NewUser("test-acl", expTime)
+                    u, err := NewUser("test-acl")
                     So(err, ShouldBeNil)
                     u.GitHubLogin("criloz", "delos", "umbrella")
                     w := &httptest.ResponseRecorder{}
-                    setToken(u, w)
+                    expTime := MakeTimestampMillisecond() + 3600 * 1000
+                    setToken(u, 3600 * 1000, w)
                     r := w.Result()
                     c := r.Cookies()[0]
                     So(c.Value, ShouldEqual, u.GenerateJWT())
                     So(c.HttpOnly, ShouldEqual, true)
-                    So(c.Expires.Unix(), ShouldEqual, expTime)
+                    So(c.Expires.Unix(), ShouldEqual, expTime/1000)
                     So(c.Secure, ShouldEqual, false)
                 })
             Convey("Cookie should be secure if kuber is behind an https proxy",
                 func() {
                     Config.Scheme = "https"
-                    expTime := getNow() + 3600 * 1000
-                    u, err := NewUser("test-acl", expTime)
+                    u, err := NewUser("test-acl")
+                    u.SetExpiresAt(getNow() + 3600 * 1000)
                     So(err, ShouldBeNil)
                     u.GitHubLogin("criloz", "delos", "umbrella")
                     w := &httptest.ResponseRecorder{}
-                    setToken(u, w)
+                    expTime := MakeTimestampMillisecond() + 3600 * 1000
+                    setToken(u, 3600 * 1000, w)
                     r := w.Result()
                     c := r.Cookies()[0]
                     So(c.Value, ShouldEqual, u.GenerateJWT())
                     So(c.HttpOnly, ShouldEqual, true)
-                    So(c.Expires.Unix(), ShouldEqual, expTime)
+                    So(c.Expires.Unix(), ShouldEqual, expTime/1000)
                     So(c.Secure, ShouldEqual, true)
                 })
         })
@@ -110,7 +114,7 @@ func TestImpersonateHandler(t *testing.T) {
     VaultConfig.Address = "http://localhost:8200"
     Convey("TestImpersonateHandler",
         t, func(c C) {
-          Convey("Should impersonate requested user and groups",
+            Convey("Should impersonate requested user and groups",
                 func() {
                     var u bytes.Buffer
                     testHandler := func() http.HandlerFunc {
@@ -131,7 +135,8 @@ func TestImpersonateHandler(t *testing.T) {
                     req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
                     req.Header.Add("Content-Length", strconv.Itoa(len(form.Encode())))
                     So(err, ShouldBeNil)
-                    usr, err := NewUser("myroot", getNow() + 1000)
+                    usr, err := NewUser("myroot")
+                    usr.SetExpiresAt(getNow() + 3600 * 1000)
                     So(err, ShouldBeNil)
                     usr.GitHubLogin("criloz", "delos", "umbrella")
                     req.AddCookie(&http.Cookie{Name:"kuper-jwt", Value:usr.GenerateJWT()})
@@ -158,7 +163,7 @@ func TestImpersonateHandler(t *testing.T) {
                     So(resUser.ImpersonatedByAuthProvider, ShouldEqual,
                         GitHubProvider)
                 })
-
+            
             Convey("if the token has not username should panic",
                 func(c C) {
                     var u bytes.Buffer
@@ -196,7 +201,8 @@ func TestImpersonateHandler(t *testing.T) {
                     req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
                     req.Header.Add("Content-Length", strconv.Itoa(len(form.Encode())))
                     So(err, ShouldBeNil)
-                    usr, err := NewUser("test_token", getNow() + 1000)
+                    usr, err := NewUser("test_token")
+                    usr.SetExpiresAt(getNow() + 3600 * 1000)
                     So(err, ShouldBeNil)
                     usr.TokenLogin()
                     req.AddCookie(&http.Cookie{Name:"kuper-jwt", Value:usr.GenerateJWT()})
@@ -245,7 +251,8 @@ func TestImpersonateHandler(t *testing.T) {
                     req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
                     req.Header.Add("Content-Length", strconv.Itoa(len(form.Encode())))
                     So(err, ShouldBeNil)
-                    usr, err := NewUser("myroot", getNow() + 1000)
+                    usr, err := NewUser("myroot")
+                    usr.SetExpiresAt(getNow() + 1000)
                     So(err, ShouldBeNil)
                     usr.GitHubLogin("criloz", "admin")
                     req.AddCookie(&http.Cookie{Name:"kuper-jwt", Value:usr.GenerateJWT()})
@@ -254,7 +261,7 @@ func TestImpersonateHandler(t *testing.T) {
                     So(panic, ShouldBeTrue)
                     
                 })
-           
+            
             Convey("if the new authProvider is not set in the form, the method " +
                 "should panic",
                 func(c C) {
@@ -293,7 +300,8 @@ func TestImpersonateHandler(t *testing.T) {
                     req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
                     req.Header.Add("Content-Length", strconv.Itoa(len(form.Encode())))
                     So(err, ShouldBeNil)
-                    usr, err := NewUser("myroot", getNow() + 1000)
+                    usr, err := NewUser("myroot")
+                    usr.SetExpiresAt(getNow() + 1000)
                     So(err, ShouldBeNil)
                     usr.GitHubLogin("criloz", "admin")
                     req.AddCookie(&http.Cookie{Name:"kuper-jwt", Value:usr.GenerateJWT()})
@@ -342,7 +350,8 @@ func TestImpersonateHandler(t *testing.T) {
                     req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
                     req.Header.Add("Content-Length", strconv.Itoa(len(form.Encode())))
                     So(err, ShouldBeNil)
-                    usr, err := NewUser("myroot", getNow() + 1000)
+                    usr, err := NewUser("myroot")
+                    usr.SetExpiresAt(getNow() + 1000)
                     So(err, ShouldBeNil)
                     usr.GitHubLogin("criloz", "admin")
                     req.AddCookie(&http.Cookie{Name:"kuper-jwt", Value:usr.GenerateJWT()})
@@ -390,7 +399,8 @@ func TestImpersonateHandler(t *testing.T) {
                     req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
                     req.Header.Add("Content-Length", strconv.Itoa(len(form.Encode())))
                     So(err, ShouldBeNil)
-                    usr, err := NewUser("myroot", getNow() + 1000)
+                    usr, err := NewUser("myroot")
+                    usr.SetExpiresAt(getNow() + 1000)
                     So(err, ShouldBeNil)
                     usr.GitHubLogin("criloz", "admin")
                     req.AddCookie(&http.Cookie{Name:"kuper-jwt", Value:usr.GenerateJWT()})

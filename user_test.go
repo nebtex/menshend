@@ -16,7 +16,8 @@ func TestGetUser(t *testing.T) {
     var err error
     Convey("Should obtain an User struct from a valid jwt token", t, func() {
         MySecretKey = GenerateRandomBytes(64)
-        u, err := NewUser("test-acl", getNow() + 3600 * 1000)
+        u, err := NewUser("test-acl")
+        u.SetExpiresAt(getNow() + 1000)
         So(err, ShouldBeNil)
         u.GitHubLogin("criloz", "delos", "umbrella")
         j := u.GenerateJWT()
@@ -26,7 +27,8 @@ func TestGetUser(t *testing.T) {
         So(requestUser.Username, ShouldEqual, "criloz")
         
         Convey("If the token use another algo should return error", func() {
-            u, err := NewUser("test-acl", getNow() + 3600 * 1000)
+            u, err := NewUser("test-acl")
+            u.SetExpiresAt(getNow() + 1000)
             So(err, ShouldBeNil)
             u.GitHubLogin("criloz", "delos", "umbrella")
             token := jwt.NewWithClaims(jwt.SigningMethodNone, u)
@@ -40,7 +42,8 @@ func TestGetUser(t *testing.T) {
         Convey("should ivalidate token generated with other secret key",
             func() {
                 MySecretKey = GenerateRandomBytes(64)
-                u, err := NewUser("test-acl", getNow() + 3600 * 1000)
+                u, err := NewUser("test-acl")
+                u.SetExpiresAt(getNow() + 1000)
                 So(err, ShouldBeNil)
                 u.GitHubLogin("criloz", "delos", "umbrella")
                 j := u.GenerateJWT()
@@ -55,7 +58,8 @@ func TestGetUser(t *testing.T) {
         func() {
             MySecretKey = GenerateRandomBytes(64)
             So(err, ShouldBeNil)
-            u, err := NewUser("test-acl", getNow() - 1000)
+            u, err := NewUser("test-acl")
+            u.SetExpiresAt(getNow() - 1000)
             So(err, ShouldBeNil)
             u.TokenLogin()
             j := u.GenerateJWT()
@@ -66,7 +70,8 @@ func TestGetUser(t *testing.T) {
     Convey("Should mark the token as invalid if it has not a csrf token", t,
         func() {
             MySecretKey = GenerateRandomBytes(64)
-            u, err := NewUser("test-acl", getNow() + 1000)
+            u, err := NewUser("test-acl")
+            u.SetExpiresAt(getNow() + 1000)
             So(err, ShouldBeNil)
             u.CSRFToken = ""
             u.TokenLogin()
@@ -87,7 +92,8 @@ func TestGetUser(t *testing.T) {
         "and someone is using the impersonate feature", t,
         func() {
             MySecretKey = GenerateRandomBytes(64)
-            u, err := NewUser("test-acl", getNow() + 1000)
+            u, err := NewUser("test-acl")
+            u.SetExpiresAt(getNow() + 1000)
             So(err, ShouldBeNil)
             u.TokenLogin()
             u.ImpersonatedBy = "criloz"
@@ -99,7 +105,8 @@ func TestGetUser(t *testing.T) {
         func() {
             MySecretKey = GenerateRandomBytes(64)
             So(err, ShouldBeNil)
-            u, err := NewUser("", getNow() + 1000)
+            u, err := NewUser("")
+            u.SetExpiresAt(getNow() + 1000)
             So(err, ShouldBeNil)
             u.UsernamePasswordLogin("criloz")
             j := u.GenerateJWT()
@@ -110,7 +117,8 @@ func TestGetUser(t *testing.T) {
     Convey("Should not contains user or groups when TokenLogin is used", t,
         func() {
             MySecretKey = GenerateRandomBytes(64)
-            u, err := NewUser("acl-token", getNow() + 1000)
+            u, err := NewUser("acl-token")
+            u.SetExpiresAt(getNow() + 1000)
             So(err, ShouldBeNil)
             u.TokenLogin()
             u.Username = "criloz"
@@ -124,7 +132,8 @@ func TestGetUser(t *testing.T) {
         func() {
             MySecretKey = GenerateRandomBytes(64)
             So(err, ShouldBeNil)
-            u, err := NewUser("acl-token", getNow() + 1000)
+            u, err := NewUser("acl-token")
+            u.SetExpiresAt(getNow() + 1000)
             So(err, ShouldBeNil)
             u.UsernamePasswordLogin("criloz")
             u.Groups = []string{"admin", "devs"}
@@ -136,7 +145,8 @@ func TestGetUser(t *testing.T) {
     Convey("Should contains the AuthProvider", t, func() {
         MySecretKey = GenerateRandomBytes(64)
         So(err, ShouldBeNil)
-        u, err := NewUser("acl-token", getNow() + 1000)
+        u, err := NewUser("acl-token")
+        u.SetExpiresAt(getNow() + 1000)
         So(err, ShouldBeNil)
         u.UsernamePasswordLogin("criloz")
         u.AuthProvider = ""
@@ -219,7 +229,8 @@ func TestNeedLogin(t *testing.T) {
             var DefaultTransport http.RoundTripper = &http.Transport{}
             req, err := http.NewRequest("GET", u.String(), nil)
             So(err, ShouldBeNil)
-            usr, err := NewUser("acl", getNow() + 1000)
+            usr, err := NewUser("acl")
+            usr.SetExpiresAt(getNow() + 1000)
             So(err, ShouldBeNil)
             usr.TokenLogin()
             // if the auth method is TokenLogin, set a username will
@@ -248,7 +259,8 @@ func TestNeedLogin(t *testing.T) {
         var DefaultTransport http.RoundTripper = &http.Transport{}
         req, err := http.NewRequest("GET", u.String(), nil)
         So(err, ShouldBeNil)
-        usr, err := NewUser("acl", getNow() + 1000)
+        usr, err := NewUser("acl")
+        usr.SetExpiresAt(getNow() + 1000)
         So(err, ShouldBeNil)
         usr.TokenLogin()
         req.AddCookie(&http.Cookie{Name:"kuper-jwt", Value:usr.GenerateJWT()})

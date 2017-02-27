@@ -126,7 +126,8 @@ func TestService_ServiceListHandler(t *testing.T) {
             
             req, err := http.NewRequest("GET", u.String(), nil)
             So(err, ShouldBeNil)
-            user, err := NewUser("myroot", getNow() + 3600 * 1000)
+            user, err := NewUser("myroot")
+            user.SetExpiresAt(getNow() + 1000)
             So(err, ShouldBeNil)
             user.GitHubLogin("criloz", "admin", "delos", "umbrella")
             req.AddCookie(&http.Cookie{Name:"kuper-jwt", Value:user.GenerateJWT()})
@@ -160,7 +161,8 @@ func TestService_ServiceListHandler(t *testing.T) {
                 
                 req, err := http.NewRequest("GET", u.String(), nil)
                 So(err, ShouldBeNil)
-                user, err := NewUser("myroot", getNow() + 3600 * 1000)
+                user, err := NewUser("myroot")
+                user.SetExpiresAt(getNow() + 3600 * 1000)
                 So(err, ShouldBeNil)
                 user.GitHubLogin("criloz", "admin", "delos", "umbrella")
                 req.AddCookie(&http.Cookie{Name:"kuper-jwt", Value:user.GenerateJWT()})
@@ -192,7 +194,8 @@ func TestService_ServiceListHandler(t *testing.T) {
                 
                 req, err := http.NewRequest("GET", u.String(), nil)
                 So(err, ShouldBeNil)
-                user, err := NewUser("test-acl", getNow() + 3600 * 1000)
+                user, err := NewUser("test-acl")
+                user.SetExpiresAt(getNow() + 3600 * 1000)
                 So(err, ShouldBeNil)
                 user.GitHubLogin("criloz", "admin", "delos", "umbrella")
                 req.AddCookie(&http.Cookie{Name:"kuper-jwt", Value:user.GenerateJWT()})
@@ -235,7 +238,8 @@ func TestService_ServiceListHandler(t *testing.T) {
             
             req, err := http.NewRequest("GET", u.String(), nil)
             So(err, ShouldBeNil)
-            user, err := NewUser(secret.Auth.ClientToken, getNow() + 3600)
+            user, err := NewUser(secret.Auth.ClientToken)
+            user.SetExpiresAt(getNow() + 3600 * 1000)
             So(err, ShouldBeNil)
             user.TokenLogin()
             req.AddCookie(&http.Cookie{Name:"kuper-jwt", Value:user.GenerateJWT()})
@@ -258,14 +262,16 @@ func Test_IsAdmin(t *testing.T) {
         " not", t, func() {
         Convey("Should return false if th user is not an admin", func() {
             cleanVault()
-            user, err := NewUser("test_token", getNow() + 3600 * 1000)
+            user, err := NewUser("test_token")
+            user.SetExpiresAt(getNow() + 3600 * 1000)
             So(err, ShouldBeNil)
             user.TokenLogin()
             So(IsAdmin(user), ShouldBeFalse)
         })
         Convey("Should return true if th user is  an admin", func() {
             cleanVault()
-            user, err := NewUser("myroot", getNow() + 3600 * 1000)
+            user, err := NewUser("myroot")
+            user.SetExpiresAt(getNow() + 3600 * 1000)
             So(err, ShouldBeNil)
             user.TokenLogin()
             So(IsAdmin(user), ShouldBeTrue)
@@ -280,7 +286,9 @@ func Test_CanImpersonateHandler(t *testing.T) {
         " not", t, func() {
         Convey("Should return false if th user can't impersonate", func() {
             cleanVault()
-            user, err := NewUser("test_token", getNow() + 3600 * 1000)
+            user, err := NewUser("test_token")
+            user.SetExpiresAt(getNow() + 3600 * 1000)
+            
             So(err, ShouldBeNil)
             user.TokenLogin()
             So(CanImpersonate(user), ShouldBeFalse)
@@ -288,7 +296,9 @@ func Test_CanImpersonateHandler(t *testing.T) {
         
         Convey("Should return true if th user can impersonate", func() {
             cleanVault()
-            user, err := NewUser("myroot", getNow() + 3600 * 1000)
+            user, err := NewUser("myroot")
+            user.SetExpiresAt(getNow() + 3600 * 1000)
+            
             So(err, ShouldBeNil)
             user.TokenLogin()
             So(CanImpersonate(user), ShouldBeTrue)
@@ -315,7 +325,8 @@ func Test_LoginStatusHandler(t *testing.T) {
             
             req, err := http.NewRequest("GET", u.String(), nil)
             So(err, ShouldBeNil)
-            user, err := NewUser("myroot", getNow() + 3600 * 1000)
+            user, err := NewUser("myroot")
+            user.SetExpiresAt(getNow() + 3600 * 1000)
             So(err, ShouldBeNil)
             user.GitHubLogin("criloz", "admin", "delos", "umbrella")
             req.AddCookie(&http.Cookie{Name:"kuper-jwt",

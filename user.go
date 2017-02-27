@@ -7,6 +7,8 @@ import (
     "encoding/base64"
     "net/http"
     "context"
+    "github.com/Sirupsen/logrus"
+    "encoding/json"
 )
 
 type User struct {
@@ -61,9 +63,8 @@ func (u *User) Valid() error {
     return u.StandardClaims.Valid()
 }
 //NewUser create a new user struct
-func NewUser(acl string, expireAt int64) (*User, merry.Error) {
+func NewUser(acl string) (*User, merry.Error) {
     user := &User{Token:acl}
-    user.ExpiresAt = expireAt
     user.CSRFToken = GenerateRandomString(CSRFTokenLen)
     
     return user, nil
@@ -96,6 +97,10 @@ func (u *User)GenerateJWT() string {
     tokenString, err := token.SignedString(MySecretKey)
     CheckPanic(err)
     return tokenString
+}
+
+func (u *User)SetExpiresAt(value int64) {
+    u.ExpiresAt = value
 }
 
 //FromJWT read a jwt token, parse and validate it then obtain an User
@@ -141,5 +146,54 @@ func NeedLogin(next http.Handler) http.Handler {
         }
         ctx := context.WithValue(r.Context(), "User", user)
         next.ServeHTTP(w, r.WithContext(ctx))
+    })
+}
+
+
+//PanicHandler middleware for recover from panic attacks
+func PanicHandler(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        defer func() {
+            rec := recover()
+            if rec != nil {
+                logrus.Errorf("%v", rec)
+                switch v := rec.(type) {
+                case merry.Error:
+                    subDomain := getSubDomain(r.URL.Host)
+                    if len(subDomain) == 0 {
+                        w.WriteHeader(500)
+                        response := Response{Success:false,
+                            Message:v.Error()}
+                        data, err := json.Marshal(response)
+                        if (err != nil) {
+                            logrus.Error(err)
+                        }
+                        w.Write(data)
+                        return
+                        
+                    } else {
+                        // Get a session.
+                        session, err := FlashStore.Get(r, "errors")
+                        if err != nil {
+                            http.Error(w, err.Error(), http.StatusInternalServerError)
+                            logrus.Error(err)
+                            return
+                        }
+                        session.AddFlash(v.Error())
+                        session.Save(r, w)
+                        redirectUrl := fmt.Sprintf("%s://%s/ui/login", Config.Scheme, Config.Host)
+                        http.Redirect(w, r, redirectUrl, 301)
+                        return
+                    }
+                
+                default:
+                    w.WriteHeader(500)
+                    errMsg := `{"success":false, "message": "Unkown error (please contact your admin)"}`
+                    w.Write([]byte(errMsg))
+                    return
+                }
+            }
+        }()
+        next.ServeHTTP(w, r)
     })
 }
