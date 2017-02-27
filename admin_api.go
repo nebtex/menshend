@@ -9,8 +9,9 @@ import (
     "io/ioutil"
     "github.com/fatih/structs"
     vault "github.com/hashicorp/vault/api"
-    "strings"
     "github.com/mitchellh/mapstructure"
+    "github.com/Sirupsen/logrus"
+    "strings"
 )
 
 type ServiceRole struct {
@@ -18,6 +19,7 @@ type ServiceRole struct {
     ImpersonateWithinRole bool `json:"impersonateWithinRole"`
     Proxy                 bool `json:"proxy"`
     IsActive              bool `json:"isActive"`
+    SecretPaths           []string `json:"secretPaths"`
 }
 
 type ServicePayload struct {
@@ -106,6 +108,7 @@ func CreateEditServiceHandler(w http.ResponseWriter, r *http.Request) {
         newS.ShortDescription = csp.ShortDescription
         newS.LongDescription = csp.LongDescription
         newS.LuaScript = val.LuaScript
+        newS.SecretPaths = val.SecretPaths
         newS.ImpersonateWithinRole = val.ImpersonateWithinRole
         newS.Proxy = val.Proxy
         newS.IsActive = val.IsActive
@@ -184,7 +187,7 @@ func checkAdminPermission(u *User, vc *vault.Config) {
         (SliceStringContains(cap, "write")) ||
         (SliceStringContains(cap, "update")) ||
         (SliceStringContains(cap, "root"))) {
-        panic(PermissionError.Append(err.Error()).WithValue("user", u))
+        panic(PermissionError.WithValue("user", u))
     }
 }
 
@@ -217,13 +220,11 @@ func GetServiceHandler(w http.ResponseWriter, r *http.Request) {
     CheckPanic(err)
     key := fmt.Sprintf("%s/Roles", Config.VaultPath)
     secret, vaultErr := vc.Logical().List(key)
-    if vaultErr != nil {
-        if strings.Contains(vaultErr.Error(), "403") {
-            errMsg := `{"success":false, "message": "permission error"}`
-            w.Write([]byte(errMsg))
-            return
-        }
-        CheckPanic(vaultErr)
+    if (vaultErr != nil) {
+        logrus.Error(vaultErr)
+        errMsg := `{"success":false, "message": "permission error"}`
+        w.Write([]byte(errMsg))
+        return
     }
     if (secret == nil) || (secret.Data == nil) {
         errMsg := `{"success":false, "message": "service not found"}`
@@ -243,18 +244,10 @@ func GetServiceHandler(w http.ResponseWriter, r *http.Request) {
     serviceFound.Roles = map[string]*ServiceRole{}
     
     for _, role := range roleList {
-        if !strings.HasSuffix(role, "/") {
-            continue
-        }
+        role = strings.Trim(role, "/")
         sKey := fmt.Sprintf("%s/Roles/%s/%s", Config.VaultPath, role, subDomain)
         sSecret, err := vc.Logical().Read(sKey)
-        
-        if err != nil {
-            continue
-        }
-        if (sSecret == nil) || (sSecret.Data == nil) {
-            continue
-        }
+        if (err != nil) || (sSecret == nil) || (sSecret.Data == nil) {continue}
         nService := &Service{}
         err = mapstructure.Decode(sSecret.Data, nService)
         CheckPanic(err)
@@ -267,7 +260,7 @@ func GetServiceHandler(w http.ResponseWriter, r *http.Request) {
         serviceFound.Roles[role].IsActive = nService.IsActive
         serviceFound.Roles[role].LuaScript = nService.LuaScript
         serviceFound.Roles[role].Proxy = nService.Proxy
-        
+        serviceFound.Roles[role].SecretPaths = nService.SecretPaths
     }
     response := &GetServiceResponse{}
     response.Success = true

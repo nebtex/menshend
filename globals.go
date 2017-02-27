@@ -9,6 +9,7 @@ import (
     "github.com/stretchr/gomniauth/providers/github"
     "fmt"
     "github.com/gorilla/sessions"
+    "github.com/gorilla/securecookie"
 )
 
 const (
@@ -18,20 +19,18 @@ const (
     TokenProvider = "token"
     //UsernamePasswordProvider vault user/password auth
     UsernamePasswordProvider = "username/password"
-    //CSRFTokenLen size of the CSRF token
-    CSRFTokenLen = 32
 )
 //MySecretKey secret key for sign the jwt token, this global is generated
 //automatically each time that the server start
 //A restart of the server means that all the issued keys will become invalid
-var MySecretKey []byte
 
 type GithubConfig struct {
     ClientID     string
     ClientSecret string
 }
 type KuperConfig struct {
-    Salt         string
+    HashKey      string
+    BlockKey     string
     ListenPort   int
     InterfaceURL string
     VaultPath    string
@@ -44,9 +43,18 @@ type KuperConfig struct {
     DefaultTTL   int64
 }
 
+func (k *KuperConfig) GetLoginPath() string {
+    loginUrl:= k.Scheme + "://" + k.Host + "/ui/login"
+    return loginUrl
+}
+func (k *KuperConfig) GetServicePath() string {
+    loginUrl:= k.Scheme + "://" + k.Host + "/ui/services"
+    return loginUrl
+}
 var Config *KuperConfig
 var VaultConfig *vault.Config
 var FlashStore *sessions.CookieStore
+var SecureCookie *securecookie.SecureCookie
 
 func init() {
     Config = &KuperConfig{}
@@ -55,20 +63,23 @@ func init() {
     Config.Scheme = "http"
     Config.VaultPath = "secret/kuper"
     Config.DefaultTTL = 24 * 60 * 60 * 1000
-    Config.Salt = GenerateRandomString(32)
+    Config.HashKey = GenerateRandomString(32)
+    Config.BlockKey = GenerateRandomString(32)
+    
     Config.ListenPort = 8080
     
     VaultConfig = vault.DefaultConfig()
     
     githubCallbackUrl := fmt.Sprintf("%s://%s/login/github/callback", Config.Scheme, Config.Host)
-    gomniauth.SetSecurityKey(Config.Salt)
+    gomniauth.SetSecurityKey(Config.HashKey)
     gomniauth.WithProviders(github.New(Config.Github.ClientID, Config.Github.ClientSecret, githubCallbackUrl))
-    FlashStore = sessions.NewCookieStore([]byte(Config.Salt))
+    FlashStore = sessions.NewCookieStore([]byte(Config.HashKey), []byte(Config.BlockKey))
     FlashStore.Options.Domain = "." + Config.Host
     FlashStore.Options.Path = "/"
     if Config.Scheme == "http" {
         FlashStore.Options.Secure = false
     }
+    SecureCookie = securecookie.New([]byte(Config.HashKey), []byte(Config.BlockKey))
 }
 
 //CheckPanic if error exist exit and log the file and line from where

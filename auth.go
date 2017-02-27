@@ -24,14 +24,12 @@ func MakeTimestampMillisecond() int64 {
 
 // token
 func TokenLoginHandler(w http.ResponseWriter, r *http.Request) {
-    w.Header().Set("Content-Type", "application/json")
-    w.WriteHeader(200)
     
     tr := &TokenLogin{}
     err := json.NewDecoder(r.Body).Decode(tr)
     if err != nil {
-        errMsg := `{"success":false, "message": "Please send a valid json"}`
-        w.Write([]byte(errMsg))
+        logrus.Error(err)
+        http.Redirect(w, r, Config.GetLoginPath()+"?token_error=true", 301)
         return
     }
     vc, err := vault.NewClient(VaultConfig)
@@ -40,8 +38,7 @@ func TokenLoginHandler(w http.ResponseWriter, r *http.Request) {
     secret, err := vc.Auth().Token().LookupSelf()
     if (err != nil) || (secret == nil) || (secret.Data == nil) {
         logrus.Error(err.Error())
-        errMsg := `{"success":false, "message": "The token provided is not valid, or there are issues with vault (contact your admin)"}`
-        w.Write([]byte(errMsg))
+        http.Redirect(w, r, Config.GetLoginPath()+"?token_error=true", 301)
         return
     }
     type secretData struct {
@@ -54,8 +51,7 @@ func TokenLoginHandler(w http.ResponseWriter, r *http.Request) {
     CheckPanic(err)
     user.TokenLogin()
     setToken(user, sd.ttl * 1000, w)
-    errMsg := `{"success":true}`
-    w.Write([]byte(errMsg))
+    http.Redirect(w, r, Config.GetServicePath(), 301)
     return
 }
 
@@ -93,14 +89,12 @@ func VaultLogin(c *vault.Client, path string, data map[string]interface{}) (*vau
 // user/password
 func UserPasswordHandler(w http.ResponseWriter, r *http.Request) {
     var key string
-    w.Header().Set("Content-Type", "application/json")
-    w.WriteHeader(200)
     
     upr := &UPLogin{}
     err := json.NewDecoder(r.Body).Decode(upr)
     if err != nil {
-        errMsg := `{"success":false, "message": "Please send a valid json"}`
-        w.Write([]byte(errMsg))
+        logrus.Error(err)
+        http.Redirect(w, r, Config.GetLoginPath()+"?user_pass_error=true", 301)
         return
     }
     
@@ -114,9 +108,7 @@ func UserPasswordHandler(w http.ResponseWriter, r *http.Request) {
     
     secret, err := VaultLogin(vc, key, data)
     if (err != nil) || (secret == nil) {
-        logrus.Error(err.Error())
-        errMsg := `{"success":false, "message": "bad  user or password (contact your admin)"}`
-        w.Write([]byte(errMsg))
+        http.Redirect(w, r, Config.GetLoginPath()+"?user_pass_error=true", 301)
         return
     }
     
@@ -124,8 +116,7 @@ func UserPasswordHandler(w http.ResponseWriter, r *http.Request) {
     CheckPanic(err)
     user.UsernamePasswordLogin(upr.User)
     setToken(user, int64(secret.Auth.LeaseDuration) * 1000, w)
-    errMsg := `{"success":true}`
-    w.Write([]byte(errMsg))
+    http.Redirect(w, r, Config.GetServicePath(), 301)
     return
 }
 

@@ -566,6 +566,46 @@ func TestGetServiceHandler(t *testing.T) {
                 So(umR.Message, ShouldBeEmpty)
             })
         
+        Convey("if user cant list roles should return error",
+            func(c C) {
+                var u bytes.Buffer
+                cleanVault()
+                populateVault()
+                vaultClient, err := vault.NewClient(VaultConfig)
+                So(err, ShouldBeNil)
+                vaultClient.SetToken("myroot")
+    
+                err = vaultClient.Sys().PutPolicy("get-service-not-roles", `
+         path "secret/kuper/Roles/admin/*" { policy = "read" }`)
+                So(err, ShouldBeNil)
+                secret, err := vaultClient.Auth().Token().
+                    Create(&vault.TokenCreateRequest{
+                    Policies:[]string{"get-service-not-roles"}})
+                So(err, ShouldBeNil)
+                
+                r := mux.NewRouter()
+                r.HandleFunc("/v1/api/admin/service/{subDomain}", GetServiceHandler)
+                ts := httptest.NewServer(NeedLogin(r))
+                defer ts.Close()
+                u.WriteString(string(ts.URL))
+                u.WriteString("/v1/api/admin/service/redis")
+                req, err := http.NewRequest("GET", u.String(), nil)
+                So(err, ShouldBeNil)
+                user, err := NewUser(secret.Auth.ClientToken)
+                user.SetExpiresAt(getNow() + 3600 * 1000)
+                So(err, ShouldBeNil)
+                user.GitHubLogin("criloz", "admin", "delos", "umbrella")
+                req.AddCookie(&http.Cookie{Name:"kuper-jwt", Value:user.GenerateJWT()})
+                client := &http.Client{}
+                response, err := client.Do(req)
+                So(err, ShouldBeNil)
+                jsonResponse, err := ioutil.ReadAll(response.Body)
+                So(err, ShouldBeNil)
+                umR := GetServiceResponse{}
+                err = json.Unmarshal(jsonResponse, &umR)
+                So(err, ShouldBeNil)
+                So(umR.Success, ShouldBeFalse)
+            })
     })
 }
 

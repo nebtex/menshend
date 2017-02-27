@@ -15,7 +15,7 @@ import (
 func TestGetUser(t *testing.T) {
     var err error
     Convey("Should obtain an User struct from a valid jwt token", t, func() {
-        MySecretKey = GenerateRandomBytes(64)
+        Config.HashKey = GenerateRandomString(64)
         u, err := NewUser("test-acl")
         u.SetExpiresAt(getNow() + 1000)
         So(err, ShouldBeNil)
@@ -41,13 +41,13 @@ func TestGetUser(t *testing.T) {
         
         Convey("should ivalidate token generated with other secret key",
             func() {
-                MySecretKey = GenerateRandomBytes(64)
+                Config.HashKey = GenerateRandomString(64)
                 u, err := NewUser("test-acl")
                 u.SetExpiresAt(getNow() + 1000)
                 So(err, ShouldBeNil)
                 u.GitHubLogin("criloz", "delos", "umbrella")
                 j := u.GenerateJWT()
-                MySecretKey = GenerateRandomBytes(64)
+                Config.HashKey = GenerateRandomString(64)
                 _, err = FromJWT(j)
                 So(err, ShouldNotBeNil)
             })
@@ -56,7 +56,7 @@ func TestGetUser(t *testing.T) {
     
     Convey("Should mark the token as invalid after the expiration date", t,
         func() {
-            MySecretKey = GenerateRandomBytes(64)
+            Config.HashKey = GenerateRandomString(64)
             So(err, ShouldBeNil)
             u, err := NewUser("test-acl")
             u.SetExpiresAt(getNow() - 1000)
@@ -67,31 +67,11 @@ func TestGetUser(t *testing.T) {
             So(err, ShouldNotBeNil)
         })
     
-    Convey("Should mark the token as invalid if it has not a csrf token", t,
-        func() {
-            MySecretKey = GenerateRandomBytes(64)
-            u, err := NewUser("test-acl")
-            u.SetExpiresAt(getNow() + 1000)
-            So(err, ShouldBeNil)
-            u.CSRFToken = ""
-            u.TokenLogin()
-            j := u.GenerateJWT()
-            _, err = FromJWT(j)
-            So(err, ShouldNotBeNil)
-            Convey("csrf token should be a valid base64", func() {
-                u.CSRFToken = "awdrgyjilp"
-                j = u.GenerateJWT()
-                _, err = FromJWT(j)
-                So(err, ShouldNotBeNil)
-                
-            })
-            
-        })
     
     Convey("Should mark the token as invalid if username is not defined " +
         "and someone is using the impersonate feature", t,
         func() {
-            MySecretKey = GenerateRandomBytes(64)
+            Config.HashKey = GenerateRandomString(64)
             u, err := NewUser("test-acl")
             u.SetExpiresAt(getNow() + 1000)
             So(err, ShouldBeNil)
@@ -103,7 +83,7 @@ func TestGetUser(t *testing.T) {
         })
     Convey("Should mark the token as invalid if it has not a acl token", t,
         func() {
-            MySecretKey = GenerateRandomBytes(64)
+            Config.HashKey = GenerateRandomString(64)
             So(err, ShouldBeNil)
             u, err := NewUser("")
             u.SetExpiresAt(getNow() + 1000)
@@ -116,7 +96,7 @@ func TestGetUser(t *testing.T) {
         })
     Convey("Should not contains user or groups when TokenLogin is used", t,
         func() {
-            MySecretKey = GenerateRandomBytes(64)
+            Config.HashKey = GenerateRandomString(64)
             u, err := NewUser("acl-token")
             u.SetExpiresAt(getNow() + 1000)
             So(err, ShouldBeNil)
@@ -130,7 +110,7 @@ func TestGetUser(t *testing.T) {
     
     Convey("Should not contains groups when UsernamePasswordLogin is used", t,
         func() {
-            MySecretKey = GenerateRandomBytes(64)
+            Config.HashKey = GenerateRandomString(64)
             So(err, ShouldBeNil)
             u, err := NewUser("acl-token")
             u.SetExpiresAt(getNow() + 1000)
@@ -143,7 +123,7 @@ func TestGetUser(t *testing.T) {
         })
     
     Convey("Should contains the AuthProvider", t, func() {
-        MySecretKey = GenerateRandomBytes(64)
+        Config.HashKey = GenerateRandomString(64)
         So(err, ShouldBeNil)
         u, err := NewUser("acl-token")
         u.SetExpiresAt(getNow() + 1000)

@@ -4,7 +4,6 @@ import (
     "github.com/dgrijalva/jwt-go"
     "github.com/ansel1/merry"
     "fmt"
-    "encoding/base64"
     "net/http"
     "context"
     "github.com/Sirupsen/logrus"
@@ -21,8 +20,6 @@ type User struct {
     Groups                     []string `json:"grp,omitempty"`
     //github, token or user/password
     AuthProvider               string `json:"atp,omitempty"`
-    //CSRF token for this jwt token (used in the kuper ui interface)
-    CSRFToken                  string `json:"cst,omitempty"`
     //person that is impersonating this user
     ImpersonatedBy             string `json:"ipb,omitempty"`
     ImpersonatedByGroups       []string `json:"ipbg,omitempty"`
@@ -30,13 +27,6 @@ type User struct {
 }
 
 func (u *User) Valid() error {
-    csrf, err := base64.URLEncoding.DecodeString(u.CSRFToken)
-    if err != nil {
-        return err
-    }
-    if len(csrf) != CSRFTokenLen {
-        return fmt.Errorf("jwt token has not a csfr token")
-    }
     if len(u.Token) < 1 {
         return fmt.Errorf("jwt token has not an acl token")
     }
@@ -65,8 +55,6 @@ func (u *User) Valid() error {
 //NewUser create a new user struct
 func NewUser(acl string) (*User, merry.Error) {
     user := &User{Token:acl}
-    user.CSRFToken = GenerateRandomString(CSRFTokenLen)
-    
     return user, nil
 }
 
@@ -94,7 +82,7 @@ func (u *User)GenerateJWT() string {
     token := jwt.NewWithClaims(jwt.SigningMethodHS256, u)
     
     // Sign and get the complete encoded token as a string using the secret
-    tokenString, err := token.SignedString(MySecretKey)
+    tokenString, err := token.SignedString([]byte(Config.HashKey))
     CheckPanic(err)
     return tokenString
 }
@@ -113,7 +101,7 @@ func FromJWT(jwtRaw string) (*User, merry.Error) {
         }
         // MySecretKey is a []byte containing your secret,
         // e.g. []byte("my_secret_key")
-        return MySecretKey, nil
+        return  []byte(Config.HashKey), nil
     })
     
     if err != nil {

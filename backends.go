@@ -32,6 +32,7 @@ type Service struct {
     ImpersonateWithinRole bool
     Proxy                 bool
     IsActive              bool
+    SecretPaths           []string
 }
 
 //CreateLuaScript create the lua script that will be execute to obtain the full

@@ -267,6 +267,24 @@ func Test_IsAdmin(t *testing.T) {
             So(err, ShouldBeNil)
             user.TokenLogin()
             So(IsAdmin(user), ShouldBeFalse)
+            vaultClient,vaultErr:= vault.NewClient(VaultConfig)
+            So(vaultErr, ShouldBeNil)
+            vaultClient.SetToken("myroot")
+    
+            vaultErr = vaultClient.Sys().PutPolicy("check-capabilities", `
+        path "/sys/capabilities-self" { policy = "read" }
+            `)
+            So(vaultErr, ShouldBeNil)
+            secret, vaultErr := vaultClient.Auth().Token().
+                Create(&vault.TokenCreateRequest{
+                Policies:[]string{"check-capabilities"}})
+            So(vaultErr, ShouldBeNil)
+            user, err = NewUser(secret.Auth.ClientToken)
+            So(err, ShouldBeNil)
+            user.SetExpiresAt(getNow() + 3600 * 1000)
+            So(err, ShouldBeNil)
+            user.TokenLogin()
+            So(IsAdmin(user), ShouldBeFalse)
         })
         Convey("Should return true if th user is  an admin", func() {
             cleanVault()

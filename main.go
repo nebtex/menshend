@@ -42,6 +42,7 @@ func Server() {
     //provide basic features that allow to any user list the services in the ui
     kuperRouter.Path("/v1/api/client/service/list").Handler(NeedLogin(http.HandlerFunc(ServiceListHandler)))
     kuperRouter.Path("/v1/api/client/status").Handler(http.HandlerFunc(LoginStatusHandler))
+    kuperRouter.Path("/v1/api/client/secrets/read").Handler(http.HandlerFunc(LoginStatusHandler)).Methods("POST")
     
     //flash message  api
     kuperRouter.Path("/messages/flash").HandlerFunc(UserPasswordHandler)
@@ -64,7 +65,7 @@ func Server() {
     if Config.Scheme == "http" {
         secure = false
     }
-    CSRF := csrf.Protect([]byte(Config.Salt), csrf.Secure(secure), csrf.Domain(Config.Host), csrf.Path("/"))
+    CSRF := csrf.Protect([]byte(Config.HashKey), csrf.Secure(secure), csrf.Domain(Config.Host), csrf.Path("/"))
     http.ListenAndServe(fmt.Sprintf(":%d", Config.ListenPort), context.ClearHandler(PanicHandler(CSRF(CSRFHeader(r)))))
     
 }

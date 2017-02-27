@@ -3,7 +3,6 @@ package kuper
 import (
     "testing"
     . "github.com/smartystreets/goconvey/convey"
-    "io/ioutil"
     "net/http/httptest"
     "net/http"
     "bytes"
@@ -35,11 +34,9 @@ func Test_TokenLoginHandler(t *testing.T) {
         client := &http.Client{}
         response, err := client.Do(req)
         So(err, ShouldBeNil)
-        jsonResponse, err := ioutil.ReadAll(response.Body)
-        ar := &Response{}
-        err = json.Unmarshal(jsonResponse, ar)
+        url, err:= response.Location()
         So(err, ShouldBeNil)
-        So(ar.Success, ShouldBeTrue)
+        So(url.String(), ShouldEqual, Config.GetServicePath())
     })
     
     Convey("Should fail when triying to login with a non " +
@@ -63,11 +60,10 @@ func Test_TokenLoginHandler(t *testing.T) {
         client := &http.Client{}
         response, err := client.Do(req)
         So(err, ShouldBeNil)
-        jsonResponse, err := ioutil.ReadAll(response.Body)
-        ar := &Response{}
-        err = json.Unmarshal(jsonResponse, ar)
+        url, err:= response.Location()
         So(err, ShouldBeNil)
-        So(ar.Success, ShouldBeFalse)
+        So(url.RawQuery, ShouldEqual, "token_error=true")
+        
     })
     
     Convey("Should fail when a invalid json is sent", t, func() {
@@ -87,17 +83,10 @@ func Test_TokenLoginHandler(t *testing.T) {
         client := &http.Client{}
         response, err := client.Do(req)
         So(err, ShouldBeNil)
-        jsonResponse, err := ioutil.ReadAll(response.Body)
-        ar := &Response{}
-        err = json.Unmarshal(jsonResponse, ar)
+        url, err:= response.Location()
         So(err, ShouldBeNil)
-        So(ar.Success, ShouldBeFalse)
+        So(url.RawQuery, ShouldEqual, "token_error=true")
     })
-    
-    
-    
-    
-    
     
 }
 
@@ -122,11 +111,9 @@ func Test_UserPasswordHandler(t *testing.T) {
         client := &http.Client{}
         response, err := client.Do(req)
         So(err, ShouldBeNil)
-        jsonResponse, err := ioutil.ReadAll(response.Body)
-        ar := &Response{}
-        err = json.Unmarshal(jsonResponse, ar)
+        url, err:= response.Location()
         So(err, ShouldBeNil)
-        So(ar.Success, ShouldBeFalse)
+        So(url.RawQuery, ShouldEqual, "user_pass_error=true")
     })
     
     Convey("Should fail when it try to login using " +
@@ -151,13 +138,11 @@ func Test_UserPasswordHandler(t *testing.T) {
         client := &http.Client{}
         response, err := client.Do(req)
         So(err, ShouldBeNil)
-        jsonResponse, err := ioutil.ReadAll(response.Body)
-        ar := &Response{}
-        err = json.Unmarshal(jsonResponse, ar)
+        url, err:= response.Location()
         So(err, ShouldBeNil)
-        So(ar.Success, ShouldBeFalse)
+        So(url.RawQuery, ShouldEqual, "user_pass_error=true")
     })
-    Convey("Should login store the vault token in the jwt token with the apropiate" +
+    Convey("Should login  and store the vault token in the jwt token with the apropiate" +
         " expiration time", t, func() {
         var u bytes.Buffer
         
@@ -180,11 +165,9 @@ func Test_UserPasswordHandler(t *testing.T) {
         client := &http.Client{}
         response, err := client.Do(req)
         So(err, ShouldBeNil)
-        jsonResponse, err := ioutil.ReadAll(response.Body)
-        ar := &Response{}
-        err = json.Unmarshal(jsonResponse, ar)
+        url, err:= response.Location()
         So(err, ShouldBeNil)
-        So(ar.Success, ShouldBeTrue)
+        So(url.String(), ShouldEqual, Config.GetServicePath())
     })
     
     
