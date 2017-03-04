@@ -2,7 +2,6 @@ package v1
 
 import (
     "github.com/emicklei/go-restful"
-    vault "github.com/hashicorp/vault/api"
     . "github.com/nebtex/menshend/pkg/apis/menshend"
     . "github.com/nebtex/menshend/pkg/users"
     . "github.com/nebtex/menshend/pkg/utils"
@@ -40,9 +39,7 @@ func (i *ImpersonateResource) Register(container *restful.Container) {
         Writes(ImpersonateResource{}))
     
     ws.Route(ws.DELETE("").To(i.stopImpersonate).
-        Operation("readSecret").
-        Param(ws.PathParameter("id", "secret path").DataType("string")).
-        Writes(vault.Secret{}))
+        Operation("stopImpersonate"))
     container.Add(ws)
 }
 
@@ -67,7 +64,7 @@ func (i *ImpersonateResource) impersonate(request *restful.Request, response *re
     HttpCheckPanic(err, BadRequest.Append("invalid request format"))
     
     err = user.Impersonate(ipr.AuthProvider, ipr.User, ipr.Groups...)
-    HttpCheckPanic(err, BadRequest.Append(err.Error()))
+    HttpCheckPanic(err, BadRequest)
     
     response.AddHeader("menshend-jwt", user.GenerateJWT())
     response.WriteEntity(ImpersonateResource{
