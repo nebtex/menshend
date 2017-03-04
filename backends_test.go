@@ -1,4 +1,4 @@
-package kuper
+package menshend
 
 import (
     "testing"
@@ -28,7 +28,7 @@ func TestService_CreateLuaScript(t *testing.T) {
 end
 `
             u, err := NewUser("test-acl")
-            u.SetExpiresAt(getNow() + 3600 * 1000)
+            u.SetExpiresAt(GetNow() + 3600 * 1000)
             So(err, ShouldBeNil)
             u.TokenLogin()
             ls := s.CreateLuaScript(u)
@@ -51,7 +51,7 @@ end
                 s := generateService()
                 s.LuaScript = ""
                 u, err := NewUser("test-acl")
-                u.SetExpiresAt(getNow() + 3600 * 1000)
+                u.SetExpiresAt(GetNow() + 3600 * 1000)
                 So(err, ShouldBeNil)
                 u.TokenLogin()
                 ls := s.CreateLuaScript(u)
@@ -74,7 +74,7 @@ end`)
                 s := generateService()
                 s.LuaScript = ""
                 u, err := NewUser("test-acl")
-                u.SetExpiresAt(getNow() + 1000)
+                u.SetExpiresAt(GetNow() + 1000)
                 So(err, ShouldBeNil)
                 u.GitHubLogin("criloz", "admin", "delos", "umbrella")
                 ls := s.CreateLuaScript(u)
@@ -99,7 +99,7 @@ func TestService_GetBackend(t *testing.T) {
         Convey("Should fails  if does not return anything", func() {
             s := &Service{}
             u, err := NewUser("test-acl")
-            u.SetExpiresAt(getNow() + 1000)
+            u.SetExpiresAt(GetNow() + 1000)
             So(err, ShouldBeNil)
             u.TokenLogin()
             backend, err := s.GetBackend(u)
@@ -110,7 +110,7 @@ func TestService_GetBackend(t *testing.T) {
         Convey("test with 1 backend", func() {
             s := &Service{}
             u, err := NewUser("test-acl")
-            u.SetExpiresAt(getNow() + 1000)
+            u.SetExpiresAt(GetNow() + 1000)
             So(err, ShouldBeNil)
             u.TokenLogin()
             s.LuaScript = `
@@ -126,7 +126,7 @@ end`
             s := &Service{}
             s.LuaScript = "xx(ss)44"
             u, err := NewUser("test-acl")
-            u.SetExpiresAt(getNow() + 1000)
+            u.SetExpiresAt(GetNow() + 1000)
             So(err, ShouldBeNil)
             u.TokenLogin()
             _, err = s.GetBackend(u)
@@ -142,7 +142,7 @@ func TestGetBackend(t *testing.T) {
     Convey("Should return Full url backend (using the permissions)", t, func() {
         Convey("Should return error if subdomain is not provided", func() {
             u, err := NewUser("test-acl")
-            u.SetExpiresAt( getNow() + 3600 * 1000)
+            u.SetExpiresAt( GetNow() + 3600 * 1000)
             So(err, ShouldBeNil)
             u.TokenLogin()
             bc, err := GetBackend(u, "", "machine-learning-public")
@@ -154,7 +154,7 @@ func TestGetBackend(t *testing.T) {
         Convey("If the user has not access to the service it should return " +
             "a permission error", func() {
             u, err := NewUser("test-acl")
-            u.SetExpiresAt(getNow() + 3600 * 1000)
+            u.SetExpiresAt(GetNow() + 3600 * 1000)
             So(err, ShouldBeNil)
             u.TokenLogin()
             bc, err := GetBackend(u, "term", "ml-team")
@@ -171,7 +171,7 @@ func TestGetBackend(t *testing.T) {
             var err error
             VaultConfig.Address = "http://example.com.local:3212"
             u, err := NewUser("test-acl")
-            u.SetExpiresAt(getNow() + 3600 * 1000)
+            u.SetExpiresAt(GetNow() + 3600 * 1000)
             So(err, ShouldBeNil)
             u.TokenLogin()
             GetBackend(u, "term", "ml-team")
@@ -185,7 +185,7 @@ func TestGetBackend(t *testing.T) {
             
             var err error
             u, err := NewUser("myroot")
-            u.SetExpiresAt(getNow() + 1000)
+            u.SetExpiresAt(GetNow() + 1000)
             So(err, ShouldBeNil)
             u.TokenLogin()
             bc, err := GetBackend(u, "term", "ml-team")
@@ -201,7 +201,7 @@ func TestGetBackend(t *testing.T) {
             populateVault()
             So(err, ShouldBeNil)
             u, err := NewUser("myroot")
-            u.SetExpiresAt( getNow() + 3600 * 1000)
+            u.SetExpiresAt( GetNow() + 3600 * 1000)
             So(err, ShouldBeNil)
             u.TokenLogin()
             bc, err := GetBackend(u, "redis", "admin")
@@ -215,7 +215,7 @@ func TestGetBackend(t *testing.T) {
                 cleanVault()
                 populateVault()
                 u, err := NewUser("myroot")
-                u.SetExpiresAt(getNow() + 3600 * 1000)
+                u.SetExpiresAt(GetNow() + 3600 * 1000)
                 So(err, ShouldBeNil)
                 u.TokenLogin()
                 bc, err := GetBackend(u, "kubernetes", "admin")
@@ -231,7 +231,7 @@ func TestGetBackend(t *testing.T) {
             populateVault()
     
             u, err := NewUser("myroot")
-            u.SetExpiresAt(getNow() + 3600 * 1000)
+            u.SetExpiresAt(GetNow() + 3600 * 1000)
             So(err, ShouldBeNil)
             u.TokenLogin()
             bc, err := GetBackend(u, "gitlab", "ml-team")

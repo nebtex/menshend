@@ -1,4 +1,4 @@
-package kuper
+package menshend
 
 import (
     "runtime"
@@ -10,6 +10,7 @@ import (
     "fmt"
     "github.com/gorilla/sessions"
     "github.com/gorilla/securecookie"
+    "strings"
 )
 
 const (
@@ -28,7 +29,7 @@ type GithubConfig struct {
     ClientID     string
     ClientSecret string
 }
-type KuperConfig struct {
+type menshendConfig struct {
     HashKey      string
     BlockKey     string
     ListenPort   int
@@ -43,25 +44,29 @@ type KuperConfig struct {
     DefaultTTL   int64
 }
 
-func (k *KuperConfig) GetLoginPath() string {
-    loginUrl:= k.Scheme + "://" + k.Host + "/ui/login"
+func (k *menshendConfig) HostWithoutPort() string {
+    return strings.Split(k.Host, ":")[0]
+}
+func (k *menshendConfig) GetLoginPath() string {
+    loginUrl := k.Scheme + "://" + k.Host + "/ui/login"
     return loginUrl
 }
-func (k *KuperConfig) GetServicePath() string {
-    loginUrl:= k.Scheme + "://" + k.Host + "/ui/services"
+func (k *menshendConfig) GetServicePath() string {
+    loginUrl := k.Scheme + "://" + k.Host + "/ui/services"
     return loginUrl
 }
-var Config *KuperConfig
+
+var Config *menshendConfig
 var VaultConfig *vault.Config
 var FlashStore *sessions.CookieStore
 var SecureCookie *securecookie.SecureCookie
 
 func init() {
-    Config = &KuperConfig{}
+    Config = &menshendConfig{}
     Config.Host = "test.local"
-    Config.InterfaceURL = "http://kuper.test.local/ui/"
+    Config.InterfaceURL = "http://menshend.test.local/ui/"
     Config.Scheme = "http"
-    Config.VaultPath = "secret/kuper"
+    Config.VaultPath = "secret/menshend"
     Config.DefaultTTL = 24 * 60 * 60 * 1000
     Config.HashKey = GenerateRandomString(32)
     Config.BlockKey = GenerateRandomString(32)
@@ -74,7 +79,7 @@ func init() {
     gomniauth.SetSecurityKey(Config.HashKey)
     gomniauth.WithProviders(github.New(Config.Github.ClientID, Config.Github.ClientSecret, githubCallbackUrl))
     FlashStore = sessions.NewCookieStore([]byte(Config.HashKey), []byte(Config.BlockKey))
-    FlashStore.Options.Domain = "." + Config.Host
+    FlashStore.Options.Domain = "." + Config.HostWithoutPort()
     FlashStore.Options.Path = "/"
     if Config.Scheme == "http" {
         FlashStore.Options.Secure = false
@@ -96,10 +101,7 @@ func CheckPanic(e error) {
 
 //Errors
 
-//InvalidJWT
-var InvalidJWT = merry.New("jwt is invalid")
-//JWTNotFound is not available
-var JWTNotFound = merry.New("Could not read the jwt cookie")
+
 //ServiceNotFound not backend defined for service
 var ServiceNotFound = merry.New("I could not find the service")
 //LuaScriptFailed the lua script failed
@@ -107,7 +109,7 @@ var LuaScriptFailed = merry.New("There is a issue with the lua script")
 //InvalidSubdomain the subdomain provided is invalid
 var InvalidSubdomain = merry.New("subdomain provided is invalid ")
 //PermissionError this mean that the acl token has not access to x key on consul
-var PermissionError = merry.New("User has not access to resource")
+var PermissionError = merry.New("Permission Error").WithHTTPCode(403)
 //InvalidUrl url returned is not valid
 var InvalidUrl = merry.New("The url returned by the lua script is not valid")
 //InvalidService service definition on consul is invalid
@@ -116,3 +118,9 @@ var InvalidService = merry.New("service definition on vault is invalid")
 var InactiveService = merry.New("service is disabled")
 //BadBackendUrl ...
 var BadBackendUrl = merry.New("Backend return a invalid url")
+//BadRequest ...
+var BadRequest = merry.New("Bad request").WithHTTPCode(400)
+
+//BadRequest ...
+var InternalError = merry.New("Internal Error").WithHTTPCode(500)
+var NotFound = merry.New("Resource not found").WithHTTPCode(404)

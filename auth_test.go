@@ -1,4 +1,4 @@
-package kuper
+package menshend
 
 import (
     "testing"
@@ -155,7 +155,7 @@ func Test_UserPasswordHandler(t *testing.T) {
         defer ts.Close()
         u.WriteString(string(ts.URL))
         u.WriteString("/api/v1/login/token")
-        tp := UPLogin{User:"kuper",
+        tp := UPLogin{User:"menshend",
             Password:"test"}
         postBody, err := json.Marshal(tp)
         So(err, ShouldBeNil)

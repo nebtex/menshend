@@ -1,4 +1,4 @@
-package kuper
+package menshend
 
 import (
     . "github.com/smartystreets/goconvey/convey"
@@ -19,12 +19,12 @@ func TestServer(t *testing.T) {
     Convey("Test routers ", t, func() {
         cleanVault()
     
-        session := grequests.NewSession(&grequests.RequestOptions{Host:Config.Host})
+        session := grequests.NewSession(&grequests.RequestOptions{Host:Config.HostWithoutPort()})
         response, err := session.Get("http://localhost:18080/", nil)
         So(err, ShouldBeNil)
         csrfToken := response.Header.Get("X-CSRF-Token")
     
-        options := &grequests.RequestOptions{Host:Config.Host}
+        options := &grequests.RequestOptions{Host:Config.HostWithoutPort()}
         options.Headers = map[string]string{}
         options.Headers["X-CSRF-Token"] = csrfToken
         options.JSON = TokenLogin{Token:"myroot"}
@@ -36,3 +36,4 @@ func TestServer(t *testing.T) {
         //session.Post()
     })
 }
+GetNow()

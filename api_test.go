@@ -1,4 +1,4 @@
-package kuper
+package menshend
 
 import (
     "testing"
@@ -23,7 +23,7 @@ func cleanVault() {
     CheckPanic(err)
     vc.SetToken("myroot")
     
-    key := fmt.Sprintf("%s/Roles", Config.VaultPath)
+    key := fmt.Sprintf("%s/roles", Config.VaultPath)
     secret, err := vc.Logical().List(key)
     CheckPanic(err)
     if (secret == nil) || (secret.Data == nil) {
@@ -38,7 +38,7 @@ func cleanVault() {
         if !strings.HasSuffix(role, "/") {
             continue
         }
-        rKey := fmt.Sprintf("%s/Roles/%s", Config.VaultPath, role)
+        rKey := fmt.Sprintf("%s/roles/%s", Config.VaultPath, role)
         rSecret, err := vc.Logical().List(rKey)
         if err != nil {
             continue
@@ -51,7 +51,7 @@ func cleanVault() {
         serviceList := sr.Keys
         
         for _, service := range serviceList {
-            sKey := fmt.Sprintf("%s/Roles/%s/%s", Config.VaultPath, role, service)
+            sKey := fmt.Sprintf("%s/roles/%s/%s", Config.VaultPath, role, service)
             _, err := vc.Logical().Delete(sKey)
             CheckPanic(err)
             
@@ -90,7 +90,7 @@ func populateVault() {
         }}
     for role, services := range roles {
         for service, val := range services {
-            key := fmt.Sprintf("%s/Roles/%s/%s", Config.VaultPath, role, service)
+            key := fmt.Sprintf("%s/roles/%s/%s", Config.VaultPath, role, service)
             _, err := vc.Logical().Write(key, structs.Map(val))
             CheckPanic(err)
         }
@@ -127,10 +127,10 @@ func TestService_ServiceListHandler(t *testing.T) {
             req, err := http.NewRequest("GET", u.String(), nil)
             So(err, ShouldBeNil)
             user, err := NewUser("myroot")
-            user.SetExpiresAt(getNow() + 1000)
+            user.SetExpiresAt(GetNow() + 1000)
             So(err, ShouldBeNil)
             user.GitHubLogin("criloz", "admin", "delos", "umbrella")
-            req.AddCookie(&http.Cookie{Name:"kuper-jwt", Value:user.GenerateJWT()})
+            req.AddCookie(&http.Cookie{Name:"menshend-jwt", Value:user.GenerateJWT()})
             client := &http.Client{}
             response, err := client.Do(req)
             So(err, ShouldBeNil)
@@ -162,10 +162,10 @@ func TestService_ServiceListHandler(t *testing.T) {
                 req, err := http.NewRequest("GET", u.String(), nil)
                 So(err, ShouldBeNil)
                 user, err := NewUser("myroot")
-                user.SetExpiresAt(getNow() + 3600 * 1000)
+                user.SetExpiresAt(GetNow() + 3600 * 1000)
                 So(err, ShouldBeNil)
                 user.GitHubLogin("criloz", "admin", "delos", "umbrella")
-                req.AddCookie(&http.Cookie{Name:"kuper-jwt", Value:user.GenerateJWT()})
+                req.AddCookie(&http.Cookie{Name:"menshend-jwt", Value:user.GenerateJWT()})
                 client := &http.Client{}
                 response, err := client.Do(req)
                 So(err, ShouldBeNil)
@@ -195,10 +195,10 @@ func TestService_ServiceListHandler(t *testing.T) {
                 req, err := http.NewRequest("GET", u.String(), nil)
                 So(err, ShouldBeNil)
                 user, err := NewUser("test-acl")
-                user.SetExpiresAt(getNow() + 3600 * 1000)
+                user.SetExpiresAt(GetNow() + 3600 * 1000)
                 So(err, ShouldBeNil)
                 user.GitHubLogin("criloz", "admin", "delos", "umbrella")
-                req.AddCookie(&http.Cookie{Name:"kuper-jwt", Value:user.GenerateJWT()})
+                req.AddCookie(&http.Cookie{Name:"menshend-jwt", Value:user.GenerateJWT()})
                 client := &http.Client{}
                 response, err := client.Do(req)
                 So(err, ShouldBeNil)
@@ -219,8 +219,8 @@ func TestService_ServiceListHandler(t *testing.T) {
             vaultClient.SetToken("myroot")
             
             err = vaultClient.Sys().PutPolicy("api-test-permissions", `
-        path "secret/kuper/Roles/admin/*" { policy = "read" }
-        path "secret/kuper/Roles" { capabilities = ["list"] }
+        path "secret/menshend/Roles/admin/*" { policy = "read" }
+        path "secret/menshend/Roles" { capabilities = ["list"] }
             `)
             So(err, ShouldBeNil)
             secret, err := vaultClient.Auth().Token().
@@ -239,10 +239,10 @@ func TestService_ServiceListHandler(t *testing.T) {
             req, err := http.NewRequest("GET", u.String(), nil)
             So(err, ShouldBeNil)
             user, err := NewUser(secret.Auth.ClientToken)
-            user.SetExpiresAt(getNow() + 3600 * 1000)
+            user.SetExpiresAt(GetNow() + 3600 * 1000)
             So(err, ShouldBeNil)
             user.TokenLogin()
-            req.AddCookie(&http.Cookie{Name:"kuper-jwt", Value:user.GenerateJWT()})
+            req.AddCookie(&http.Cookie{Name:"menshend-jwt", Value:user.GenerateJWT()})
             client := &http.Client{}
             response, err := client.Do(req)
             So(err, ShouldBeNil)
@@ -263,7 +263,7 @@ func Test_IsAdmin(t *testing.T) {
         Convey("Should return false if th user is not an admin", func() {
             cleanVault()
             user, err := NewUser("test_token")
-            user.SetExpiresAt(getNow() + 3600 * 1000)
+            user.SetExpiresAt(GetNow() + 3600 * 1000)
             So(err, ShouldBeNil)
             user.TokenLogin()
             So(IsAdmin(user), ShouldBeFalse)
@@ -281,7 +281,7 @@ func Test_IsAdmin(t *testing.T) {
             So(vaultErr, ShouldBeNil)
             user, err = NewUser(secret.Auth.ClientToken)
             So(err, ShouldBeNil)
-            user.SetExpiresAt(getNow() + 3600 * 1000)
+            user.SetExpiresAt(GetNow() + 3600 * 1000)
             So(err, ShouldBeNil)
             user.TokenLogin()
             So(IsAdmin(user), ShouldBeFalse)
@@ -289,7 +289,7 @@ func Test_IsAdmin(t *testing.T) {
         Convey("Should return true if th user is  an admin", func() {
             cleanVault()
             user, err := NewUser("myroot")
-            user.SetExpiresAt(getNow() + 3600 * 1000)
+            user.SetExpiresAt(GetNow() + 3600 * 1000)
             So(err, ShouldBeNil)
             user.TokenLogin()
             So(IsAdmin(user), ShouldBeTrue)
@@ -305,7 +305,7 @@ func Test_CanImpersonateHandler(t *testing.T) {
         Convey("Should return false if th user can't impersonate", func() {
             cleanVault()
             user, err := NewUser("test_token")
-            user.SetExpiresAt(getNow() + 3600 * 1000)
+            user.SetExpiresAt(GetNow() + 3600 * 1000)
             
             So(err, ShouldBeNil)
             user.TokenLogin()
@@ -315,7 +315,7 @@ func Test_CanImpersonateHandler(t *testing.T) {
         Convey("Should return true if th user can impersonate", func() {
             cleanVault()
             user, err := NewUser("myroot")
-            user.SetExpiresAt(getNow() + 3600 * 1000)
+            user.SetExpiresAt(GetNow() + 3600 * 1000)
             
             So(err, ShouldBeNil)
             user.TokenLogin()
@@ -344,10 +344,10 @@ func Test_LoginStatusHandler(t *testing.T) {
             req, err := http.NewRequest("GET", u.String(), nil)
             So(err, ShouldBeNil)
             user, err := NewUser("myroot")
-            user.SetExpiresAt(getNow() + 3600 * 1000)
+            user.SetExpiresAt(GetNow() + 3600 * 1000)
             So(err, ShouldBeNil)
             user.GitHubLogin("criloz", "admin", "delos", "umbrella")
-            req.AddCookie(&http.Cookie{Name:"kuper-jwt",
+            req.AddCookie(&http.Cookie{Name:"menshend-jwt",
                 Value:user.GenerateJWT()})
             client := &http.Client{}
             response, err := client.Do(req)

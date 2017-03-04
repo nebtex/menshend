@@ -1,4 +1,4 @@
-package kuper
+package menshend
 
 import (
     "net/http"
@@ -24,7 +24,7 @@ func ServiceListHandler(w http.ResponseWriter, r *http.Request) {
     vc, err := vault.NewClient(VaultConfig)
     vc.SetToken(user.Token)
     CheckPanic(err)
-    key := fmt.Sprintf("%s/Roles", Config.VaultPath)
+    key := fmt.Sprintf("%s/roles", Config.VaultPath)
     secret, vaultErr := vc.Logical().List(key)
     if vaultErr != nil {
         if strings.Contains(vaultErr.Error(), "403") {
@@ -47,7 +47,7 @@ func ServiceListHandler(w http.ResponseWriter, r *http.Request) {
         if !strings.HasSuffix(role, "/") {
             continue
         }
-        rKey := fmt.Sprintf("%s/Roles/%s", Config.VaultPath, role)
+        rKey := fmt.Sprintf("%s/roles/%s", Config.VaultPath, role)
         rSecret, err := vc.Logical().List(rKey)
         if err != nil {
             continue
@@ -60,7 +60,7 @@ func ServiceListHandler(w http.ResponseWriter, r *http.Request) {
         serviceList := sr.Keys
 
         for _, service := range serviceList {
-            sKey := fmt.Sprintf("%s/Roles/%s/%s", Config.VaultPath, role, service)
+            sKey := fmt.Sprintf("%s/roles/%s/%s", Config.VaultPath, role, service)
             sSecret, consulErr := vc.Logical().Read(sKey)
             if consulErr != nil {
                 continue
@@ -116,35 +116,6 @@ func ServiceListHandler(w http.ResponseWriter, r *http.Request) {
     w.Write(data)
 }
 
-//IsAdmin ...
-func IsAdmin(user *User) bool {
-    ret := true
-    func() {
-        defer func() {
-            r := recover()
-            if r != nil {
-                ret = false
-            }
-        }()
-        checkAdminPermission(user, VaultConfig)
-    }()
-    return ret
-}
-
-//CanImpersonate ...
-func CanImpersonate(user *User) bool {
-    ret := true
-    func() {
-        defer func() {
-            r := recover()
-            if r != nil {
-                ret = false
-            }
-        }()
-        checkImpersonatePermission(user, VaultConfig)
-    }()
-    return ret
-}
 
 
 type LoginStatusResponse struct {

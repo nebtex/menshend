@@ -1,4 +1,4 @@
-package kuper
+package menshend
 
 import (
     "github.com/ansel1/merry"
@@ -16,24 +16,19 @@ end`
 
 type Role map[string]*Service
 
-type Kuper struct {
+type menshend struct {
     Roles       map[string]Role
     Impersonate string
     Admin       string
 }
 
-//Service service definition struct
-type Service struct {
-    Logo                  string
-    Name                  string
-    ShortDescription      string
-    LongDescription       string
-    LuaScript             string
-    ImpersonateWithinRole bool
-    Proxy                 bool
-    IsActive              bool
-    SecretPaths           []string
+type ServiceCache struct {
+    // time to live seconds
+    TTL    int
+    Active bool
 }
+
+
 
 //CreateLuaScript create the lua script that will be execute to obtain the full
 //backend url
@@ -105,7 +100,7 @@ func GetBackend(u *User, subDomain string, role string) (*PlainBackend, merry.Er
     vc, vaultErr := vault.NewClient(VaultConfig)
     vc.SetToken(u.Token)
     CheckPanic(vaultErr)
-    key := fmt.Sprintf("%s/Roles/%s/%s", Config.VaultPath, role, subDomain)
+    key := fmt.Sprintf("%s/roles/%s/%s", Config.VaultPath, role, subDomain)
     secret, vaultError := vc.Logical().Read(key)
     if vaultError != nil {
         if strings.Contains(vaultError.Error(), "403") {
