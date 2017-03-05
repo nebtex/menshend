@@ -223,9 +223,7 @@ func (as *AdminServiceResource)getService(request *restful.Request, response *re
     vaultClient.SetToken(user.Menshend.VaultToken)
     secret, err := vaultClient.Logical().Read(key)
     HttpCheckPanic(err, PermissionError)
-    if secret == nil || secret.Data == nil {
-        panic(NotFound)
-    }
+    CheckSecretFailIfIsNull(secret)
     
     nService := &AdminServiceResource{}
     err = mapstructure.Decode(secret.Data, nService)
@@ -247,9 +245,7 @@ func (as *AdminServiceResource) listServiceHandler(request *restful.Request, res
     vaultClient.SetToken(user.Menshend.VaultToken)
     secret, err := vaultClient.Logical().List(key)
     HttpCheckPanic(err, PermissionError)
-    if secret == nil || secret.Data == nil {
-        panic(NotFound)
-    }
+    CheckSecretFailIfIsNull(secret)
     
     sr := &ListResult{}
     err = mapstructure.Decode(secret.Data, sr)
@@ -261,13 +257,12 @@ func (as *AdminServiceResource) listServiceHandler(request *restful.Request, res
     for _, role := range roleList {
         key := fmt.Sprintf("%s/roles/%s/%s", Config.VaultPath, role, subdomain)
         secret, err := vaultClient.Logical().Read(key)
-        if err != nil || secret == nil || secret.Data == nil {
-            continue
+        if !(err != nil || secret == nil || secret.Data == nil) {
+            nService := &AdminServiceResource{}
+            err = mapstructure.Decode(secret.Data, nService)
+            HttpCheckPanic(err, InternalError.Append("error decoding service"))
+            ret = append(ret, nService)
         }
-        nService := &AdminServiceResource{}
-        err = mapstructure.Decode(secret.Data, nService)
-        HttpCheckPanic(err, InternalError.Append("error decoding service"))
-        ret = append(ret, nService)
     }
     response.WriteEntity(ret)
 }

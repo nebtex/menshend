@@ -37,9 +37,7 @@ func (s *SecretResource) read(request *restful.Request, response *restful.Respon
     vaultClient.SetToken(user.Menshend.VaultToken)
     secret, err := vaultClient.Logical().Read(key)
     HttpCheckPanic(err, PermissionError)
-    if secret == nil || secret.Data == nil {
-        panic(NotFound)
-    }
+    CheckSecretFailIfIsNull(secret)
     response.WriteEntity(secret)
 }
 

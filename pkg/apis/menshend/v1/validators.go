@@ -81,9 +81,7 @@ func ValidateSecret(secretId string, user *User) (vaultSecretPath string) {
     vc.SetToken(user.Menshend.VaultToken)
     secret, err := vc.Logical().Read(fmt.Sprintf("%s/%s", Config.VaultPath, serviceId))
     HttpCheckPanic(err, PermissionError)
-    if secret == nil || secret.Data == nil {
-        panic(NotFound)
-    }
+    CheckSecretFailIfIsNull(secret)
     
     nService := &AdminServiceResource{}
     err = mapstructure.Decode(secret.Data, nService)
