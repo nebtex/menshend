@@ -10,7 +10,7 @@ import (
 )
 
 func getUserFromRequest(r *restful.Request) *User {
-    jwtCookie := r.HeaderParameter("menshend-jwt")
+    jwtCookie := r.HeaderParameter("X-Menshend-Token")
     user, err := FromJWT(jwtCookie)
     HttpCheckPanic(err, NotAuthorized)
     return user

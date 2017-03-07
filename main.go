@@ -90,7 +90,7 @@ func setToken(u *User, expiresIn int64, w http.ResponseWriter) {
         expireAt += expiresIn
     }
     u.SetExpiresAt(expireAt)
-    ct := &http.Cookie{Path: "/", Name: "menshend-jwt", Value: u.GenerateJWT(),
+    ct := &http.Cookie{Path: "/", Name: "X-Menshend-Token", Value: u.GenerateJWT(),
         Expires: time.Unix(u.ExpiresAt / 1000, 0),
         HttpOnly:true }
     

@@ -25,7 +25,7 @@ func Test_ListClientService(t *testing.T) {
         So(err, ShouldBeNil)
         user.UsernamePasswordLogin("root")
         user.SetExpiresAt(GetNow() + 3600)
-        httpReq.Header.Add("menshend-jwt", user.GenerateJWT())
+        httpReq.Header.Add("X-Menshend-Token", user.GenerateJWT())
         httpWriter := httptest.NewRecorder()
         wsContainer := restful.NewContainer()
         s := ClientServiceResource{}
@@ -49,7 +49,7 @@ func Test_ListClientService(t *testing.T) {
         So(err, ShouldBeNil)
         user.UsernamePasswordLogin("root")
         user.SetExpiresAt(GetNow() + 3600)
-        httpReq.Header.Add("menshend-jwt", user.GenerateJWT())
+        httpReq.Header.Add("X-Menshend-Token", user.GenerateJWT())
         httpWriter := httptest.NewRecorder()
         wsContainer := restful.NewContainer()
         s := ClientServiceResource{}
@@ -74,7 +74,7 @@ func Test_ListClientService(t *testing.T) {
         So(err, ShouldBeNil)
         user.UsernamePasswordLogin("root")
         user.SetExpiresAt(GetNow() + 3600)
-        httpReq.Header.Add("menshend-jwt", user.GenerateJWT())
+        httpReq.Header.Add("X-Menshend-Token", user.GenerateJWT())
         httpWriter := httptest.NewRecorder()
         wsContainer := restful.NewContainer()
         s := ClientServiceResource{}
@@ -98,7 +98,7 @@ func Test_ListClientService(t *testing.T) {
         So(err, ShouldBeNil)
         user.UsernamePasswordLogin("root")
         user.SetExpiresAt(GetNow() + 3600)
-        httpReq.Header.Add("menshend-jwt", user.GenerateJWT())
+        httpReq.Header.Add("X-Menshend-Token", user.GenerateJWT())
         httpWriter := httptest.NewRecorder()
         wsContainer := restful.NewContainer()
         s := ClientServiceResource{}

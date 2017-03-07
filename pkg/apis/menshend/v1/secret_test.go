@@ -31,7 +31,7 @@ func Test_SecretEndpoint(t *testing.T) {
         So(err, ShouldBeNil)
         user.TokenLogin()
         user.SetExpiresAt(GetNow() + 3600)
-        httpReq.Header.Add("menshend-jwt", user.GenerateJWT())
+        httpReq.Header.Add("X-Menshend-Token", user.GenerateJWT())
         httpWriter := httptest.NewRecorder()
         wsContainer := restful.NewContainer()
         s := SecretResource{}
@@ -71,7 +71,7 @@ func Test_SecretEndpoint(t *testing.T) {
         So(err, ShouldBeNil)
         user.TokenLogin()
         user.SetExpiresAt(GetNow() + 3600)
-        httpReq.Header.Add("menshend-jwt", user.GenerateJWT())
+        httpReq.Header.Add("X-Menshend-Token", user.GenerateJWT())
         httpWriter := httptest.NewRecorder()
         wsContainer := restful.NewContainer()
         s := SecretResource{}

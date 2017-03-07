@@ -142,14 +142,14 @@ func (u *User)GenerateJWT() string {
 }
 
 func (u *User)Encoded() {
-    ed, err := SecureCookie.Encode("menshend-jwt", u.Menshend)
+    ed, err := SecureCookie.Encode("X-Menshend-Token", u.Menshend)
     CheckPanic(err)
     u.EncodedData = ed
 }
 
 func (u *User)Decode() {
     dst := &JwtMenshendInfo{}
-    err := SecureCookie.Decode("menshend-jwt", u.EncodedData, dst)
+    err := SecureCookie.Decode("X-Menshend-Token", u.EncodedData, dst)
     CheckPanic(err)
     u.Menshend = dst
 }

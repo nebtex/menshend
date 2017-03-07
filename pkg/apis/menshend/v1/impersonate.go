@@ -66,7 +66,7 @@ func (i *ImpersonateResource) impersonate(request *restful.Request, response *re
     err = user.Impersonate(ipr.AuthProvider, ipr.User, ipr.Groups...)
     HttpCheckPanic(err, BadRequest)
     
-    response.AddHeader("menshend-jwt", user.GenerateJWT())
+    response.AddHeader("X-Menshend-Token", user.GenerateJWT())
     response.WriteEntity(ImpersonateResource{
         Active:true,
         User:StringPtr(user.Menshend.Username),
@@ -78,7 +78,7 @@ func (i *ImpersonateResource) impersonate(request *restful.Request, response *re
 func (i *ImpersonateResource) stopImpersonate(request *restful.Request, response *restful.Response) {
     user := GetUserFromContext(request)
     user.StopImpersonate()
-    response.AddHeader("menshend-jwt", user.GenerateJWT())
+    response.AddHeader("X-Menshend-Token", user.GenerateJWT())
     response.WriteEntity(nil)
     
 }

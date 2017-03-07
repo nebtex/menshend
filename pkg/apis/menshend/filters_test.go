@@ -153,7 +153,7 @@ func TestLoginFilter(t *testing.T) {
             u.TokenLogin()
             u.SetExpiresAt(GetNow() + 3600)
             u.Menshend.Username = "tokenLoginDoesnotSupportUser"
-            req.Request.Header.Add("menshend-jwt", u.GenerateJWT())
+            req.Request.Header.Add("X-Menshend-Token", u.GenerateJWT())
             
             recorder := new(httptest.ResponseRecorder)
             resp := restful.NewResponse(recorder)
@@ -174,7 +174,7 @@ func TestLoginFilter(t *testing.T) {
         So(err, ShouldBeNil)
         u.TokenLogin()
         u.SetExpiresAt(GetNow() + 3600)
-        req.Request.Header.Add("menshend-jwt", u.GenerateJWT())
+        req.Request.Header.Add("X-Menshend-Token", u.GenerateJWT())
         
         recorder := new(httptest.ResponseRecorder)
         resp := restful.NewResponse(recorder)
@@ -209,7 +209,7 @@ func TestAdminFilter(t *testing.T) {
             So(err, ShouldBeNil)
             u.TokenLogin()
             u.SetExpiresAt(GetNow() + 3600)
-            req.Request.Header.Add("menshend-jwt", u.GenerateJWT())
+            req.Request.Header.Add("X-Menshend-Token", u.GenerateJWT())
     
             recorder := new(httptest.ResponseRecorder)
             resp := restful.NewResponse(recorder)
@@ -245,7 +245,7 @@ func TestCanImpersonateFilter(t *testing.T) {
             So(err, ShouldBeNil)
             u.TokenLogin()
             u.SetExpiresAt(GetNow() + 3600)
-            req.Request.Header.Add("menshend-jwt", u.GenerateJWT())
+            req.Request.Header.Add("X-Menshend-Token", u.GenerateJWT())
             
             recorder := new(httptest.ResponseRecorder)
             resp := restful.NewResponse(recorder)
