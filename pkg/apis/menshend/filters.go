@@ -9,7 +9,7 @@ import (
     "github.com/emicklei/go-restful"
 )
 
-func getUserFromRequest(r *restful.Request) *User {
+func GetUserFromRequest(r *restful.Request) *User {
     jwtCookie := r.HeaderParameter("X-Menshend-Token")
     user, err := FromJWT(jwtCookie)
     HttpCheckPanic(err, NotAuthorized)
@@ -104,7 +104,7 @@ func AdminFilter(req *restful.Request, resp *restful.Response, chain *restful.Fi
 
 //LoginFilter fail if the user is not logged in
 func LoginFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
-    user := getUserFromRequest(req)
+    user := GetUserFromRequest(req)
     req.SetAttribute("user", user)
     chain.ProcessFilter(req, resp)
 }

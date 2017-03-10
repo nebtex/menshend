@@ -1,0 +1,550 @@
+swagger: '2.0'
+info:
+  version: 1.0.0
+  title: menshend-api
+  description: The API for the Menshend Project
+schemes:
+  - https
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /v1/secret/{id}:
+    parameters:
+    - name: "id"
+      in: "path"
+      required: true
+      type: "string"
+      description: secret path
+    get:
+      tags:
+      - Secrets
+      description: return secret associate with a service
+      operationId: readSecret
+      responses:
+        200:
+          description: ok
+          schema:
+            $ref: "#/definitions/Secret"
+        403:
+          description: Permission Error
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+        400:
+          description: Bad request
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+        404:
+          description: Not found
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+        500:
+          description: Internal error
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+
+  /v1/clientServices:
+    parameters:
+    - name: "subdomain"
+      in: "query"
+      required: false
+      type: "string"
+      description: filter by subdomain
+    - name: "role"
+      in: "query"
+      required: false
+      type: "string"
+      description: filter by role
+    get:
+      tags:
+      - Client
+      description: list or search availables services
+      operationId: listAvailableServices
+      responses:
+        200:
+          description: ok
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/ClientService"
+        500:
+          description: Internal error
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+
+  /v1/account:
+    get:
+      tags:
+      - Auth
+      description: get login status
+      operationId: loginStatus
+      responses:
+        200:
+          description: ok
+          schema:
+            $ref: "#/definitions/LoginStatus"
+
+        500:
+          description: Internal error
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    delete:
+      tags:
+      - Auth
+      description: login off
+      operationId: logout
+      responses:
+        200:
+          description: ok
+          schema:
+            $ref: "#/definitions/LoginStatus"
+        403:
+          description: Permission Error
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+        400:
+          description: Bad request
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+        404:
+          description: Not found
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+        500:
+          description: Internal error
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    put:
+      parameters:
+      - name: "auth"
+        in: "body"
+        required: true
+        schema:
+          type: object
+          properties:
+            data:
+              type:
+                object
+            authProvider:
+              type: integer
+              enum:
+                - token
+                - userpass
+                - github
+        description: auth object
+      tags:
+      - Auth
+      description: login
+      operationId: Login
+      responses:
+        200:
+          description: ok
+          schema:
+            $ref: "#/definitions/LoginStatus"
+        403:
+          description: Permission Error
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+        400:
+          description: Bad request
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+        404:
+          description: Not found
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+        500:
+          description: Internal error
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+
+
+  /v1/adminServices/{id}:
+    parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        pattern: "^roles/[a-z0-9\\-]+/([a-z0-9\\-]+\\.)+$"
+        type: "string"
+        description: service id
+    get:
+      tags:
+      - Admin
+      description: returns all the available information of the service
+      operationId: adminGetService
+      responses:
+        200:
+          description: Service
+          schema:
+            $ref: '#/definitions/AdminService'
+        403:
+          description: Permission Error
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+        400:
+          description: Bad request
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+        404:
+          description: Not found
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+        500:
+          description: Internal error
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    put:
+      parameters:
+      - name: "body"
+        in: "body"
+        required: true
+        schema:
+         $ref: '#/definitions/AdminService'
+      tags:
+      - Admin
+      description: create a new service
+      operationId: adminSaveService
+      responses:
+        200:
+          description: ok
+          schema:
+            $ref: '#/definitions/AdminService'
+        403:
+          description: Permission Error
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+        400:
+          description: Bad request
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+        404:
+          description: Not found
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+        500:
+          description: Internal error
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    delete:
+      tags:
+      - Admin
+      description: delete service
+      operationId: adminDeleteService
+      responses:
+        200:
+          description: ok
+          schema:
+            type: object
+        403:
+          description: Permission Error
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+        400:
+          description: Bad request
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+        404:
+          description: Not found
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+        500:
+          description: Internal error
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+
+  /v1/adminServices:
+    parameters:
+      - name: "subdomain"
+        in: "query"
+        required: true
+        type: "string"
+        pattern: "^([a-z0-9\\-]+\\.)+$"
+        description: subdomain
+    get:
+      tags:
+      - Admin
+      description: returns all the available information of the service over all the roles
+      operationId: adminListService
+      responses:
+        200:
+          description: Service
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/AdminService'
+        403:
+          description: Permission Error
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+        400:
+          description: Bad request
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+        404:
+          description: Not found
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+        500:
+          description: Internal error
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+
+definitions:
+  LoginStatus:
+    type: object
+    properties:
+      isLogged:
+        type: boolean
+      isAdmin:
+        type: boolean
+      canImpersonate:
+        type: boolean
+      sessionExpiresAt:
+        type: integer
+  AdminService:
+    type: object
+    properties:
+      id:
+        type: string
+      roleId:
+        type: string
+      logo:
+        type: string
+      name:
+        type: string
+      shortDescription:
+        type: string
+      longDescription:
+        type: string
+      longDescriptionUrl:
+        type: string
+      proxyCode:
+        type: string
+      proxyCodeLanguage:
+        type: string
+        enum:
+        - yaml
+        - lua
+      csrf:
+        type: boolean
+      impersonateWithinRole:
+        type: boolean
+      isActive:
+        type: boolean
+      strategy:
+        type: string
+        enum:
+        - proxy
+        - redirect
+        - port-forward
+      cache:
+        type: object
+        properties:
+          active:
+            type: boolean
+          ttl:
+            type: integer
+      cors:
+        type: object
+        properties:
+          allowedOrigins:
+            type: array
+            items:
+              type: string
+          allowedMethods:
+            type: array
+            items:
+              type: string
+          allowedHeaders:
+            type: array
+            items:
+              type: string
+          allowCredentials:
+            type: boolean
+          optionsPassthrough:
+            type: boolean
+          maxAge:
+            type: boolean
+          exposedHeaders:
+            type: array
+            items:
+              type: string
+      secretPaths:
+        type: array
+        items:
+          type: string
+  Secret:
+    type: object
+    description: vault secret object
+    properties:
+      request_id:
+        type: string
+      lease_duration:
+        type: integer
+      renewable:
+        type: boolean
+      data:
+        type: object
+      warnings:
+        type: array
+        items:
+          type: string
+      wrap_info:
+        type: object
+        properties:
+          token:
+            type: string
+          ttl:
+            type: integer
+          creation_time:
+            type: integer
+          wrapped_accessor:
+            type: string
+      auth:
+        type: object
+        properties:
+          client_token:
+            type: string
+          accessor:
+            type: string
+          policies:
+            type: array
+            items:
+              type: string
+          metadata:
+            type: object
+          lease_duration:
+            type: integer
+          renewable:
+            type: boolean
+
+  ClientService:
+    type: object
+    required: [id]
+    description: this object represent a service for user without admin access
+    properties:
+      id:
+        type: string
+        description: service id `/roles/{role-name}/{subdomain}/`
+      roleId:
+        type: string
+        description: role name
+      subDomain:
+        type: string
+        description: subdomain
+      logo:
+        type: string
+        description: url where the logo of this service is stored
+      name:
+        type: string
+        description: name
+      shortDescription:
+        type: string
+        description: max 100 characters
+      longDescription:
+        type: string
+        description: support markdown
+      impersonateWithinRole:
+        type: boolean
+        description: if this propertie is true, any user with access to this service  can impersonate anothers users, this only work within the service and role, without the need of special permission, `md-user` and `md-groups` can be user in the query params to select the user / group to impersonate
+      secretPaths:
+        type: array
+        description: list of secret vault paths relate with this service.
+        items:
+          type: string
+
+# Added by API Auto Mocking Plugin
+host: virtserver.swaggerhub.com
+basePath: /

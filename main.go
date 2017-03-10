@@ -82,25 +82,7 @@ func main() {
 }
 //setToken ..
 // expiresIn in milliseconds
-func setToken(u *User, expiresIn int64, w http.ResponseWriter) {
-    expireAt := MakeTimestampMillisecond()
-    if expiresIn == 0 {
-        expireAt += Config.DefaultTTL
-    } else {
-        expireAt += expiresIn
-    }
-    u.SetExpiresAt(expireAt)
-    ct := &http.Cookie{Path: "/", Name: "X-Menshend-Token", Value: u.GenerateJWT(),
-        Expires: time.Unix(u.ExpiresAt / 1000, 0),
-        HttpOnly:true }
-    
-    ct.Domain = "." + Config.HostWithoutPort()
-    
-    if Config.Scheme == "https" {
-        ct.Secure = true
-    }
-    http.SetCookie(w, ct)
-}
+
 //TestSetToken
 func TestSetToken(t *testing.T) {
     

@@ -1,92 +1,132 @@
 package v1
 
 import (
-    "github.com/stretchr/objx"
-    "net/url"
-    "time"
-    "github.com/Sirupsen/logrus"
-    "github.com/hashicorp/vault/vault"
-    "github.com/mitchellh/mapstructure"
+    vault "github.com/hashicorp/vault/api"
     "fmt"
-    "github.com/gorilla/mux"
-    "github.com/stretchr/gomniauth"
+    "github.com/emicklei/go-restful"
+    . "github.com/nebtex/menshend/pkg/apis/menshend"
+    . "github.com/nebtex/menshend/pkg/config"
+    . "github.com/nebtex/menshend/pkg/utils"
+    . "github.com/nebtex/menshend/pkg/users"
+    "net/http"
+    "time"
+    "github.com/mitchellh/mapstructure"
 )
 
+type AuthResource struct {
+    Data         map[string]interface{} `json:"data"`
+    AuthProvider string `json:"authProvider"`
+}
 
-/*
+type LoginStatus struct {
+    IsLogged         bool `json:"isLogged"`
+    IsAdmin          bool `json:"isAdmin"`
+    CanImpersonate   bool `json:"canImpersonate"`
+    SessionExpiresAt int64 `json:"sessionExpiresAt"`
+}
 
-PUT v/account
-GET v/account
-DELETE v/account
-*/
-
-package menshend
-
-import (
-"net/http"
-"encoding/json"
-vault "github.com/hashicorp/vault/api"
-"github.com/Sirupsen/logrus"
-"time"
-"github.com/mitchellh/mapstructure"
-"fmt"
-"github.com/gorilla/mux"
-"github.com/stretchr/gomniauth"
-"github.com/stretchr/objx"
-"net/url"
-)
+type UPLogin struct {
+    User     string `json:"user"`
+    Password string `json:"password"`
+    Type     string `json:"type"`
+}
 
 type TokenLogin struct {
     Token string `json:"token"`
+}
+
+type GithubLogin struct {
+    Token string `json:"token"`
+}
+
+func (a *AuthResource) Register(container *restful.Container) {
+    ws := new(restful.WebService).
+        Consumes(restful.MIME_JSON).
+        Produces(restful.MIME_JSON)
+    
+    ws.Path("/v1/account").
+        Doc("login service")
+    
+    ws.Route(ws.GET("").To(a.accountStatus).
+        Doc("get login status").
+        Operation("loginStatus").
+        Writes(LoginStatus{}))
+    
+    /*ws.Route(ws.PUT("").To(a.accountLogin).
+        Doc("get login status").
+        Operation("login").
+        Writes([]LoginStatus{}))
+    */
+    ws.Route(ws.DELETE("").To(a.logout).
+        Doc("get login status").
+        Operation("logout"))
+    container.Add(ws)
+    
+}
+func (a *AuthResource) logout(request *restful.Request, response *restful.Response) {
+    defer func() {}()
+    user := GetUserFromRequest(request)
+    vc, err := vault.NewClient(VaultConfig)
+    CheckPanic(err)
+    vc.SetToken(user.Menshend.VaultToken)
+    err = vc.Auth().Token().RevokeSelf(user.Menshend.VaultToken)
+    HttpCheckPanic(err, PermissionError)
 }
 
 func MakeTimestampMillisecond() int64 {
     return time.Now().UnixNano() / int64(time.Millisecond)
 }
 
-// token
-func TokenLoginHandler(w http.ResponseWriter, r *http.Request) {
+func setToken(u *User, expiresIn int64, response *restful.Response, hasCSRF bool) {
+    expireAt := MakeTimestampMillisecond()
+    if expiresIn == 0 {
+        expireAt += Config.DefaultTTL
+    } else {
+        expireAt += expiresIn
+    }
+    u.SetExpiresAt(expireAt)
     
-    tr := &TokenLogin{}
-    err := json.NewDecoder(r.Body).Decode(tr)
-    if err != nil {
-        logrus.Error(err)
-        http.Redirect(w, r, Config.GetLoginPath()+"?token_error=true", 301)
-        return
+    if !hasCSRF {
+        response.AddHeader("X-Menshend-Token", u.GenerateJWT())
+        
+    } else {
+        ct := &http.Cookie{Path: "/", Name: "X-Menshend-Token", Value: u.GenerateJWT(),
+            Expires: time.Unix(u.ExpiresAt / 1000, 0),
+            HttpOnly:true }
+        
+        ct.Domain = "." + Config.HostWithoutPort()
+        
+        if Config.Scheme == "https" {
+            ct.Secure = true
+        }
+        http.SetCookie(response.ResponseWriter, ct)
+        
     }
-    vc, err := vault.NewClient(VaultConfig)
-    CheckPanic(err)
-    vc.SetToken(tr.Token)
-    secret, err := vc.Auth().Token().LookupSelf()
-    if (err != nil) || (secret == nil) || (secret.Data == nil) {
-        logrus.Error(err.Error())
-        http.Redirect(w, r, Config.GetLoginPath()+"?token_error=true", 301)
-        return
-    }
-    type secretData struct {
-        ttl int64
-    }
-    sd := &secretData{}
-    err = mapstructure.Decode(secret.Data, sd)
-    CheckPanic(err)
-    user, err := NewUser(tr.Token)
-    CheckPanic(err)
-    user.TokenLogin()
-    setToken(user, sd.ttl * 1000, w)
-    http.Redirect(w, r, Config.GetServicePath(), 301)
-    return
 }
 
-type UPLoginType int
-
-const (
-    UPVault UPLoginType = iota
-)
-
-type UPLogin struct {
-    User     string
-    Password string
-    Type     UPLoginType
+func (*AuthResource)accountStatus(request *restful.Request, response *restful.Response) {
+    defer func() {
+        r := recover()
+        if r != nil {
+            ls := LoginStatus{
+                IsLogged: false,
+                IsAdmin: false,
+                CanImpersonate: false,
+                SessionExpiresAt: 0,
+            }
+            response.WriteEntity(ls)
+        }
+        
+    }()
+    
+    user := GetUserFromRequest(request)
+    ls := LoginStatus{
+        IsLogged: true,
+        IsAdmin: IsAdmin(user),
+        CanImpersonate: CanImpersonate(user),
+        SessionExpiresAt: user.ExpiresAt,
+    }
+    response.WriteEntity(ls)
 }
 
 func VaultLogin(c *vault.Client, path string, data map[string]interface{}) (*vault.Secret, error) {
@@ -109,17 +149,8 @@ func VaultLogin(c *vault.Client, path string, data map[string]interface{}) (*vau
 }
 
 // user/password
-func UserPasswordHandler(w http.ResponseWriter, r *http.Request) {
+func UserPasswordHandler(upr *UPLogin, response *restful.Response, hasCSRF bool) {
     var key string
-    
-    upr := &UPLogin{}
-    err := json.NewDecoder(r.Body).Decode(upr)
-    if err != nil {
-        logrus.Error(err)
-        http.Redirect(w, r, Config.GetLoginPath()+"?user_pass_error=true", 301)
-        return
-    }
-    
     vc, err := vault.NewClient(VaultConfig)
     CheckPanic(err)
     data := map[string]interface{}{"password": upr.Password}
@@ -129,46 +160,57 @@ func UserPasswordHandler(w http.ResponseWriter, r *http.Request) {
     }
     
     secret, err := VaultLogin(vc, key, data)
-    if (err != nil) || (secret == nil) {
-        http.Redirect(w, r, Config.GetLoginPath()+"?user_pass_error=true", 301)
-        return
-    }
+    HttpCheckPanic(err, NotAuthorized)
+    CheckSecretFailIfIsNull(secret)
     
     user, err := NewUser(secret.Auth.ClientToken)
     CheckPanic(err)
     user.UsernamePasswordLogin(upr.User)
-    setToken(user, int64(secret.Auth.LeaseDuration) * 1000, w)
-    http.Redirect(w, r, Config.GetServicePath(), 301)
-    return
+    response.AddHeader("X-Menshend-Token", user.GenerateJWT())
+    setToken(user, int64(secret.Auth.LeaseDuration) * 1000, response, hasCSRF)
 }
 
-func OauthLoginHandler(w http.ResponseWriter, r *http.Request) {
-    vars := mux.Vars(r)
-    provider, err := gomniauth.Provider(vars["provider"])
-    CheckPanic(err)
-    state := gomniauth.NewState("after", "success")
-    options := objx.MSI("scope", "org")
-    authUrl, err := provider.GetBeginAuthURL(state, options)
-    CheckPanic(err)
-    http.Redirect(w, r, authUrl, 301)
-}
 
-func urlValuesToObjectsMap(values url.Values) objx.Map {
-    m := make(objx.Map)
-    for k, vs := range values {
-        m.Set(k, vs)
+// token
+func TokenLoginHandler(tr *TokenLogin, response *restful.Response, hasCSRF bool) {
+    vc, err := vault.NewClient(VaultConfig)
+    CheckPanic(err)
+    vc.SetToken(tr.Token)
+    secret, err := vc.Auth().Token().LookupSelf()
+    HttpCheckPanic(err, NotAuthorized)
+    CheckSecretFailIfIsNull(secret)
+    type secretData struct {
+        ttl int64
     }
-    return m
+    sd := &secretData{}
+    err = mapstructure.Decode(secret.Data, sd)
+    CheckPanic(err)
+    user, err := NewUser(tr.Token)
+    CheckPanic(err)
+    user.TokenLogin()
+    setToken(user, sd.ttl * 1000, response, hasCSRF)
 }
-func OauthLoginCallback(w http.ResponseWriter, r *http.Request) {
-    vars := mux.Vars(r)
-    provider, err := gomniauth.Provider(vars["provider"])
+
+// github login
+func GithubLoginHandler(tr *GithubLogin, response *restful.Response, hasCSRF bool) {
+    vc, err := vault.NewClient(VaultConfig)
     CheckPanic(err)
-    queryParams := urlValuesToObjectsMap(r.URL.Query())
-    creds, err := provider.CompleteAuth(queryParams)
+    vc.SetToken(tr.Token)
+    secret, err := vc.Auth().Token().LookupSelf()
+    HttpCheckPanic(err, NotAuthorized)
+    CheckSecretFailIfIsNull(secret)
+    type secretData struct {
+        ttl int64
+    }
+    sd := &secretData{}
+    err = mapstructure.Decode(secret.Data, sd)
     CheckPanic(err)
-    user, err := provider.GetUser(creds)
+    user, err := NewUser(tr.Token)
     CheckPanic(err)
-    fmt.Println(user)
+    user.TokenLogin()
+    setToken(user, sd.ttl * 1000, response, hasCSRF)
 }
+
+
+//TODO: account[put[account, github, token]], impersonate[cookie], panic handler, backend, resolver, ui
 
