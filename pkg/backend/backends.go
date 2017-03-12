@@ -136,4 +136,52 @@ func GetBackend(u *User, subDomain string, role string) (*PlainBackend, merry.Er
     ret.ImpersonateWithinRole = service.ImpersonateWithinRole
     ret.Proxy = service.Proxy
     return ret, nil
+    
+    }
+/*
+//GetBackend return the full backend url
+func GetBackend(u *User, subDomain string, role string) (*PlainBackend, merry.Error) {
+    if subDomain == "" {
+        return nil, InvalidSubdomain
+    }
+    vc, vaultErr := vault.NewClient(VaultConfig)
+    vc.SetToken(u.Token)
+    CheckPanic(vaultErr)
+    key := fmt.Sprintf("%s/roles/%s/%s", Config.VaultPath, role, subDomain)
+    secret, vaultError := vc.Logical().Read(key)
+    if vaultError != nil {
+        if strings.Contains(vaultError.Error(), "403") {
+            return nil, PermissionError.Append(vaultError.Error()).
+                WithValue("user", u).WithValue("subdomain", subDomain)
+        }
+        CheckPanic(vaultError)
+    }
+    if (secret == nil) || (secret.Data == nil) {
+        return nil, ServiceNotFound.
+        WithValue("user", u).WithValue("subdomain", subDomain)
+    }
+    service := &Service{}
+    decodeErr := mapstructure.Decode(secret.Data, service)
+    if decodeErr != nil {
+        return nil, InvalidService.
+        WithValue("subdomain", subDomain).Append(decodeErr.Error())
+    }
+    if !service.IsActive {
+        return nil, InactiveService.WithValue("subdomain", subDomain)
+    }
+    backendString, err := service.GetBackend(u)
+    if err != nil {
+        return nil, err
+    }
+    
+    URL, errURL := url.ParseRequestURI(backendString)
+    if errURL != nil {
+        return nil, InvalidUrl.WithValue("url", backendString)
+    }
+    ret := &PlainBackend{}
+    ret.Url = URL
+    ret.ImpersonateWithinRole = service.ImpersonateWithinRole
+    ret.Proxy = service.Proxy
+    return ret, nil
 }*/
+    

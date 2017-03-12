@@ -37,17 +37,10 @@ func ValidateRole(s string) {
     }
 }
 
-func SliceLanguageTypesContains(s []LanguageTypes, e LanguageTypes) bool {
-    for _, a := range s {
-        if a == e {
-            return true
-        }
-    }
-    return false
-}
 
-func ValidateLanguageTypes(value LanguageTypes) {
-    if !SliceLanguageTypesContains(AllLanguageTypes, value) {
+
+func ValidateLanguageTypes(value string) {
+    if !SliceStringContains(AllLanguageTypes, value) {
         panic(BadRequest.Append("language type not supported"))
     }
 }

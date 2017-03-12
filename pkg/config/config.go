@@ -16,18 +16,19 @@ type GithubConfig struct {
     ClientSecret string
 }
 type MenshendConfig struct {
-    HashKey      string
-    BlockKey     string
-    ListenPort   int
-    InterfaceURL string
-    VaultPath    string
-    Scheme       string
-    Host         string
-    Github       GithubConfig
+    MenshendSubdomain string
+    HashKey           string
+    BlockKey          string
+    ListenPort        int
+    InterfaceURL      string
+    VaultPath         string
+    Scheme            string
+    Host              string
+    Github            GithubConfig
     //default time to live for the jwt token in seconds
     //this value will be used only when the expiration time cant be guessed
     //using the vault api
-    DefaultTTL   int64
+    DefaultTTL        int64
 }
 
 func (k *MenshendConfig) HostWithoutPort() string {

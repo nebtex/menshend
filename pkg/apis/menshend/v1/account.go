@@ -241,5 +241,5 @@ func (a *AuthResource) accountLogin(request *restful.Request, response *restful.
     response.AddHeader("X-Menshend-Token", token)
     
 }
-//TODO: account[put[github]], impersonate[cookie], panic handler, backend, resolver, ui
+//TODO: account[put[github]], panic handler, ui proxy[account, impersonate], proxy[api], [add static]
 

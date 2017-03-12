@@ -12,15 +12,15 @@ import (
 var InvalidJWT = merry.New("jwt is invalid")
 //JWTNotFound is not available
 
-type AuthProviderType int
+type AuthProviderType string
 
 const (
     //GitHubProvider means that the auth method used was github
-    GitHubProvider AuthProviderType = iota
+    GitHubProvider AuthProviderType = "github"
     //TokenProvider means that the user used a vault token
-    TokenProvider
+    TokenProvider = "token"
     //UsernamePasswordProvider vault user/password auth
-    UsernamePasswordProvider
+    UsernamePasswordProvider = "userpass"
 )
 
 var AllAuthProviders = []AuthProviderType{

@@ -10,6 +10,7 @@ import (
 func AuthProviderPtr(v AuthProviderType) *AuthProviderType {
     return &v
 }
+
 //Space ..
 type ImpersonateResource struct {
     Active       bool  `json:"active"`

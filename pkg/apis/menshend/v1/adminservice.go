@@ -41,14 +41,10 @@ var AllStrategyTypes = []StrategyTypes{
 
 type LanguageTypes int
 
-const (
-    LuaLanguage LanguageTypes = iota
-    YAMLLanguage
-)
 
-var AllLanguageTypes = []LanguageTypes{
-    LuaLanguage,
-    YAMLLanguage,
+var AllLanguageTypes = []string{
+    "lua",
+    "yaml",
 }
 // Options is a configuration container to setup the CORS middleware.
 type CorsOptions struct {
@@ -94,7 +90,7 @@ type AdminServiceResource struct {
     LongDescription       string `json:"longDescription"`
     LongDescriptionUrl    string `json:"longDescriptionUrl"`
     ProxyCode             string `json:"proxyCode"`
-    ProxyLanguage         LanguageTypes `json:"proxyCodeLanguage"`
+    ProxyLanguage         string `json:"proxyCodeLanguage"`
     Cache                 ServiceCache `json:"cache"`
     ImpersonateWithinRole bool   `json:"impersonateWithinRole"`
     Strategy              StrategyTypes `json:"strategy"`
