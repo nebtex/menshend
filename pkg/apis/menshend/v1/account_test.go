@@ -13,9 +13,11 @@ import (
     . "github.com/nebtex/menshend/pkg/utils/test"
     . "github.com/nebtex/menshend/pkg/users"
     . "github.com/nebtex/menshend/pkg/config"
-    
+    . "github.com/nebtex/menshend/pkg/apis/menshend"
     "fmt"
     vault "github.com/hashicorp/vault/api"
+    "bytes"
+    "github.com/ansel1/merry"
 )
 
 func TestAccountStatus(t *testing.T) {
@@ -95,172 +97,140 @@ func TestLogout(t *testing.T) {
         httpReq.Header.Add("X-Menshend-Token", user.GenerateJWT())
         httpWriter := httptest.NewRecorder()
         wsContainer.ServeHTTP(httpWriter, httpReq)
-        _,err = vc.Auth().Token().Lookup(secret.Auth.ClientToken)
+        _, err = vc.Auth().Token().Lookup(secret.Auth.ClientToken)
         So(err, ShouldNotBeNil)
     })
     
 }
 
-/*
-func Test_TokenLoginHandler(t *testing.T) {
+func TestTokenLogin(t *testing.T) {
     VaultConfig.Address = "http://127.0.0.1:8200"
-    
-    Convey("Should store the token in the jwt token with the apropiate" +
-        " expiration time", t, func() {
-        var u bytes.Buffer
+    Convey("Should store the token in the jwt token with the apropiate expiration time", t, func() {
+        CleanVault()
         
-        testHandler := func() http.HandlerFunc {
-            return http.HandlerFunc(TokenLoginHandler)
-        }
+        wsContainer := restful.NewContainer()
+        ar := AuthResource{}
+        ar.Register(wsContainer)
         
-        ts := httptest.NewServer(testHandler())
-        defer ts.Close()
-        u.WriteString(string(ts.URL))
-        u.WriteString("/api/v1/login/token")
-        tp := TokenLogin{Token:"myroot"}
-        postBody, err := json.Marshal(tp)
+        body := bytes.NewReader([]byte(`{"authProvider": "token", "data": {"token": "myroot"} }`))
+        httpReq, err := http.NewRequest("PUT", "/v1/account", body)
         So(err, ShouldBeNil)
-        req, err := http.NewRequest("POST", u.String(),
-            bytes.NewReader(postBody))
-        So(err, ShouldBeNil)
-        client := &http.Client{}
-        response, err := client.Do(req)
-        So(err, ShouldBeNil)
-        url, err:= response.Location()
-        So(err, ShouldBeNil)
-        So(url.String(), ShouldEqual, Config.GetServicePath())
+        httpReq.Header.Set("Content-Type", "application/json")
+        httpWriter := httptest.NewRecorder()
+        wsContainer.ServeHTTP(httpWriter, httpReq)
+        So(httpWriter.HeaderMap["X-Menshend-Token"], ShouldNotBeNil)
     })
     
     Convey("Should fail when triying to login with a non " +
-        "existen token", t, func() {
-        var u bytes.Buffer
+        "existen token", t, func(c C) {
         
-        testHandler := func() http.HandlerFunc {
-            return http.HandlerFunc(TokenLoginHandler)
-        }
+        defer func() {
+            r := recover()
+            if (r == nil) {
+                t.Error("did not panicked")
+                t.Fail()
+            }
+            switch x := r.(type) {
+            case error:
+                c.So(merry.Is(x, NotAuthorized), ShouldBeTrue)
+            default:
+                t.Errorf("%v", x)
+                t.Fail()
+            }
+        }()
+        CleanVault()
         
-        ts := httptest.NewServer(testHandler())
-        defer ts.Close()
-        u.WriteString(string(ts.URL))
-        u.WriteString("/api/v1/login/token")
-        tp := TokenLogin{Token:"404token"}
-        postBody, err := json.Marshal(tp)
-        So(err, ShouldBeNil)
-        req, err := http.NewRequest("POST", u.String(),
-            bytes.NewReader(postBody))
-        So(err, ShouldBeNil)
-        client := &http.Client{}
-        response, err := client.Do(req)
-        So(err, ShouldBeNil)
-        url, err:= response.Location()
-        So(err, ShouldBeNil)
-        So(url.RawQuery, ShouldEqual, "token_error=true")
+        wsContainer := restful.NewContainer()
+        ar := AuthResource{}
+        ar.Register(wsContainer)
         
+        body := bytes.NewReader([]byte(`{"authProvider": "token", "data": {"token": "nonToken"} }`))
+        httpReq, err := http.NewRequest("PUT", "/v1/account", body)
+        So(err, ShouldBeNil)
+        httpReq.Header.Set("Content-Type", "application/json")
+        httpWriter := httptest.NewRecorder()
+        wsContainer.ServeHTTP(httpWriter, httpReq)
     })
     
-    Convey("Should fail when a invalid json is sent", t, func() {
-        var u bytes.Buffer
+    Convey("Should fail when a invalid json is sent", t, func(c C) {
+        defer func() {
+            r := recover()
+            if (r == nil) {
+                t.Error("did not panicked")
+                t.Fail()
+            }
+            switch x := r.(type) {
+            case error:
+                c.So(merry.Is(x, BadRequest), ShouldBeTrue)
+            default:
+                t.Errorf("%v", x)
+                t.Fail()
+            }
+        }()
+        CleanVault()
         
-        testHandler := func() http.HandlerFunc {
-            return http.HandlerFunc(TokenLoginHandler)
-        }
+        wsContainer := restful.NewContainer()
+        ar := AuthResource{}
+        ar.Register(wsContainer)
         
-        ts := httptest.NewServer(testHandler())
-        defer ts.Close()
-        u.WriteString(string(ts.URL))
-        u.WriteString("/api/v1/login/token")
-        req, err := http.NewRequest("POST", u.String(),
-            nil)
+        body := bytes.NewReader([]byte(`{"authProvider": "token"}`))
+        httpReq, err := http.NewRequest("PUT", "/v1/account", body)
         So(err, ShouldBeNil)
-        client := &http.Client{}
-        response, err := client.Do(req)
-        So(err, ShouldBeNil)
-        url, err:= response.Location()
-        So(err, ShouldBeNil)
-        So(url.RawQuery, ShouldEqual, "token_error=true")
+        httpReq.Header.Set("Content-Type", "application/json")
+        httpWriter := httptest.NewRecorder()
+        wsContainer.ServeHTTP(httpWriter, httpReq)
     })
     
 }
 
-
 func Test_UserPasswordHandler(t *testing.T) {
     VaultConfig.Address = "http://127.0.0.1:8200"
-    
-    Convey("Should fail when a invalid json is sent", t, func() {
-        var u bytes.Buffer
-        
-        testHandler := func() http.HandlerFunc {
-            return http.HandlerFunc(UserPasswordHandler)
-        }
-        
-        ts := httptest.NewServer(testHandler())
-        defer ts.Close()
-        u.WriteString(string(ts.URL))
-        u.WriteString("/api/v1/login/userpass")
-        req, err := http.NewRequest("POST", u.String(),
-            nil)
-        So(err, ShouldBeNil)
-        client := &http.Client{}
-        response, err := client.Do(req)
-        So(err, ShouldBeNil)
-        url, err:= response.Location()
-        So(err, ShouldBeNil)
-        So(url.RawQuery, ShouldEqual, "user_pass_error=true")
-    })
-    
     Convey("Should fail when it try to login using " +
-        "bad user or password", t, func() {
-        var u bytes.Buffer
+        "bad user or password", t, func(c C) {
+        defer func() {
+            r := recover()
+            if (r == nil) {
+                t.Error("did not panicked")
+                t.Fail()
+            }
+            switch x := r.(type) {
+            case error:
+                c.So(merry.Is(x, NotAuthorized), ShouldBeTrue)
+            default:
+                t.Errorf("%v", x)
+                t.Fail()
+            }
+        }()
+        CleanVault()
         
-        testHandler := func() http.HandlerFunc {
-            return http.HandlerFunc(UserPasswordHandler)
-        }
+        wsContainer := restful.NewContainer()
+        ar := AuthResource{}
+        ar.Register(wsContainer)
         
-        ts := httptest.NewServer(testHandler())
-        defer ts.Close()
-        u.WriteString(string(ts.URL))
-        u.WriteString("/api/v1/login/token")
-        tp := UPLogin{User:"404token",
-            Password:"404token"}
-        postBody, err := json.Marshal(tp)
+        body := bytes.NewReader([]byte(`{"authProvider": "userpass", "data": {"user": "baduser", "password": "badpassword"} }`))
+        httpReq, err := http.NewRequest("PUT", "/v1/account", body)
         So(err, ShouldBeNil)
-        req, err := http.NewRequest("POST", u.String(),
-            bytes.NewReader(postBody))
-        So(err, ShouldBeNil)
-        client := &http.Client{}
-        response, err := client.Do(req)
-        So(err, ShouldBeNil)
-        url, err:= response.Location()
-        So(err, ShouldBeNil)
-        So(url.RawQuery, ShouldEqual, "user_pass_error=true")
-    })
-    Convey("Should login  and store the vault token in the jwt token with the apropiate" +
-        " expiration time", t, func() {
-        var u bytes.Buffer
-        
-        testHandler := func() http.HandlerFunc {
-            return http.HandlerFunc(UserPasswordHandler)
-        }
-        
-        ts := httptest.NewServer(testHandler())
-        defer ts.Close()
-        defer ts.Close()
-        u.WriteString(string(ts.URL))
-        u.WriteString("/api/v1/login/token")
-        tp := UPLogin{User:"menshend",
-            Password:"test"}
-        postBody, err := json.Marshal(tp)
-        So(err, ShouldBeNil)
-        req, err := http.NewRequest("POST", u.String(),
-            bytes.NewReader(postBody))
-        So(err, ShouldBeNil)
-        client := &http.Client{}
-        response, err := client.Do(req)
-        So(err, ShouldBeNil)
-        url, err:= response.Location()
-        So(err, ShouldBeNil)
-        So(url.String(), ShouldEqual, Config.GetServicePath())
+        httpReq.Header.Set("Content-Type", "application/json")
+        httpWriter := httptest.NewRecorder()
+        wsContainer.ServeHTTP(httpWriter, httpReq)
     })
     
-}*/
+	 Convey("Should login  and save the vault token in the jwt token with the apropiate" +
+		 " expiration time", t, func(c C) {
+         CleanVault()
+        
+         wsContainer := restful.NewContainer()
+         ar := AuthResource{}
+         ar.Register(wsContainer)
+        
+         body := bytes.NewReader([]byte(`{"authProvider": "userpass", "data": {"user": "menshend", "password": "test"} }`))
+         httpReq, err := http.NewRequest("PUT", "/v1/account", body)
+         So(err, ShouldBeNil)
+         httpReq.Header.Set("Content-Type", "application/json")
+         httpWriter := httptest.NewRecorder()
+         wsContainer.ServeHTTP(httpWriter, httpReq)
+         So(httpWriter.HeaderMap["X-Menshend-Token"], ShouldNotBeNil)
+	 })
+    
+}
 

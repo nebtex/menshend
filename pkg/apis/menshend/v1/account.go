@@ -8,7 +8,6 @@ import (
     . "github.com/nebtex/menshend/pkg/config"
     . "github.com/nebtex/menshend/pkg/utils"
     . "github.com/nebtex/menshend/pkg/users"
-    "net/http"
     "time"
     "github.com/mitchellh/mapstructure"
 )
@@ -52,11 +51,11 @@ func (a *AuthResource) Register(container *restful.Container) {
         Operation("loginStatus").
         Writes(LoginStatus{}))
     
-    /*ws.Route(ws.PUT("").To(a.accountLogin).
+    ws.Route(ws.PUT("").To(a.accountLogin).
         Doc("get login status").
         Operation("login").
         Writes([]LoginStatus{}))
-    */
+    
     ws.Route(ws.DELETE("").To(a.logout).
         Doc("get login status").
         Operation("logout"))
@@ -76,7 +75,7 @@ func (a *AuthResource) logout(request *restful.Request, response *restful.Respon
 func MakeTimestampMillisecond() int64 {
     return time.Now().UnixNano() / int64(time.Millisecond)
 }
-
+/*
 func setToken(u *User, expiresIn int64, response *restful.Response, hasCSRF bool) {
     expireAt := MakeTimestampMillisecond()
     if expiresIn == 0 {
@@ -102,6 +101,18 @@ func setToken(u *User, expiresIn int64, response *restful.Response, hasCSRF bool
         http.SetCookie(response.ResponseWriter, ct)
         
     }
+}
+*/
+func getToken(u *User, expiresIn int64) string {
+    expireAt := MakeTimestampMillisecond()
+    if expiresIn == 0 {
+        expireAt += Config.DefaultTTL
+    } else {
+        expireAt += expiresIn
+    }
+    u.SetExpiresAt(expireAt)
+    return u.GenerateJWT()
+    
 }
 
 func (*AuthResource)accountStatus(request *restful.Request, response *restful.Response) {
@@ -149,30 +160,27 @@ func VaultLogin(c *vault.Client, path string, data map[string]interface{}) (*vau
 }
 
 // user/password
-func UserPasswordHandler(upr *UPLogin, response *restful.Response, hasCSRF bool) {
+func UserPasswordHandler(upr *UPLogin) string {
     var key string
     vc, err := vault.NewClient(VaultConfig)
-    CheckPanic(err)
+    HttpCheckPanic(err, InternalError)
     data := map[string]interface{}{"password": upr.Password}
     switch  upr.Type {
     default:
         key = fmt.Sprintf("/auth/userpass/login/%s", upr.User)
     }
-    
+    fmt.Print(key)
     secret, err := VaultLogin(vc, key, data)
     HttpCheckPanic(err, NotAuthorized)
-    CheckSecretFailIfIsNull(secret)
-    
     user, err := NewUser(secret.Auth.ClientToken)
-    CheckPanic(err)
+    HttpCheckPanic(err, InternalError)
     user.UsernamePasswordLogin(upr.User)
-    response.AddHeader("X-Menshend-Token", user.GenerateJWT())
-    setToken(user, int64(secret.Auth.LeaseDuration) * 1000, response, hasCSRF)
+    return getToken(user, int64(secret.Auth.LeaseDuration) * 1000)
 }
 
 
 // token
-func TokenLoginHandler(tr *TokenLogin, response *restful.Response, hasCSRF bool) {
+func TokenLoginHandler(tr *TokenLogin) string {
     vc, err := vault.NewClient(VaultConfig)
     CheckPanic(err)
     vc.SetToken(tr.Token)
@@ -188,7 +196,7 @@ func TokenLoginHandler(tr *TokenLogin, response *restful.Response, hasCSRF bool)
     user, err := NewUser(tr.Token)
     CheckPanic(err)
     user.TokenLogin()
-    setToken(user, sd.ttl * 1000, response, hasCSRF)
+    return getToken(user, sd.ttl * 1000)
 }
 
 // github login
@@ -208,9 +216,30 @@ func GithubLoginHandler(tr *GithubLogin, response *restful.Response, hasCSRF boo
     user, err := NewUser(tr.Token)
     CheckPanic(err)
     user.TokenLogin()
-    setToken(user, sd.ttl * 1000, response, hasCSRF)
+//    setToken(user, sd.ttl * 1000, response, hasCSRF)
 }
 
-
-//TODO: account[put[account, github, token]], impersonate[cookie], panic handler, backend, resolver, ui
+func (a *AuthResource) accountLogin(request *restful.Request, response *restful.Response) {
+    entry := &AuthResource{}
+    var token string
+    err := request.ReadEntity(entry)
+    HttpCheckPanic(err, BadRequest)
+    if entry.Data == nil {
+        panic(BadRequest)
+    }
+    if entry.AuthProvider == "token" {
+        tk := &TokenLogin{}
+        err = mapstructure.Decode(entry.Data, tk)
+        HttpCheckPanic(err, BadRequest)
+        token = TokenLoginHandler(tk)
+    } else if entry.AuthProvider == "userpass" {
+        up := &UPLogin{}
+        err = mapstructure.Decode(entry.Data, up)
+        HttpCheckPanic(err, BadRequest)
+        token = UserPasswordHandler(up)
+    }
+    response.AddHeader("X-Menshend-Token", token)
+    
+}
+//TODO: account[put[github]], impersonate[cookie], panic handler, backend, resolver, ui
 

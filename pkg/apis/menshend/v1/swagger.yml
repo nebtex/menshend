@@ -158,7 +158,7 @@ paths:
               type:
                 object
             authProvider:
-              type: integer
+              type: string
               enum:
                 - token
                 - userpass
