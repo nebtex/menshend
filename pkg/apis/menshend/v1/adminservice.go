@@ -27,16 +27,11 @@ type ServiceCache struct {
 
 type StrategyTypes int
 
-const (
-    ProxyStrategy StrategyTypes = iota
-    RedirectStrategy
-    PortForwardStrategy
-)
 
-var AllStrategyTypes = []StrategyTypes{
-    ProxyStrategy,
-    RedirectStrategy,
-    PortForwardStrategy,
+var AllStrategyTypes = []string{
+    "proxy",
+    "redirect",
+    "port-forward",
 }
 
 type LanguageTypes int
@@ -93,7 +88,7 @@ type AdminServiceResource struct {
     ProxyLanguage         string `json:"proxyCodeLanguage"`
     Cache                 ServiceCache `json:"cache"`
     ImpersonateWithinRole bool   `json:"impersonateWithinRole"`
-    Strategy              StrategyTypes `json:"strategy"`
+    Strategy              string `json:"strategy"`
     IsActive              bool `json:"isActive"`
     SecretPaths           []string `json:"secretPaths"`
     Cors                  CorsOptions `json:"cors"`

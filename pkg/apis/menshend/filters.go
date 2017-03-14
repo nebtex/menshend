@@ -104,6 +104,14 @@ func AdminFilter(req *restful.Request, resp *restful.Response, chain *restful.Fi
 
 //LoginFilter fail if the user is not logged in
 func LoginFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
+    if Config.DevMode {
+        u, error := NewUser("myroot")
+        HttpCheckPanic(error, InternalError)
+        u.GitHubLogin("root", "root")
+        req.SetAttribute("user", u)
+        chain.ProcessFilter(req, resp)
+        return
+    }
     user := GetUserFromRequest(req)
     req.SetAttribute("user", user)
     chain.ProcessFilter(req, resp)

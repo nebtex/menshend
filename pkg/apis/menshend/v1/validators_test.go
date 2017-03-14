@@ -107,9 +107,9 @@ func Test_ValidateSubdomain(t *testing.T) {
 }
 
 func Test_ValidateLanguageTypes(t *testing.T) {
-    lts := []LanguageTypes{
-        0,
-        1,
+    lts := []string{
+        "yaml",
+        "lua",
     }
     Convey("Test ValidateLanguageTypes", t, func() {
         for _, l := range lts {
@@ -117,13 +117,13 @@ func Test_ValidateLanguageTypes(t *testing.T) {
         }
     })
     
-    wrong_lts := []LanguageTypes{
-        8595,
-        23000,
+    wrong_lts := []string{
+        "dsd",
+        "sdsxxxxx",
     }
     
     Convey("Test ValidateLanguageTypes (not found)", t, func(c C) {
-        wraper := func(lt LanguageTypes) {
+        wraper := func(lt string) {
             defer func() {
                 r := recover()
                 c.So(r, ShouldNotBeNil)
@@ -137,23 +137,23 @@ func Test_ValidateLanguageTypes(t *testing.T) {
 }
 
 func Test_ValidateStrategyTypes(t *testing.T) {
-    lts := []StrategyTypes{
-        0,
-        1,
-        2,
+    lts := []string{
+        "proxy",
+        "port-forward",
+        "redirect",
     }
     Convey("Test ValidateStrategyTypes", t, func() {
         for _, l := range lts {
             ValidateStrategyTypes(l)
         }
     })
-    wrong_lts := []StrategyTypes{
-        8595,
-        23000,
+    wrong_lts := []string{
+        "dsdsdsd",
+        "sdsddd",
     }
     
     Convey("Test ValidateStrategyTypes (not found)", t, func(c C) {
-        wraper := func(lt StrategyTypes) {
+        wraper := func(lt string) {
             defer func() {
                 r := recover()
                 c.So(r, ShouldNotBeNil)

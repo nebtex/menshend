@@ -12,9 +12,7 @@ func getSubDomain(s string) string {
     return strings.TrimSuffix(s, Config.Host)
     
 }
-
 //CorsHandler()
-//PanicHandler
 
 func proxy(response http.ResponseWriter, request *http.Request) {
     //login [delete menshend headers] // get if user come from browser or api

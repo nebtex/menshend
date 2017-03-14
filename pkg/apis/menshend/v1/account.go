@@ -15,6 +15,8 @@ import (
 type AuthResource struct {
     Data         map[string]interface{} `json:"data"`
     AuthProvider string `json:"authProvider"`
+    //realm can be browser or api, default api
+    Realm        string `json:"realm"`
 }
 
 type LoginStatus struct {
@@ -103,7 +105,7 @@ func setToken(u *User, expiresIn int64, response *restful.Response, hasCSRF bool
     }
 }
 */
-func getToken(u *User, expiresIn int64) string {
+func setExpirationTime(u *User, expiresIn int64) *User {
     expireAt := MakeTimestampMillisecond()
     if expiresIn == 0 {
         expireAt += Config.DefaultTTL
@@ -111,7 +113,7 @@ func getToken(u *User, expiresIn int64) string {
         expireAt += expiresIn
     }
     u.SetExpiresAt(expireAt)
-    return u.GenerateJWT()
+    return u
     
 }
 
@@ -160,7 +162,7 @@ func VaultLogin(c *vault.Client, path string, data map[string]interface{}) (*vau
 }
 
 // user/password
-func UserPasswordHandler(upr *UPLogin) string {
+func UserPasswordHandler(upr *UPLogin) *User {
     var key string
     vc, err := vault.NewClient(VaultConfig)
     HttpCheckPanic(err, InternalError)
@@ -175,12 +177,12 @@ func UserPasswordHandler(upr *UPLogin) string {
     user, err := NewUser(secret.Auth.ClientToken)
     HttpCheckPanic(err, InternalError)
     user.UsernamePasswordLogin(upr.User)
-    return getToken(user, int64(secret.Auth.LeaseDuration) * 1000)
+    return setExpirationTime(user, int64(secret.Auth.LeaseDuration) * 1000)
 }
 
 
 // token
-func TokenLoginHandler(tr *TokenLogin) string {
+func TokenLoginHandler(tr *TokenLogin) *User {
     vc, err := vault.NewClient(VaultConfig)
     CheckPanic(err)
     vc.SetToken(tr.Token)
@@ -196,7 +198,8 @@ func TokenLoginHandler(tr *TokenLogin) string {
     user, err := NewUser(tr.Token)
     CheckPanic(err)
     user.TokenLogin()
-    return getToken(user, sd.ttl * 1000)
+    user.Menshend.VaultMetaData = secret.Data["meta"]
+    return setExpirationTime(user, sd.ttl * 1000)
 }
 
 // github login
@@ -216,12 +219,12 @@ func GithubLoginHandler(tr *GithubLogin, response *restful.Response, hasCSRF boo
     user, err := NewUser(tr.Token)
     CheckPanic(err)
     user.TokenLogin()
-//    setToken(user, sd.ttl * 1000, response, hasCSRF)
+    //    setToken(user, sd.ttl * 1000, response, hasCSRF)
 }
 
 func (a *AuthResource) accountLogin(request *restful.Request, response *restful.Response) {
     entry := &AuthResource{}
-    var token string
+    var user *User
     err := request.ReadEntity(entry)
     HttpCheckPanic(err, BadRequest)
     if entry.Data == nil {
@@ -231,15 +234,17 @@ func (a *AuthResource) accountLogin(request *restful.Request, response *restful.
         tk := &TokenLogin{}
         err = mapstructure.Decode(entry.Data, tk)
         HttpCheckPanic(err, BadRequest)
-        token = TokenLoginHandler(tk)
+        user = TokenLoginHandler(tk)
     } else if entry.AuthProvider == "userpass" {
         up := &UPLogin{}
         err = mapstructure.Decode(entry.Data, up)
         HttpCheckPanic(err, BadRequest)
-        token = UserPasswordHandler(up)
+        user = UserPasswordHandler(up)
     }
-    response.AddHeader("X-Menshend-Token", token)
-    
+    if entry.Realm == "browser" {
+        user.Menshend.Realm = BrowserRealm
+    }
+    response.AddHeader("X-Menshend-Token", user.GenerateJWT())
 }
-//TODO: account[put[github]], panic handler, ui proxy[account, impersonate], proxy[api], [add static]
+//TODO: account[put[github]], ui proxy[account, impersonate], proxy[api], [add static]
 

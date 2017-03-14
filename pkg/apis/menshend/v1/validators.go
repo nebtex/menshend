@@ -45,17 +45,9 @@ func ValidateLanguageTypes(value string) {
     }
 }
 
-func sliceStrategyTypesContains(s []StrategyTypes, e StrategyTypes) bool {
-    for _, a := range s {
-        if a == e {
-            return true
-        }
-    }
-    return false
-}
 
-func ValidateStrategyTypes(value StrategyTypes) {
-    if !sliceStrategyTypesContains(AllStrategyTypes, value) {
+func ValidateStrategyTypes(value string) {
+    if !SliceStringContains(AllStrategyTypes, value) {
         panic(BadRequest.Append("strategy type not supported"))
     }
 }

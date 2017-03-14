@@ -46,12 +46,21 @@ type JwtImpersonateInfo struct {
     //github, token or user/password
     AuthProvider AuthProviderType `json:"atp,omitempty"`
 }
+type RealmType int
+
+const (
+    ApiRealm RealmType = iota
+    BrowserRealm
+)
 
 type JwtMenshendInfo struct {
+    Realm         RealmType `json:"kgdm,omitempty"`
     //username only works with github and user/password backend
     Username      string `json:"usr,omitempty"`
     //vault
-    VaultToken    string `json:"alt,omitempty"`
+    VaultToken    string `json:"vt,omitempty"`
+    //only work with token auth (copy the token metadata)
+    VaultMetaData map[string]string `json:"vmd,omitempty"`
     //user group only works with github backend
     Groups        []string `json:"grp,omitempty"`
     //github, token or user/password

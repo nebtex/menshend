@@ -122,7 +122,7 @@ func TestGetUser(t *testing.T) {
         u.SetExpiresAt(GetNow() + 1000)
         So(err, ShouldBeNil)
         u.UsernamePasswordLogin("criloz")
-        u.Menshend.AuthProvider = 33
+        u.Menshend.AuthProvider = "dsfedgergwerg"
         j := u.GenerateJWT()
         _, err = FromJWT(j)
         So(err, ShouldNotBeNil)
@@ -222,7 +222,7 @@ func TestImpersonate(t *testing.T) {
                 So(err, ShouldBeNil)
                 u.UsernamePasswordLogin("test-user")
                 u.SetExpiresAt(GetNow() + 1000)
-                ImpErr := u.Impersonate(authProviderPtr(3265), StringPtr("criloz"), "admin", "devloper")
+                ImpErr := u.Impersonate(authProviderPtr("dsadsdsadasd"), StringPtr("criloz"), "admin", "devloper")
                 So(ImpErr, ShouldNotBeNil)
             })
         Convey("Should fail if AuthProvider is Token or user/pass and there are groups",

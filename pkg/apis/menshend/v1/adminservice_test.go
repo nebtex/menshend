@@ -31,7 +31,7 @@ func TestCreateEditServiceHandler(t *testing.T) {
                 wsContainer := restful.NewContainer()
                 u := AdminServiceResource{}
                 u.Register(wsContainer)
-                postBody, err := json.Marshal(&AdminServiceResource{})
+                postBody, err := json.Marshal(&AdminServiceResource{ProxyLanguage:"lua", Strategy:"redirect"})
                 So(err, ShouldBeNil)
                 httpReq, err := http.NewRequest("PUT", "/v1/adminServices/roles/ml-team/gitlab.", bytes.NewReader(postBody))
                 So(err, ShouldBeNil)
@@ -65,7 +65,7 @@ func Test_LoadLongDescriptionFromUrl(t *testing.T) {
         wsContainer := restful.NewContainer()
         u := AdminServiceResource{}
         u.Register(wsContainer)
-        postBody, err := json.Marshal(&AdminServiceResource{LongDescriptionUrl:"https://raw.githubusercontent.com/gitlabhq/gitlabhq/master/README.md"})
+        postBody, err := json.Marshal(&AdminServiceResource{ProxyLanguage:"lua", Strategy:"redirect", LongDescriptionUrl:"https://raw.githubusercontent.com/gitlabhq/gitlabhq/master/README.md"})
         So(err, ShouldBeNil)
         httpReq, err := http.NewRequest("PUT", "/v1/adminServices/roles/ml-team/gitlab.", bytes.NewReader(postBody))
         So(err, ShouldBeNil)
@@ -108,7 +108,7 @@ func Test_LoadLongDescriptionFromUrl(t *testing.T) {
         wsContainer := restful.NewContainer()
         u := AdminServiceResource{}
         u.Register(wsContainer)
-        postBody, err := json.Marshal(&AdminServiceResource{LongDescriptionUrl:"httpsinvali¡d/"})
+        postBody, err := json.Marshal(&AdminServiceResource{LongDescriptionUrl:"httpsinvali¡d/", Strategy:"redirect", ProxyLanguage:"lua" })
         So(err, ShouldBeNil)
         httpReq, err := http.NewRequest("PUT", "/v1/adminServices/roles/ml-team/gitlab.", bytes.NewReader(postBody))
         So(err, ShouldBeNil)
@@ -144,7 +144,7 @@ func Test_LoadLongDescriptionFromUrl(t *testing.T) {
         wsContainer := restful.NewContainer()
         u := AdminServiceResource{}
         u.Register(wsContainer)
-        postBody, err := json.Marshal(&AdminServiceResource{LongDescriptionUrl:"http://example.loca:54545/Readme.md"})
+        postBody, err := json.Marshal(&AdminServiceResource{LongDescriptionUrl:"http://example.loca:54545/Readme.md", Strategy:"redirect", ProxyLanguage:"lua"})
         So(err, ShouldBeNil)
         httpReq, err := http.NewRequest("PUT", "/v1/adminServices/roles/ml-team/gitlab.", bytes.NewReader(postBody))
         So(err, ShouldBeNil)
@@ -287,7 +287,6 @@ func TestListServiceHandler(t *testing.T) {
         wsContainer.ServeHTTP(httpWriter, httpReq)
         fmt.Println(httpWriter.Body)
         So(httpWriter.Body, ShouldNotBeNil)
-        
         
     })
 }

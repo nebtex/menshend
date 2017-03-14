@@ -36,6 +36,7 @@ math.random(); math.random(); math.random()
 
 //GetBackend execute the custom or default lua script and calculate the backend
 //full url
+//TODO: add vault token metadata
 func GetBackend(s *AdminServiceResource, u *User) (*backendValues) {
     var baseUrl *string
     var headerMaps map[string]string

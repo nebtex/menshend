@@ -58,6 +58,7 @@ type Role map[string]*Service
 //Service service definition struct
 type Service struct {
     Logo                  string
+    SubDomain             string
     Name                  string
     ShortDescription      string
     LongDescription       string
@@ -75,7 +76,7 @@ func PopulateVault() {
     CheckPanic(err)
     roles := map[string]Role{
         "ml-team": map[string]*Service{
-            "consul.":{},
+            "consul.":{IsActive:true, SubDomain: "consul.", ImpersonateWithinRole: true},
             "gitlab.":{IsActive:false, SecretPaths:[]string{"secret/gitlab/password", Config.VaultPath + "/roles/ml-team/gitlab."},
                 ProxyCode:`
     function getBackend ()
