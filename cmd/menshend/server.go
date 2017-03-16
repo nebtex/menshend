@@ -12,15 +12,9 @@ func getSubDomain(s string) string {
     return strings.TrimSuffix(s, Config.Host)
     
 }
-//CorsHandler()
 
 func proxy(response http.ResponseWriter, request *http.Request) {
-    //login [delete menshend headers] // get if user come from browser or api
-    //get role
-    //get service
-    //check if service is active
-    //impersonate within role
-    //proxy[http: check cors]
+  
 }
 
 func mainHandler(response http.ResponseWriter, request *http.Request) {

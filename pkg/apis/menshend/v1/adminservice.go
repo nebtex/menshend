@@ -27,7 +27,6 @@ type ServiceCache struct {
 
 type StrategyTypes int
 
-
 var AllStrategyTypes = []string{
     "proxy",
     "redirect",
@@ -35,7 +34,6 @@ var AllStrategyTypes = []string{
 }
 
 type LanguageTypes int
-
 
 var AllLanguageTypes = []string{
     "lua",
@@ -92,6 +90,7 @@ type AdminServiceResource struct {
     IsActive              bool `json:"isActive"`
     SecretPaths           []string `json:"secretPaths"`
     Cors                  CorsOptions `json:"cors"`
+    EnableCustomCors      bool `json:"enableCustomCors"`
     CSRF                  bool `json:"csrf"`
 }
 

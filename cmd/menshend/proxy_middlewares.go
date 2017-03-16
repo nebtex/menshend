@@ -15,6 +15,7 @@ import (
     "github.com/nebtex/menshend/pkg/strategy"
     "github.com/ansel1/merry"
     "github.com/Sirupsen/logrus"
+    "github.com/rs/cors"
 )
 
 func GetSubDomainHandler(next http.Handler) http.Handler {
@@ -218,11 +219,35 @@ func ProxyHandlers(next http.Handler) http.Handler {
         service := r.Context().Value("service").(*v1.AdminServiceResource)
         cr := &resolvers.CacheResolver{}
         backend := cr.Resolve(service, user)
-        
+        var co cors.Options
         var handler http.Handler
         switch  service.Strategy {
         case "redirect":
-            handler = CSRF(&strategy.Redirect{}.Execute(backend))
+            if service.EnableCustomCors {
+                
+                co = cors.Options{
+                    AllowedOrigins:service.Cors.AllowedOrigins,
+                    AllowedMethods:service.Cors.AllowedMethods,
+                    AllowedHeaders:service.Cors.AllowedHeaders,
+                    ExposedHeaders:service.Cors.ExposedHeaders,
+                    AllowCredentials:service.Cors.AllowCredentials,
+                    MaxAge:service.Cors.MaxAge,
+                    OptionsPassthrough:service.Cors.OptionsPassthrough,
+                    Debug:service.Cors.Debug,
+                    
+                }
+                
+            } else {
+                co = cors.Options{
+                    AllowedOrigins:[]string{service.SubDomain + Config.Host()},
+                    AllowedMethods:[]string{"HEAD", "GET", "POST", "PUT", "PATCH", "DELETE"},
+                    AllowedHeaders:[]string{},
+                    ExposedHeaders:[]string{},
+                    AllowCredentials:true,
+                }
+            }
+            crs := cors.New(co)
+            handler = crs.Handler(CSRF(&strategy.Redirect{}.Execute(backend)))
         case "proxy":
             handler = &strategy.Proxy{}.Execute(backend)
         case "port-forward":
