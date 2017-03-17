@@ -7,7 +7,6 @@ import (
     . "github.com/nebtex/menshend/pkg/config"
     . "github.com/nebtex/menshend/pkg/utils"
     "time"
-    "kuper"
 )
 
 type AuthResource struct {
@@ -41,7 +40,7 @@ func (a *AuthResource) Register(container *restful.Container) {
 }
 func (a *AuthResource) logout(request *restful.Request, response *restful.Response) {
     defer func() {}()
-    user := GetTokenFromContext(request)
+    user := GetTokenFromRequest(request)
     vc, err := vault.NewClient(VaultConfig)
     CheckPanic(err)
     vc.SetToken(user)
@@ -54,6 +53,9 @@ func MakeTimestampMillisecond() int64 {
 }
 
 func (*AuthResource)accountStatus(request *restful.Request, response *restful.Response) {
+    var creationTimeMillisecond int64
+    var ttl int64
+    
     defer func() {
         r := recover()
         if r != nil {
@@ -66,15 +68,17 @@ func (*AuthResource)accountStatus(request *restful.Request, response *restful.Re
             response.WriteEntity(ls)
         }
     }()
-    user := kuper.GetUserFromContext(request)
+    user := GetTokenFromRequest(request)
     vc, err := vault.NewClient(VaultConfig)
     CheckPanic(err)
     vc.SetToken(user)
     secret, err := vc.Auth().Token().LookupSelf()
     HttpCheckPanic(err, NotAuthorized)
     CheckSecretFailIfIsNull(secret)
-    creationTimeMillisecond := secret.WrapInfo.CreationTime.UnixNano() / int64(time.Millisecond)
-    ttl := int64(secret.WrapInfo.TTL) * 1000
+    if (secret.WrapInfo != nil) {
+        creationTimeMillisecond = secret.WrapInfo.CreationTime.UnixNano() / int64(time.Millisecond)
+        ttl = int64(secret.WrapInfo.TTL) * 1000
+    }
     
     ls := LoginStatus{
         IsLogged: true,

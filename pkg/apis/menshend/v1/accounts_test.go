@@ -6,7 +6,6 @@ import (
     "net/http/httptest"
     "net/http"
     "encoding/json"
-    
     "github.com/emicklei/go-restful"
     "io/ioutil"
     . "github.com/nebtex/menshend/pkg/utils/test"
@@ -82,7 +81,7 @@ func TestLogout(t *testing.T) {
         httpReq, err := http.NewRequest("DELETE", "/v1/account", nil)
         So(err, ShouldBeNil)
         httpReq.Header.Set("Content-Type", "application/json")
-        httpReq.Header.Add("X-Menshend-Token", secret.Auth.ClientToken)
+        httpReq.Header.Add("X-Vault-Token", secret.Auth.ClientToken)
         httpWriter := httptest.NewRecorder()
         wsContainer.ServeHTTP(httpWriter, httpReq)
         _, err = vc.Auth().Token().Lookup(secret.Auth.ClientToken)
