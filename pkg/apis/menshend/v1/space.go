@@ -35,7 +35,7 @@ func (s *SpaceResource) info(request *restful.Request, response *restful.Respons
     ns.ShortDescription = Config.GetShortDescription()
     ns.Name = Config.GetName()
     ns.Logo = Config.GetLogo()
-    ns.Host = Config.Host
+    ns.Host = Config.Host()
     response.WriteEntity(ns)
 }
 

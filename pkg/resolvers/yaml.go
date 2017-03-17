@@ -4,14 +4,14 @@ import (
     . "github.com/nebtex/menshend/pkg/backend"
     "gopkg.in/yaml.v2"
     . "github.com/nebtex/menshend/pkg/apis/menshend/v1"
-    . "github.com/nebtex/menshend/pkg/users"
     . "github.com/nebtex/menshend/pkg/utils"
     . "github.com/nebtex/menshend/pkg/apis/menshend"
     "net/url"
+    vault "github.com/hashicorp/vault/api"
 )
 
 type Resolver interface {
-    Resolve(*AdminServiceResource, *User) Backend
+    Resolve(*AdminServiceResource, *vault.Secret) Backend
 }
 
 type YAMLResolve struct {
@@ -34,7 +34,7 @@ func (ym *backendImplementation)Headers() map[string]string {
     return ym.ys.HeadersMap
 }
 
-func (yr *YAMLResolve)Resolve(c *AdminServiceResource, u *User) (*backendImplementation) {
+func (yr *YAMLResolve)Resolve(c *AdminServiceResource, u *vault.Secret) (*backendImplementation) {
     ys := &backendValues{}
     err := yaml.Unmarshal([]byte(c.ProxyCode), ys)
     HttpCheckPanic(err, InternalError)

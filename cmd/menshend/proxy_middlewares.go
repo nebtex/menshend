@@ -3,7 +3,6 @@ package main
 import (
     "net/http"
     "context"
-    . "github.com/nebtex/menshend/pkg/users"
     . "github.com/nebtex/menshend/pkg/utils"
     . "github.com/nebtex/menshend/pkg/config"
     . "github.com/nebtex/menshend/pkg/apis/menshend"
@@ -15,6 +14,7 @@ import (
     "github.com/nebtex/menshend/pkg/strategy"
     "github.com/ansel1/merry"
     "github.com/Sirupsen/logrus"
+    "github.com/gorilla/csrf"
     "github.com/rs/cors"
 )
 
@@ -25,7 +25,8 @@ func GetSubDomainHandler(next http.Handler) http.Handler {
         next.ServeHTTP(w, r.WithContext(ctx))
     })
 }
-
+//TODO: add impersonate handler
+//TODO: add role handler - {map menshend-role, vault-role}
 //TokenRealmSecurity don't allow api token to be used in the browser as cookies or headers
 func TokenRealmSecurityHandler(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -44,15 +45,15 @@ func DetectBrowser(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         ibr := false
         if len(r.Cookies()) > 0 {
-            ck, err := r.Cookie("X-Menshend-Token")
+            ck, err := r.Cookie("X-Vault-Token")
             if err == nil {
                 ibr = true
-                r.Header.Add("X-Menshend-Token", ck.Value)
+                r.Header.Add("X-Vault-Token", ck.Value)
                 // remove menshend cookie
                 cks := r.Cookies()
                 r.Header.Del("Cookie")
                 for _, c := range cks {
-                    if c.Name == "X-Menshend-Token" {
+                    if c.Name == "X-Vault-Token" {
                         continue
                     }
                     r.AddCookie(c)
@@ -64,6 +65,8 @@ func DetectBrowser(next http.Handler) http.Handler {
     })
 }
 
+
+//PanicHandler
 func PanicHandler(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         IsBrowserRequest := r.Context().Value("IsBrowserRequest").(bool)
@@ -71,11 +74,11 @@ func PanicHandler(next http.Handler) http.Handler {
         var errorCode int
         
         defer func() {
-            r := recover()
-            if (r == nil) {
+            rec := recover()
+            if (rec == nil) {
                 return
             }
-            switch x := r.(type) {
+            switch x := rec.(type) {
             case merry.Error:
                 logrus.Errorln(merry.Details(x))
                 errorMessage = x.Error()
@@ -87,10 +90,9 @@ func PanicHandler(next http.Handler) http.Handler {
             default:
                 errorMessage = "Uknown error"
                 errorCode = http.StatusInternalServerError
-                
             }
             
-            if !IsBrowserRequest {
+            if (!IsBrowserRequest) || (!Config.EnableUI) {
                 http.Error(w, errorMessage, errorCode)
                 
             } else {
@@ -103,7 +105,7 @@ func PanicHandler(next http.Handler) http.Handler {
                 // Set a new flash.
                 session.AddFlash(errorMessage)
                 session.Save(r, w)
-                http.Redirect(w, r, Config.MenshendSubdomain + Config.Host + "/ui", 302)
+                http.Redirect(w, r, Config.Scheme() + "://" + Config.MenshendSubdomain + Config.Host() + "/ui/login", 302)
             }
         }()
         
@@ -112,7 +114,7 @@ func PanicHandler(next http.Handler) http.Handler {
 }
 
 func getUserFromRequest(r *http.Request) *User {
-    jwtCookie := r.Header.Get("X-Menshend-Token")
+    jwtCookie := r.Header.Get("X-Vault-Token")
     user, err := FromJWT(jwtCookie)
     HttpCheckPanic(err, NotAuthorized)
     return user
@@ -124,16 +126,19 @@ func NeedLogin(next http.Handler) http.Handler {
         user := getUserFromRequest(r)
         ctx := context.WithValue(r.Context(), "User", user)
         //remove menshend token from headers
-        r.Header.Del("X-Menshend-Token")
+        r.Header.Del("X-Vault-Token")
         next.ServeHTTP(w, r.WithContext(ctx))
     })
 }
 
 func RoleHandler(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        mdRole := r.FormValue("md-role")
+        mdRole := r.Header.Get("md-role")
+        mdRoleQ := r.FormValue("md-role")
+        if mdRoleQ != "" {
+            mdRole = mdRoleQ
+        }
         IsBrowserRequest := r.Context().Value("IsBrowserRequest").(bool)
-        
         if !IsBrowserRequest {
             
             if mdRole != "" {
@@ -210,52 +215,70 @@ func ImpersonateWithinRoleHandler(next http.Handler) http.Handler {
                 user.Menshend.Groups = r.URL.Query()["md-groups"]
             }
         }
+        next.ServeHTTP(w, r)
     })
 }
 
-func ProxyHandlers(next http.Handler) http.Handler {
+func NextCSRFHandler(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        ct := csrf.Token(r)
+        r.Header.Set("X-Next-CSRF-Token", ct)
+        w.Header().Set("X-Next-CSRF-Token", ct)
+        next.ServeHTTP(w, r)
+    })
+}
+
+func ProxyHandlers() http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        var CSRF func(http.Handler) http.Handler
+        IsBrowserRequest := r.Context().Value("IsBrowserRequest").(bool)
         user := r.Context().Value("User").(*User)
         service := r.Context().Value("service").(*v1.AdminServiceResource)
         cr := &resolvers.CacheResolver{}
         backend := cr.Resolve(service, user)
-        var co cors.Options
+        //        var co cors.Options
         var handler http.Handler
         switch  service.Strategy {
         case "redirect":
-            if service.EnableCustomCors {
-                
-                co = cors.Options{
-                    AllowedOrigins:service.Cors.AllowedOrigins,
-                    AllowedMethods:service.Cors.AllowedMethods,
-                    AllowedHeaders:service.Cors.AllowedHeaders,
-                    ExposedHeaders:service.Cors.ExposedHeaders,
-                    AllowCredentials:service.Cors.AllowCredentials,
-                    MaxAge:service.Cors.MaxAge,
-                    OptionsPassthrough:service.Cors.OptionsPassthrough,
-                    Debug:service.Cors.Debug,
-                    
+            handler = (&strategy.Redirect{}).Execute(backend)
+            handler.ServeHTTP(w, r)
+            return
+        
+        case "proxy":
+            handler = (&strategy.Proxy{}).Execute(backend)
+            if IsBrowserRequest {
+                if service.CSRF {
+                    if Config.Scheme() == "http" {
+                        CSRF = csrf.Protect([]byte(Config.BlockKey), csrf.Secure(false), csrf.Domain(service.SubDomain + Config.HostWithoutPort()))
+                    }
+                    CSRF = csrf.Protect([]byte(Config.BlockKey), csrf.Domain(service.SubDomain + Config.HostWithoutPort()))
+                    handler = CSRF(NextCSRFHandler(handler))
                 }
-                
-            } else {
-                co = cors.Options{
-                    AllowedOrigins:[]string{service.SubDomain + Config.Host()},
-                    AllowedMethods:[]string{"HEAD", "GET", "POST", "PUT", "PATCH", "DELETE"},
-                    AllowedHeaders:[]string{},
-                    ExposedHeaders:[]string{},
-                    AllowCredentials:true,
+                if service.EnableCustomCors {
+                    
+                    co := cors.Options{
+                        AllowedOrigins:service.Cors.AllowedOrigins,
+                        AllowedMethods:service.Cors.AllowedMethods,
+                        AllowedHeaders:service.Cors.AllowedHeaders,
+                        ExposedHeaders:service.Cors.ExposedHeaders,
+                        AllowCredentials:service.Cors.AllowCredentials,
+                        MaxAge:service.Cors.MaxAge,
+                        OptionsPassthrough:service.Cors.OptionsPassthrough,
+                        Debug:service.Cors.Debug,
+                    }
+                    crs := cors.New(co)
+                    handler = crs.Handler(handler)
                 }
             }
-            crs := cors.New(co)
-            handler = crs.Handler(CSRF(&strategy.Redirect{}.Execute(backend)))
-        case "proxy":
-            handler = &strategy.Proxy{}.Execute(backend)
+            handler.ServeHTTP(w, r)
+            return
         case "port-forward":
-            handler = &strategy.PortForward{}.Execute(backend)
+            handler = (&strategy.PortForward{}).Execute(backend)
+            handler.ServeHTTP(w, r)
+            return
         default:
             panic(InternalError.Append("strategy for service " + service.ID + " was not recognized"))
         }
-        handler.ServeHTTP(w, r)
         
     })
 }

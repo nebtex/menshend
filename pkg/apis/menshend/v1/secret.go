@@ -30,11 +30,11 @@ func (s *SecretResource) Register(container *restful.Container) {
 
 func (s *SecretResource) read(request *restful.Request, response *restful.Response) {
     secretID := request.PathParameter("id")
-    user := GetUserFromContext(request)
+    user := GetTokenFromContext(request)
     key := ValidateSecret(secretID, user)
     vaultClient, err := vault.NewClient(VaultConfig)
     HttpCheckPanic(err, InternalError)
-    vaultClient.SetToken(user.Menshend.VaultToken)
+    vaultClient.SetToken(user)
     secret, err := vaultClient.Logical().Read(key)
     HttpCheckPanic(err, PermissionError)
     CheckSecretFailIfIsNull(secret)

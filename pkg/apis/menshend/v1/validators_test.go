@@ -3,10 +3,9 @@ package v1
 import (
     "testing"
     . "github.com/smartystreets/goconvey/convey"
-    . "github.com/nebtex/menshend/pkg/users"
     . "github.com/nebtex/menshend/pkg/config"
     . "github.com/nebtex/menshend/pkg/utils/test"
-    . "github.com/nebtex/menshend/pkg/apis/menshend"
+    . "github.com/nebtex/menshend/pkg/utils"
     "github.com/ansel1/merry"
 )
 
@@ -185,10 +184,7 @@ func Test_ValidateSecret(t *testing.T) {
                 }
             }()
             CleanVault()
-            user, err := NewUser("myroot")
-            So(err, ShouldBeNil)
-            user.TokenLogin()
-            ValidateSecret("roles/admin/consul./consul/creds/readonly", user)
+            ValidateSecret("roles/admin/consul./consul/creds/readonly", "myroot")
         })
         
         Convey("should fails if service does not contains this secret", func(c C) {
@@ -208,19 +204,13 @@ func Test_ValidateSecret(t *testing.T) {
             }()
             CleanVault()
             PopulateVault()
-            user, err := NewUser("myroot")
-            So(err, ShouldBeNil)
-            user.TokenLogin()
-            ValidateSecret("roles/ml-team/consul./consul/creds/readonly", user)
+            ValidateSecret("roles/ml-team/consul./consul/creds/readonly", "myroot")
         })
         
         Convey("should return vault path", func(c C) {
             CleanVault()
             PopulateVault()
-            user, err := NewUser("myroot")
-            So(err, ShouldBeNil)
-            user.TokenLogin()
-            key := ValidateSecret("roles/ml-team/gitlab./secret/gitlab/password", user)
+            key := ValidateSecret("roles/ml-team/gitlab./secret/gitlab/password", "myroot")
             So(key, ShouldEqual, "secret/gitlab/password")
         })
         

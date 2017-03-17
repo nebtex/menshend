@@ -71,6 +71,9 @@ func SliceStringContains(s []string, e string) bool {
 
 func HttpCheckPanic(err error, userError merry.Error) {
     if err != nil {
+        if (strings.Contains(err.Error(), "403")) {
+            panic(PermissionError)
+        }
         panic(userError.Append(err.Error()))
     }
 }

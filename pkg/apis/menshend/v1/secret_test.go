@@ -8,15 +8,12 @@ import (
     "net/http"
     . "github.com/nebtex/menshend/pkg/utils/test"
     . "github.com/nebtex/menshend/pkg/config"
-    . "github.com/nebtex/menshend/pkg/users"
     . "github.com/nebtex/menshend/pkg/utils"
-    . "github.com/nebtex/menshend/pkg/apis/menshend"
-    
-    "encoding/json"
-    
     "io/ioutil"
-    vault "github.com/hashicorp/vault/api"
+    "fmt"
     "github.com/ansel1/merry"
+    vault "github.com/hashicorp/vault/api"
+    "encoding/json"
 )
 
 func Test_SecretEndpoint(t *testing.T) {
@@ -27,11 +24,8 @@ func Test_SecretEndpoint(t *testing.T) {
         httpReq, err := http.NewRequest("GET", "/v1/secret/roles/ml-team/gitlab./" + Config.VaultPath + "/roles/ml-team/gitlab.", nil)
         So(err, ShouldBeNil)
         httpReq.Header.Set("Content-Type", "application/json")
-        user, err := NewUser("myroot")
         So(err, ShouldBeNil)
-        user.TokenLogin()
-        user.SetExpiresAt(GetNow() + 3600)
-        httpReq.Header.Add("X-Menshend-Token", user.GenerateJWT())
+        httpReq.Header.Add("X-Vault-Token", "myroot")
         httpWriter := httptest.NewRecorder()
         wsContainer := restful.NewContainer()
         s := SecretResource{}
@@ -58,6 +52,7 @@ func Test_SecretEndpoint(t *testing.T) {
             }
             switch x := r.(type) {
             case error:
+                fmt.Println(x)
                 c.So(merry.Is(x, NotFound), ShouldBeTrue)
             default:
                 t.Errorf("%v", x)
@@ -67,11 +62,8 @@ func Test_SecretEndpoint(t *testing.T) {
         httpReq, err := http.NewRequest("GET", "/v1/secret/roles/ml-team/gitlab./secret/gitlab/password", nil)
         So(err, ShouldBeNil)
         httpReq.Header.Set("Content-Type", "application/json")
-        user, err := NewUser("myroot")
         So(err, ShouldBeNil)
-        user.TokenLogin()
-        user.SetExpiresAt(GetNow() + 3600)
-        httpReq.Header.Add("X-Menshend-Token", user.GenerateJWT())
+        httpReq.Header.Add("X-Vault-Token", "myroot")
         httpWriter := httptest.NewRecorder()
         wsContainer := restful.NewContainer()
         s := SecretResource{}

@@ -63,11 +63,13 @@ type Service struct {
     ShortDescription      string
     LongDescription       string
     ProxyCode             string
-    ProxyLanguage         int
+    ProxyLanguage         string
     ImpersonateWithinRole bool
     Proxy                 bool
     IsActive              bool
     SecretPaths           []string
+    CSRF                  bool
+    Strategy              string
 }
 
 func PopulateVault() {
@@ -76,7 +78,24 @@ func PopulateVault() {
     CheckPanic(err)
     roles := map[string]Role{
         "ml-team": map[string]*Service{
-            "consul.":{IsActive:true, SubDomain: "consul.", ImpersonateWithinRole: true},
+            "consul.":{IsActive:true,
+                SubDomain: "consul.",
+                ImpersonateWithinRole: true,
+                CSRF: true,
+                Strategy: "proxy",
+                ProxyCode: `function getBackend (Username, Groups, AuthProvider)
+    return "http://localhost:5454", {}
+end`,
+                ProxyLanguage:"lua"},
+            "consul-2.":{IsActive:true,
+                SubDomain: "consul-2.",
+                ImpersonateWithinRole: true,
+                CSRF: false,
+                Strategy: "proxy",
+                ProxyCode: `function getBackend (Username, Groups, AuthProvider)
+    return "http://localhost:5454", {}
+end`,
+                ProxyLanguage:"lua"},
             "gitlab.":{IsActive:false, SecretPaths:[]string{"secret/gitlab/password", Config.VaultPath + "/roles/ml-team/gitlab."},
                 ProxyCode:`
     function getBackend ()

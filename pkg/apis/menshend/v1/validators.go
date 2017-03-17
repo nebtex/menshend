@@ -2,9 +2,7 @@ package v1
 
 import (
     "regexp"
-    . "github.com/nebtex/menshend/pkg/apis/menshend"
     . "github.com/nebtex/menshend/pkg/utils"
-    . "github.com/nebtex/menshend/pkg/users"
     . "github.com/nebtex/menshend/pkg/config"
     
     "strings"
@@ -52,7 +50,7 @@ func ValidateStrategyTypes(value string) {
     }
 }
 
-func ValidateSecret(secretId string, user *User) (vaultSecretPath string) {
+func ValidateSecret(secretId string, user string) (vaultSecretPath string) {
     items := strings.Split(secretId, "/")
     role := items[1]
     ValidateRole(role)
@@ -63,7 +61,7 @@ func ValidateSecret(secretId string, user *User) (vaultSecretPath string) {
     //load service
     vc, err := vault.NewClient(VaultConfig)
     HttpCheckPanic(err, InternalError)
-    vc.SetToken(user.Menshend.VaultToken)
+    vc.SetToken(user)
     secret, err := vc.Logical().Read(fmt.Sprintf("%s/%s", Config.VaultPath, serviceId))
     HttpCheckPanic(err, PermissionError)
     CheckSecretFailIfIsNull(secret)

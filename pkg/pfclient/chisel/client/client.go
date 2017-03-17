@@ -61,7 +61,7 @@ func Dial(url_, protocol, origin string, port string) (ws *websocket.Conn, err e
     if mt == "" {
         logrus.Fatal("Please set the MENSHEND_TOKEN environment variable")
     }
-    config.Header.Add("X-Menshend-Token", mt)
+    config.Header.Add("X-Vault-Token", mt)
     config.Header.Add("X-Menshend-Port-Forward", port)
     return websocket.DialConfig(config)
 }

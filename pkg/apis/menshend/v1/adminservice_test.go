@@ -8,8 +8,6 @@ import (
     . "github.com/nebtex/menshend/pkg/config"
     . "github.com/nebtex/menshend/pkg/utils"
     . "github.com/nebtex/menshend/pkg/utils/test"
-    . "github.com/nebtex/menshend/pkg/users"
-    . "github.com/nebtex/menshend/pkg/apis/menshend"
     
     "github.com/emicklei/go-restful"
     "github.com/ansel1/merry"
@@ -37,11 +35,7 @@ func TestCreateEditServiceHandler(t *testing.T) {
                 So(err, ShouldBeNil)
                 
                 httpReq.Header.Set("Content-Type", "application/json")
-                user, err := NewUser("myroot")
-                So(err, ShouldBeNil)
-                user.TokenLogin()
-                user.SetExpiresAt(GetNow() + 3600)
-                httpReq.Header.Add("X-Menshend-Token", user.GenerateJWT())
+                httpReq.Header.Add("X-Vault-Token", "myroot")
                 httpWriter := httptest.NewRecorder()
                 wsContainer.ServeHTTP(httpWriter, httpReq)
                 jsres, err := ioutil.ReadAll(httpWriter.Body)
@@ -71,11 +65,8 @@ func Test_LoadLongDescriptionFromUrl(t *testing.T) {
         So(err, ShouldBeNil)
         
         httpReq.Header.Set("Content-Type", "application/json")
-        user, err := NewUser("myroot")
         So(err, ShouldBeNil)
-        user.TokenLogin()
-        user.SetExpiresAt(GetNow() + 3600)
-        httpReq.Header.Add("X-Menshend-Token", user.GenerateJWT())
+        httpReq.Header.Add("X-Vault-Token", "myroot")
         httpWriter := httptest.NewRecorder()
         wsContainer.ServeHTTP(httpWriter, httpReq)
         jsres, err := ioutil.ReadAll(httpWriter.Body)
@@ -114,11 +105,8 @@ func Test_LoadLongDescriptionFromUrl(t *testing.T) {
         So(err, ShouldBeNil)
         
         httpReq.Header.Set("Content-Type", "application/json")
-        user, err := NewUser("myroot")
         So(err, ShouldBeNil)
-        user.TokenLogin()
-        user.SetExpiresAt(GetNow() + 3600)
-        httpReq.Header.Add("X-Menshend-Token", user.GenerateJWT())
+        httpReq.Header.Add("X-Vault-Token", "myroot")
         httpWriter := httptest.NewRecorder()
         wsContainer.ServeHTTP(httpWriter, httpReq)
         
@@ -150,11 +138,8 @@ func Test_LoadLongDescriptionFromUrl(t *testing.T) {
         So(err, ShouldBeNil)
         
         httpReq.Header.Set("Content-Type", "application/json")
-        user, err := NewUser("myroot")
         So(err, ShouldBeNil)
-        user.TokenLogin()
-        user.SetExpiresAt(GetNow() + 3600)
-        httpReq.Header.Add("X-Menshend-Token", user.GenerateJWT())
+        httpReq.Header.Add("X-Vault-Token", "myroot")
         httpWriter := httptest.NewRecorder()
         wsContainer.ServeHTTP(httpWriter, httpReq)
         
@@ -174,6 +159,7 @@ func TestDeleteServiceHandler_Permissions(t *testing.T) {
             }
             switch x := r.(type) {
             case error:
+                fmt.Println(x)
                 c.So(merry.Is(x, PermissionError), ShouldBeTrue)
             default:
                 t.Errorf("%v", x)
@@ -190,17 +176,10 @@ func TestDeleteServiceHandler_Permissions(t *testing.T) {
         So(err, ShouldBeNil)
         secret, err := vClient.Auth().Token().Create(&vault.TokenCreateRequest{
             Policies:[]string{"admin-test-cesh"}})
-        So(err, ShouldBeNil)
-        
-        user, err := NewUser(secret.Auth.ClientToken)
-        So(err, ShouldBeNil)
-        user.SetExpiresAt(GetNow() + 3600 * 1000)
-        user.GitHubLogin("criloz", "admin", "delos", "umbrella")
-        
         httpReq, err := http.NewRequest("DELETE", "/v1/adminServices/roles/ml-team/gitlab.", nil)
         So(err, ShouldBeNil)
         httpReq.Header.Set("Content-Type", "application/json")
-        httpReq.Header.Add("X-Menshend-Token", user.GenerateJWT())
+        httpReq.Header.Add("X-Vault-Token", secret.Auth.ClientToken)
         httpWriter := httptest.NewRecorder()
         
         wsContainer := restful.NewContainer()
@@ -238,11 +217,7 @@ func TestGetServiceHandler(t *testing.T) {
                 u.Register(wsContainer)
                 httpReq, _ := http.NewRequest("GET", "/v1/adminServices/roles/admin/ldap.", nil)
                 httpReq.Header.Set("Content-Type", "application/json")
-                user, err := NewUser("myroot")
-                So(err, ShouldBeNil)
-                user.TokenLogin()
-                user.SetExpiresAt(GetNow() + 3600)
-                httpReq.Header.Add("X-Menshend-Token", user.GenerateJWT())
+                httpReq.Header.Add("X-Vault-Token", "myroot")
                 recorder := new(httptest.ResponseRecorder)
                 wsContainer.ServeHTTP(recorder, httpReq)
             })
@@ -256,11 +231,7 @@ func TestGetServiceHandler(t *testing.T) {
                 u.Register(wsContainer)
                 httpReq, _ := http.NewRequest("GET", "/v1/adminServices/roles/ml-team/gitlab.", nil)
                 httpReq.Header.Set("Content-Type", "application/json")
-                user, err := NewUser("myroot")
-                So(err, ShouldBeNil)
-                user.TokenLogin()
-                user.SetExpiresAt(GetNow() + 3600)
-                httpReq.Header.Add("X-Menshend-Token", user.GenerateJWT())
+                httpReq.Header.Add("X-Vault-Token","myroot")
                 httpWriter := httptest.NewRecorder()
                 wsContainer.ServeHTTP(httpWriter, httpReq)
                 So(httpWriter.Body, ShouldNotBeNil)
@@ -278,11 +249,7 @@ func TestListServiceHandler(t *testing.T) {
         u.Register(wsContainer)
         httpReq, _ := http.NewRequest("GET", "/v1/adminServices?subdomain=redis.", nil)
         httpReq.Header.Set("Content-Type", "application/json")
-        user, err := NewUser("myroot")
-        So(err, ShouldBeNil)
-        user.TokenLogin()
-        user.SetExpiresAt(GetNow() + 3600)
-        httpReq.Header.Add("X-Menshend-Token", user.GenerateJWT())
+        httpReq.Header.Add("X-Vault-Token", "myroot")
         httpWriter := httptest.NewRecorder()
         wsContainer.ServeHTTP(httpWriter, httpReq)
         fmt.Println(httpWriter.Body)

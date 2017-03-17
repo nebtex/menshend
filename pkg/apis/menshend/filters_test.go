@@ -8,11 +8,11 @@ import (
     "net/http/httptest"
     "github.com/emicklei/go-restful"
     "net/http"
-    . "github.com/nebtex/menshend/pkg/utils"
-    . "github.com/nebtex/menshend/pkg/utils/test"
-    . "github.com/nebtex/menshend/pkg/users"
-    . "github.com/nebtex/menshend/pkg/config"
     "github.com/Sirupsen/logrus"
+    . "github.com/nebtex/menshend/pkg/utils/test"
+    . "github.com/nebtex/menshend/pkg/config"
+    . "github.com/nebtex/menshend/pkg/utils"
+
 )
 
 func Test_IsAdmin(t *testing.T) {
@@ -21,11 +21,7 @@ func Test_IsAdmin(t *testing.T) {
         " not", t, func() {
         Convey("Should return false if th user is not an admin", func() {
             CleanVault()
-            user, err := NewUser("test_token")
-            user.SetExpiresAt(GetNow() + 3600 * 1000)
-            So(err, ShouldBeNil)
-            user.TokenLogin()
-            So(IsAdmin(user), ShouldBeFalse)
+            So(IsAdmin("test_token"), ShouldBeFalse)
             vaultClient, vaultErr := vault.NewClient(VaultConfig)
             So(vaultErr, ShouldBeNil)
             vaultClient.SetToken("myroot")
@@ -38,20 +34,11 @@ func Test_IsAdmin(t *testing.T) {
                 Create(&vault.TokenCreateRequest{
                 Policies:[]string{"check-capabilities"}})
             So(vaultErr, ShouldBeNil)
-            user, err = NewUser(secret.Auth.ClientToken)
-            So(err, ShouldBeNil)
-            user.SetExpiresAt(GetNow() + 3600 * 1000)
-            So(err, ShouldBeNil)
-            user.TokenLogin()
-            So(IsAdmin(user), ShouldBeFalse)
+            So(IsAdmin(secret.Auth.ClientToken), ShouldBeFalse)
         })
         Convey("Should return true if th user is  an admin", func() {
             CleanVault()
-            user, err := NewUser("myroot")
-            user.SetExpiresAt(GetNow() + 3600 * 1000)
-            So(err, ShouldBeNil)
-            user.TokenLogin()
-            So(IsAdmin(user), ShouldBeTrue)
+            So(IsAdmin("myroot"), ShouldBeTrue)
         })
     })
 }
@@ -63,11 +50,7 @@ func Test_CanImpersonateHandler(t *testing.T) {
         " not", t, func() {
         Convey("Should return false if th user can't impersonate", func() {
             CleanVault()
-            user, err := NewUser("test_token")
-            user.SetExpiresAt(GetNow() + 3600 * 1000)
-            So(err, ShouldBeNil)
-            user.TokenLogin()
-            So(CanImpersonate(user), ShouldBeFalse)
+            So(CanImpersonate("test_token"), ShouldBeFalse)
             
             vaultClient, vaultErr := vault.NewClient(VaultConfig)
             So(vaultErr, ShouldBeNil)
@@ -81,23 +64,13 @@ func Test_CanImpersonateHandler(t *testing.T) {
                 Create(&vault.TokenCreateRequest{
                 Policies:[]string{"check-capabilities"}})
             So(vaultErr, ShouldBeNil)
-            user, err = NewUser(secret.Auth.ClientToken)
-            So(err, ShouldBeNil)
-            user.SetExpiresAt(GetNow() + 3600 * 1000)
-            So(err, ShouldBeNil)
-            user.TokenLogin()
-            So(CanImpersonate(user), ShouldBeFalse)
+            So(CanImpersonate(secret.Auth.ClientToken), ShouldBeFalse)
             
         })
         
         Convey("Should return true if th user can impersonate", func() {
             CleanVault()
-            user, err := NewUser("myroot")
-            user.SetExpiresAt(GetNow() + 3600 * 1000)
-            
-            So(err, ShouldBeNil)
-            user.TokenLogin()
-            So(CanImpersonate(user), ShouldBeTrue)
+            So(CanImpersonate("myroot"), ShouldBeTrue)
         })
     })
     
@@ -148,12 +121,7 @@ func TestLoginFilter(t *testing.T) {
             }()
             httpReq, _ := http.NewRequest("GET", "/", nil)
             req := restful.NewRequest(httpReq)
-            u, err := NewUser("test-token")
-            So(err, ShouldBeNil)
-            u.TokenLogin()
-            u.SetExpiresAt(GetNow() + 3600)
-            u.Menshend.Username = "tokenLoginDoesnotSupportUser"
-            req.Request.Header.Add("X-Menshend-Token", u.GenerateJWT())
+            req.Request.Header.Add("X-Vault-Token", "test-token")
             
             recorder := new(httptest.ResponseRecorder)
             resp := restful.NewResponse(recorder)
@@ -162,32 +130,26 @@ func TestLoginFilter(t *testing.T) {
             LoginFilter(req, resp, tf)
             panicked := false
             So(panicked, ShouldBeTrue)
-    
-    
+            
         })
     
     Convey("Should make the user available in the context if the token" +
         " is valid", t, func(c C) {
         httpReq, _ := http.NewRequest("GET", "/", nil)
         req := restful.NewRequest(httpReq)
-        u, err := NewUser("test-token")
-        So(err, ShouldBeNil)
-        u.TokenLogin()
-        u.SetExpiresAt(GetNow() + 3600)
-        req.Request.Header.Add("X-Menshend-Token", u.GenerateJWT())
+        req.Request.Header.Add("X-Vault-Token", "test-token")
         
         recorder := new(httptest.ResponseRecorder)
         resp := restful.NewResponse(recorder)
         target := func(freq *restful.Request, fresp *restful.Response) {
-            user := GetUserFromContext(freq)
+            user := GetTokenFromRequest(freq)
             So(user, ShouldNotBeNil)
         }
         tf := &restful.FilterChain{Target:target}
         LoginFilter(req, resp, tf)
-
+        
     })
 }
-
 
 func TestAdminFilter(t *testing.T) {
     Convey("Should panic when the user is not an admin", t,
@@ -202,15 +164,10 @@ func TestAdminFilter(t *testing.T) {
                     t.Fail()
                 }
             }()
-    
+            
             httpReq, _ := http.NewRequest("GET", "/", nil)
             req := restful.NewRequest(httpReq)
-            u, err := NewUser("test-token")
-            So(err, ShouldBeNil)
-            u.TokenLogin()
-            u.SetExpiresAt(GetNow() + 3600)
-            req.Request.Header.Add("X-Menshend-Token", u.GenerateJWT())
-    
+            req.Request.Header.Add("X-Vault-Token", "test-token")
             recorder := new(httptest.ResponseRecorder)
             resp := restful.NewResponse(recorder)
             target := func(freq *restful.Request, fresp *restful.Response) {
@@ -222,8 +179,6 @@ func TestAdminFilter(t *testing.T) {
         })
     
 }
-
-
 
 func TestCanImpersonateFilter(t *testing.T) {
     Convey("Should panic when the user is can not impersonate", t,
@@ -241,11 +196,7 @@ func TestCanImpersonateFilter(t *testing.T) {
             
             httpReq, _ := http.NewRequest("GET", "/", nil)
             req := restful.NewRequest(httpReq)
-            u, err := NewUser("test-token")
-            So(err, ShouldBeNil)
-            u.TokenLogin()
-            u.SetExpiresAt(GetNow() + 3600)
-            req.Request.Header.Add("X-Menshend-Token", u.GenerateJWT())
+            req.Request.Header.Add("X-Vault-Token", "test-toke")
             
             recorder := new(httptest.ResponseRecorder)
             resp := restful.NewResponse(recorder)

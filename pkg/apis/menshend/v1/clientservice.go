@@ -8,19 +8,21 @@ import (
     . "github.com/nebtex/menshend/pkg/apis/menshend"
     . "github.com/nebtex/menshend/pkg/config"
     . "github.com/nebtex/menshend/pkg/utils"
-    . "github.com/nebtex/menshend/pkg/users"
 )
 
 type ListResult struct {
     Keys []string
 }
+
 //Service service definition struct
 type ClientServiceResource struct {
+    IsActive              bool `json:"isActive"`
     ID                    string `json:"id"`
     RoleID                string `json:"roleId"`
     SubDomain             string `json:"subDomain"`
     Logo                  string `json:"logo"`
     Name                  string `json:"name"`
+    Strategy              string `json:"strategy"`
     ShortDescription      string `json:"shortDescription"`
     LongDescription       string `json:"longDescription"`
     ImpersonateWithinRole bool   `json:"impersonateWithinRole"`
@@ -53,7 +55,7 @@ func CheckSecretFailIfIsNull(s *vault.Secret) {
 }
 
 func (cs *ClientServiceResource) listServiceHandler(request *restful.Request, response *restful.Response) {
-    user := GetUserFromContext(request)
+    user := GetTokenFromContext(request)
     subdomain := request.QueryParameter("subdomain")
     role := request.QueryParameter("role")
     ret := []*ClientServiceResource{}
@@ -64,7 +66,7 @@ func (cs *ClientServiceResource) listServiceHandler(request *restful.Request, re
         key := fmt.Sprintf("%s/roles/%s/%s", Config.VaultPath, role, subdomain)
         vaultClient, err := vault.NewClient(VaultConfig)
         HttpCheckPanic(err, InternalError)
-        vaultClient.SetToken(user.Menshend.VaultToken)
+        vaultClient.SetToken(user)
         secret, err := vaultClient.Logical().Read(key)
         HttpCheckPanic(err, PermissionError)
         CheckSecretFailIfIsNull(secret)
@@ -89,7 +91,7 @@ func (cs *ClientServiceResource) listServiceHandler(request *restful.Request, re
     key := fmt.Sprintf("%s/roles", Config.VaultPath)
     vaultClient, err := vault.NewClient(VaultConfig)
     HttpCheckPanic(err, InternalError)
-    vaultClient.SetToken(user.Menshend.VaultToken)
+    vaultClient.SetToken(user)
     secret, err := vaultClient.Logical().List(key)
     HttpCheckPanic(err, PermissionError)
     CheckSecretFailIfIsNull(secret)
@@ -110,7 +112,7 @@ func (cs *ClientServiceResource) listServiceHandler(request *restful.Request, re
                 sKey := fmt.Sprintf("%s/roles/%s/%s", Config.VaultPath, role, service)
                 sSecret, err := vaultClient.Logical().Read(sKey)
                 if !(err != nil || sSecret == nil || sSecret.Data == nil) {
-                    cs:=&ClientServiceResource{}
+                    cs := &ClientServiceResource{}
                     err := mapstructure.Decode(sSecret.Data, cs)
                     HttpCheckPanic(err, InternalError.Append("there is something really wrong contact your admin"))
                     ret = append(ret, cs)
@@ -121,12 +123,12 @@ func (cs *ClientServiceResource) listServiceHandler(request *restful.Request, re
     response.WriteEntity(ret)
 }
 
-func getServiceByRole(user *User, role string) []*ClientServiceResource {
+func getServiceByRole(user string, role string) []*ClientServiceResource {
     ValidateRole(role)
     key := fmt.Sprintf("%s/roles/%s", Config.VaultPath, role)
     vaultClient, err := vault.NewClient(VaultConfig)
     HttpCheckPanic(err, InternalError)
-    vaultClient.SetToken(user.Menshend.VaultToken)
+    vaultClient.SetToken(user)
     secret, err := vaultClient.Logical().List(key)
     HttpCheckPanic(err, PermissionError)
     CheckSecretFailIfIsNull(secret)
@@ -151,12 +153,12 @@ func getServiceByRole(user *User, role string) []*ClientServiceResource {
     
 }
 
-func getServiceBySubdomain(user *User, subDomain string) []*ClientServiceResource {
+func getServiceBySubdomain(user string, subDomain string) []*ClientServiceResource {
     ValidateSubdomain(subDomain)
     key := fmt.Sprintf("%s/roles", Config.VaultPath)
     vaultClient, err := vault.NewClient(VaultConfig)
     HttpCheckPanic(err, InternalError)
-    vaultClient.SetToken(user.Menshend.VaultToken)
+    vaultClient.SetToken(user)
     secret, err := vaultClient.Logical().List(key)
     HttpCheckPanic(err, PermissionError)
     CheckSecretFailIfIsNull(secret)

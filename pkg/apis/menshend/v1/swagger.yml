@@ -11,6 +11,43 @@ consumes:
 produces:
   - application/json
 paths:
+  /v1/space:
+    get:
+      tags:
+      - Space
+      description: get the current space
+      operationId: getSpace
+      responses:
+        200:
+          description: ok
+          schema:
+            $ref: "#/definitions/Space"
+        500:
+          description: Internal error
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+  /v1/flashes:
+    get:
+      tags:
+      - Flashes
+      description: list current flashes and delete them
+      operationId: getFlashes
+      responses:
+        200:
+          description: ok
+          schema:
+            $ref: "#/definitions/Flash"
+        500:
+          description: Internal error
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+
   /v1/secret/{id}:
     parameters:
     - name: "id"
@@ -382,6 +419,27 @@ paths:
                 type: string
 
 definitions:
+  Space:
+    type: object
+    properties:
+      logo:
+        type: string
+      name:
+        type: string
+      shortDescription:
+        type: string
+      longDescription:
+        type: string
+      host:
+        type: string
+
+  Flash:
+    type: object
+    properties:
+      flashes:
+        type: array
+        items:
+          type: string
   LoginStatus:
     type: object
     properties:
@@ -515,6 +573,14 @@ definitions:
     required: [id]
     description: this object represent a service for user without admin access
     properties:
+      isActive:
+        type: boolean
+      strategy:
+        type: string
+        enum:
+        - proxy
+        - redirect
+        - port-forward
       id:
         type: string
         description: service id `/roles/{role-name}/{subdomain}/`
@@ -547,4 +613,6 @@ definitions:
 
 # Added by API Auto Mocking Plugin
 host: virtserver.swaggerhub.com
-basePath: /
+# basePath: /
+# Added by API Auto Mocking Plugin
+basePath: /nebtex/Menshend/1.0.0

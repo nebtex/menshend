@@ -6,13 +6,13 @@ import (
     "net/http"
     "github.com/emicklei/go-restful"
     "github.com/mitchellh/mapstructure"
-    vault "github.com/hashicorp/vault/api"
     "fmt"
     . "github.com/nebtex/menshend/pkg/apis/menshend"
     . "github.com/nebtex/menshend/pkg/config"
     . "github.com/nebtex/menshend/pkg/utils"
     "github.com/fatih/structs"
     "strings"
+    vault "github.com/hashicorp/vault/api"
 )
 
 func init() {
@@ -92,6 +92,7 @@ type AdminServiceResource struct {
     Cors                  CorsOptions `json:"cors"`
     EnableCustomCors      bool `json:"enableCustomCors"`
     CSRF                  bool `json:"csrf"`
+    Stream                bool `json:"stream"`
 }
 
 func getReadme(url string) ([]byte, error) {
@@ -164,7 +165,7 @@ func getRoleAndSubdomain(id string) (role string, subdomain string) {
 }
 
 func (as *AdminServiceResource) putServiceHandler(request *restful.Request, response *restful.Response) {
-    user := GetUserFromContext(request)
+    user := GetTokenFromContext(request)
     serviceId := request.PathParameter("id")
     ValidateService(serviceId)
     nService := &AdminServiceResource{}
@@ -180,7 +181,7 @@ func (as *AdminServiceResource) putServiceHandler(request *restful.Request, resp
     
     vaultClient, err := vault.NewClient(VaultConfig)
     HttpCheckPanic(err, InternalError)
-    vaultClient.SetToken(user.Menshend.VaultToken)
+    vaultClient.SetToken(user)
     key := fmt.Sprintf("%s/%s", Config.VaultPath, serviceId)
     _, vaultErr := vaultClient.Logical().Write(key, structs.Map(nService))
     HttpCheckPanic(vaultErr, PermissionError)
@@ -189,14 +190,14 @@ func (as *AdminServiceResource) putServiceHandler(request *restful.Request, resp
 
 //DeleteServiceHandler delete a  service
 func (as *AdminServiceResource)deleteServiceHandler(request *restful.Request, response *restful.Response) {
-    user := GetUserFromContext(request)
+    user := GetTokenFromContext(request)
     serviceId := request.PathParameter("id")
     ValidateService(serviceId)
     
     key := fmt.Sprintf("%s/%s", Config.VaultPath, serviceId)
     vaultClient, err := vault.NewClient(VaultConfig)
     HttpCheckPanic(err, InternalError)
-    vaultClient.SetToken(user.Menshend.VaultToken)
+    vaultClient.SetToken(user)
     HttpCheckPanic(err, InternalError.Append("error decoding service"))
     _, err = vaultClient.Logical().Delete(key)
     HttpCheckPanic(err, PermissionError)
@@ -204,13 +205,13 @@ func (as *AdminServiceResource)deleteServiceHandler(request *restful.Request, re
 }
 
 func (as *AdminServiceResource)getService(request *restful.Request, response *restful.Response) {
-    user := GetUserFromContext(request)
+    user := GetTokenFromContext(request)
     serviceId := request.PathParameter("id")
     ValidateService(serviceId)
     key := fmt.Sprintf("%s/%s", Config.VaultPath, serviceId)
     vaultClient, err := vault.NewClient(VaultConfig)
     HttpCheckPanic(err, InternalError)
-    vaultClient.SetToken(user.Menshend.VaultToken)
+    vaultClient.SetToken(user)
     secret, err := vaultClient.Logical().Read(key)
     HttpCheckPanic(err, PermissionError)
     CheckSecretFailIfIsNull(secret)
@@ -226,13 +227,13 @@ func (as *AdminServiceResource) listServiceHandler(request *restful.Request, res
     type ListResult struct {
         Keys []string
     }
-    user := GetUserFromContext(request)
+    user := GetTokenFromContext(request)
     subdomain := request.QueryParameter("subdomain")
     ValidateSubdomain(subdomain)
     key := fmt.Sprintf("%s/roles", Config.VaultPath)
     vaultClient, err := vault.NewClient(VaultConfig)
     HttpCheckPanic(err, InternalError)
-    vaultClient.SetToken(user.Menshend.VaultToken)
+    vaultClient.SetToken(user)
     secret, err := vaultClient.Logical().List(key)
     HttpCheckPanic(err, PermissionError)
     CheckSecretFailIfIsNull(secret)

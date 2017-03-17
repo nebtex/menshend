@@ -5,8 +5,6 @@ import (
     . "github.com/smartystreets/goconvey/convey"
     . "github.com/nebtex/menshend/pkg/utils/test"
     . "github.com/nebtex/menshend/pkg/config"
-    . "github.com/nebtex/menshend/pkg/users"
-    . "github.com/nebtex/menshend/pkg/utils"
     "net/http"
     "net/http/httptest"
     "github.com/emicklei/go-restful"
@@ -21,11 +19,8 @@ func Test_ListClientService(t *testing.T) {
         PopulateVault()
         httpReq, err := http.NewRequest("GET", "/v1/clientServices?subdomain=gitlab.&role=ml-team", nil)
         httpReq.Header.Set("Content-Type", "application/json")
-        user, err := NewUser("myroot")
         So(err, ShouldBeNil)
-        user.UsernamePasswordLogin("root")
-        user.SetExpiresAt(GetNow() + 3600)
-        httpReq.Header.Add("X-Menshend-Token", user.GenerateJWT())
+        httpReq.Header.Add("X-Vault-Token", "myroot")
         httpWriter := httptest.NewRecorder()
         wsContainer := restful.NewContainer()
         s := ClientServiceResource{}
@@ -45,11 +40,8 @@ func Test_ListClientService(t *testing.T) {
         PopulateVault()
         httpReq, err := http.NewRequest("GET", "/v1/clientServices?role=ml-team", nil)
         httpReq.Header.Set("Content-Type", "application/json")
-        user, err := NewUser("myroot")
         So(err, ShouldBeNil)
-        user.UsernamePasswordLogin("root")
-        user.SetExpiresAt(GetNow() + 3600)
-        httpReq.Header.Add("X-Menshend-Token", user.GenerateJWT())
+        httpReq.Header.Add("X-Vault-Token", "myroot")
         httpWriter := httptest.NewRecorder()
         wsContainer := restful.NewContainer()
         s := ClientServiceResource{}
@@ -60,7 +52,7 @@ func Test_ListClientService(t *testing.T) {
         ret := &[]ClientServiceResource{}
         err = json.Unmarshal(jsres, ret)
         So(err, ShouldBeNil)
-        So(len(*ret), ShouldEqual, 4)
+        So(len(*ret), ShouldEqual, 5)
         
     })
     
@@ -70,11 +62,8 @@ func Test_ListClientService(t *testing.T) {
         PopulateVault()
         httpReq, err := http.NewRequest("GET", "/v1/clientServices?subdomain=redis.", nil)
         httpReq.Header.Set("Content-Type", "application/json")
-        user, err := NewUser("myroot")
         So(err, ShouldBeNil)
-        user.UsernamePasswordLogin("root")
-        user.SetExpiresAt(GetNow() + 3600)
-        httpReq.Header.Add("X-Menshend-Token", user.GenerateJWT())
+        httpReq.Header.Add("X-Vault-Token", "myroot")
         httpWriter := httptest.NewRecorder()
         wsContainer := restful.NewContainer()
         s := ClientServiceResource{}
@@ -94,11 +83,8 @@ func Test_ListClientService(t *testing.T) {
         PopulateVault()
         httpReq, err := http.NewRequest("GET", "/v1/clientServices", nil)
         httpReq.Header.Set("Content-Type", "application/json")
-        user, err := NewUser("myroot")
         So(err, ShouldBeNil)
-        user.UsernamePasswordLogin("root")
-        user.SetExpiresAt(GetNow() + 3600)
-        httpReq.Header.Add("X-Menshend-Token", user.GenerateJWT())
+        httpReq.Header.Add("X-Vault-Token", "myroot")
         httpWriter := httptest.NewRecorder()
         wsContainer := restful.NewContainer()
         s := ClientServiceResource{}
@@ -109,7 +95,7 @@ func Test_ListClientService(t *testing.T) {
         ret := &[]ClientServiceResource{}
         err = json.Unmarshal(jsres, ret)
         So(err, ShouldBeNil)
-        So(len(*ret), ShouldEqual, 7)
+        So(len(*ret), ShouldEqual, 8)
         
     })
     

@@ -4,22 +4,35 @@ import (
     vault "github.com/hashicorp/vault/api"
     "fmt"
     . "github.com/nebtex/menshend/pkg/utils"
-    . "github.com/nebtex/menshend/pkg/users"
     . "github.com/nebtex/menshend/pkg/config"
     "github.com/emicklei/go-restful"
+    "strings"
 )
 
-func GetUserFromRequest(r *restful.Request) *User {
-    jwtCookie := r.HeaderParameter("X-Menshend-Token")
-    user, err := FromJWT(jwtCookie)
-    HttpCheckPanic(err, NotAuthorized)
-    return user
+func parseBearerAuth(auth string) (token string, ok bool) {
+    const prefix = "Bearer "
+    if !strings.HasPrefix(auth, prefix) {
+        return
+    }
+    return auth[len(prefix):], true
+}
+
+func GetTokenFromRequest(r *restful.Request) string {
+    bearerToken, _ := parseBearerAuth(r.Request.Header.Get("Authorization"))
+    vaultToken := r.HeaderParameter("X-Vault-Token")
+    if bearerToken != "" {
+        if vaultToken != "" {
+            vaultToken = bearerToken
+        }
+    }
+    r.Request.BasicAuth()
+    return vaultToken
 }
 
 //GetUserFromContext ...
-func GetUserFromContext(r *restful.Request) *User {
-    switch v := r.Attribute("user").(type) {
-    case *User:
+func GetTokenFromContext(r *restful.Request) string {
+    switch v := r.Attribute("VaultToken").(type) {
+    case string:
         return v
     default:
         panic(NotAuthorized)
@@ -27,44 +40,44 @@ func GetUserFromContext(r *restful.Request) *User {
 }
 
 //checkAdminPermission ...
-func CheckAdminPermission(u *User, vc *vault.Config) {
+func CheckAdminPermission(vaultToken string, vc *vault.Config) {
     key := fmt.Sprintf("%s/%s", Config.VaultPath, "Admin")
     client, err := vault.NewClient(vc)
     HttpCheckPanic(err, InternalError)
-    client.SetToken(u.Menshend.VaultToken)
+    client.SetToken(vaultToken)
     cap, err := client.Sys().CapabilitiesSelf(key)
     if err != nil {
-        panic(PermissionError.Append(err.Error()).WithValue("user", u))
+        panic(PermissionError.Append(err.Error()))
     }
     if !((SliceStringContains(cap, "read")) ||
         (SliceStringContains(cap, "write")) ||
         (SliceStringContains(cap, "update")) ||
         (SliceStringContains(cap, "root"))) {
-        panic(PermissionError.WithValue("user", u))
+        panic(PermissionError)
     }
 }
 
 //CheckImpersonatePermission check if the user can impersonate other
-func CheckImpersonatePermission(u *User, vc *vault.Config) {
+func CheckImpersonatePermission(vaultToken string, vc *vault.Config) {
     key := fmt.Sprintf("%s/%s", Config.VaultPath, "Impersonate")
     client, err := vault.NewClient(vc)
     CheckPanic(err)
-    client.SetToken(u.Menshend.VaultToken)
+    client.SetToken(vaultToken)
     cap, err := client.Sys().CapabilitiesSelf(key)
     if err != nil {
-        panic(PermissionError.Append(err.Error()).WithValue("user", u))
+        panic(PermissionError.Append(err.Error()))
     }
     if !((SliceStringContains(cap, "read")) ||
         (SliceStringContains(cap, "write")) ||
         (SliceStringContains(cap, "update")) ||
         (SliceStringContains(cap, "root"))) {
-        panic(PermissionError.Append(err.Error()).WithValue("user", u))
+        panic(PermissionError.Append(err.Error()))
     }
 }
 
 
 //IsAdmin ...
-func IsAdmin(user *User) bool {
+func IsAdmin(vaultToken string) bool {
     ret := true
     func() {
         defer func() {
@@ -73,13 +86,13 @@ func IsAdmin(user *User) bool {
                 ret = false
             }
         }()
-        CheckAdminPermission(user, VaultConfig)
+        CheckAdminPermission(vaultToken, VaultConfig)
     }()
     return ret
 }
 
 //CanImpersonate ...
-func CanImpersonate(user *User) bool {
+func CanImpersonate(vaultToken string) bool {
     ret := true
     func() {
         defer func() {
@@ -88,7 +101,7 @@ func CanImpersonate(user *User) bool {
                 ret = false
             }
         }()
-        CheckImpersonatePermission(user, VaultConfig)
+        CheckImpersonatePermission(vaultToken, VaultConfig)
     }()
     return ret
 }
@@ -96,31 +109,21 @@ func CanImpersonate(user *User) bool {
 
 //AdminFilter fail if the user is not an admin
 func AdminFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
-    user := GetUserFromContext(req)
-    CheckAdminPermission(user, VaultConfig)
+    CheckAdminPermission(GetTokenFromContext(req), VaultConfig)
     chain.ProcessFilter(req, resp)
 }
 
 
 //LoginFilter fail if the user is not logged in
 func LoginFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
-    if Config.DevMode {
-        u, error := NewUser("myroot")
-        HttpCheckPanic(error, InternalError)
-        u.GitHubLogin("root", "root")
-        req.SetAttribute("user", u)
-        chain.ProcessFilter(req, resp)
-        return
-    }
-    user := GetUserFromRequest(req)
-    req.SetAttribute("user", user)
+    vaultToken := GetTokenFromRequest(req)
+    req.SetAttribute("VaultToken", vaultToken)
     chain.ProcessFilter(req, resp)
 }
 
 
 //ImpersonateFilter ....
 func ImpersonateFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
-    user := GetUserFromContext(req)
-    CheckImpersonatePermission(user, VaultConfig)
+    CheckImpersonatePermission(GetTokenFromContext(req), VaultConfig)
     chain.ProcessFilter(req, resp)
 }

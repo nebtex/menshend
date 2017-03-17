@@ -10,8 +10,6 @@ import (
     "strings"
     . "github.com/nebtex/menshend/pkg/utils"
     "os"
-    "github.com/gorilla/csrf"
-    "net/http"
     "net/url"
 )
 
@@ -33,6 +31,7 @@ type MenshendConfig struct {
     ListenPort        int
     DevMode           bool
     VaultPath         string
+    EnableUI          bool
     Uris              *Uris
     DefaultRole       string
     DefaultRoleMap    map[string]string
@@ -91,7 +90,6 @@ var Config *MenshendConfig
 var VaultConfig *vault.Config
 var FlashStore *sessions.CookieStore
 var SecureCookie *securecookie.SecureCookie
-var CSRF func(http.Handler) http.Handler
 
 func init() {
     Config = &MenshendConfig{}
@@ -112,9 +110,7 @@ func init() {
     FlashStore.Options.Path = "/"
     if Config.Scheme() == "http" {
         FlashStore.Options.Secure = false
-        CSRF = csrf.Protect([]byte(Config.BlockKey), csrf.Secure(false))
     }
-    CSRF = csrf.Protect([]byte(Config.BlockKey))
     SecureCookie = securecookie.New([]byte(Config.HashKey), []byte(Config.BlockKey))
     
 }
