@@ -6,9 +6,9 @@ import (
     "net/http/httptest"
     "github.com/emicklei/go-restful"
     "net/http"
-    . "github.com/nebtex/menshend/pkg/utils/test"
-    . "github.com/nebtex/menshend/pkg/config"
-    . "github.com/nebtex/menshend/pkg/utils"
+    testutils "github.com/nebtex/menshend/pkg/utils/test"
+    "github.com/nebtex/menshend/pkg/config"
+    mutils "github.com/nebtex/menshend/pkg/utils"
     "io/ioutil"
     "fmt"
     "github.com/ansel1/merry"
@@ -18,11 +18,11 @@ import (
 )
 
 func Test_SecretEndpoint(t *testing.T) {
-    os.Setenv("VAULT_ADDR", "http://127.0.0.1:8200")
+    mutils.CheckPanic(os.Setenv(vault.EnvVaultAddress, "http://127.0.0.1:8200"))
     Convey("should return info about the envirenment", t, func(c C) {
-        CleanVault()
-        PopulateVault()
-        httpReq, err := http.NewRequest("GET", "/v1/secret/roles/ml-team/gitlab./" + Config.VaultPath + "/roles/ml-team/gitlab.", nil)
+        testutils.CleanVault()
+        testutils.PopulateVault()
+        httpReq, err := http.NewRequest("GET", "/v1/secret/roles/ml-team/gitlab./" + config.Config.VaultPath + "/roles/ml-team/gitlab.", nil)
         So(err, ShouldBeNil)
         httpReq.Header.Set("Content-Type", "application/json")
         So(err, ShouldBeNil)
@@ -43,8 +43,8 @@ func Test_SecretEndpoint(t *testing.T) {
     })
     
     Convey("fails if secret does not exists", t, func(c C) {
-        CleanVault()
-        PopulateVault()
+        testutils.CleanVault()
+        testutils.PopulateVault()
         defer func() {
             r := recover()
             if (r == nil) {
@@ -54,7 +54,7 @@ func Test_SecretEndpoint(t *testing.T) {
             switch x := r.(type) {
             case error:
                 fmt.Println(x)
-                c.So(merry.Is(x, NotFound), ShouldBeTrue)
+                c.So(merry.Is(x, mutils.NotFound), ShouldBeTrue)
             default:
                 t.Errorf("%v", x)
                 t.Fail()

@@ -2,14 +2,17 @@ package v1
 
 import (
     "github.com/emicklei/go-restful"
-    . "github.com/nebtex/menshend/pkg/config"
-    . "github.com/nebtex/menshend/pkg/utils"
+    "github.com/nebtex/menshend/pkg/config"
+    mutils "github.com/nebtex/menshend/pkg/utils"
 )
 
+//FlashResource  this allow to store some error messages in the cookie
+//only useful in the browser
 type FlashResource struct {
     Flashes []string `json:"flashes"`
 }
 
+//Register ...
 func (f *FlashResource) Register(container *restful.Container) {
     ws := new(restful.WebService).
         Consumes(restful.MIME_JSON).
@@ -24,8 +27,8 @@ func (f *FlashResource) Register(container *restful.Container) {
 }
 
 func (f *FlashResource) get(request *restful.Request, response *restful.Response) {
-    session, err := FlashStore.Get(request.Request, "flashes")
-    HttpCheckPanic(err, InternalError)
+    session, err := config.FlashStore.Get(request.Request, "flashes")
+    mutils.HttpCheckPanic(err, mutils.InternalError)
     flashes := []string{}
     for _, v := range session.Flashes() {
         flash := v.(string)
@@ -33,5 +36,5 @@ func (f *FlashResource) get(request *restful.Request, response *restful.Response
     }
     fn := &FlashResource{}
     fn.Flashes = flashes
-    response.WriteEntity(fn)
+    mutils.HttpCheckPanic(response.WriteEntity(fn), mutils.InternalError)
 }

@@ -3,15 +3,17 @@ package v1
 import (
     vault "github.com/hashicorp/vault/api"
     "github.com/emicklei/go-restful"
-    . "github.com/nebtex/menshend/pkg/apis/menshend"
-    . "github.com/nebtex/menshend/pkg/utils"
     "time"
     "fmt"
+    mfilters "github.com/nebtex/menshend/pkg/filters"
+    mutils "github.com/nebtex/menshend/pkg/utils"
 )
 
+//AuthResource ...
 type AuthResource struct {
 }
 
+//LoginStatus store the vault token state relative to  menshend
 type LoginStatus struct {
     IsLogged         bool `json:"isLogged"`
     IsAdmin          bool `json:"isAdmin"`
@@ -19,6 +21,7 @@ type LoginStatus struct {
     SessionExpiresAt int64 `json:"sessionExpiresAt"`
 }
 
+//Register ...
 func (a *AuthResource) Register(container *restful.Container) {
     ws := new(restful.WebService).
         Consumes(restful.MIME_JSON).
@@ -42,12 +45,12 @@ func (a *AuthResource) Register(container *restful.Container) {
 //logout try to revoke the vault token, just  a wrap over the vault enpoint
 func (a *AuthResource) logout(request *restful.Request, response *restful.Response) {
     defer func() {}()
-    user := GetTokenFromRequest(request)
+    user := mfilters.GetTokenFromRequest(request)
     vc, err := vault.NewClient(vault.DefaultConfig())
-    CheckPanic(err)
+    mutils.HttpCheckPanic(err, mutils.InternalError)
     vc.SetToken(user)
     err = vc.Auth().Token().RevokeSelf(user)
-    HttpCheckPanic(err, PermissionError)
+    mutils.HttpCheckPanic(err, mutils.PermissionError)
 }
 
 //accountStatus, if the token is active this will return some important info like
@@ -66,15 +69,15 @@ func (*AuthResource)accountStatus(request *restful.Request, response *restful.Re
                 CanImpersonate: false,
                 SessionExpiresAt: 0,
             }
-            response.WriteEntity(ls)
+            mutils.HttpCheckPanic(response.WriteEntity(ls), mutils.InternalError)
         }
     }()
-    user := GetTokenFromRequest(request)
+    user := mfilters.GetTokenFromRequest(request)
     vc, err := vault.NewClient(vault.DefaultConfig())
-    CheckPanic(err)
+    mutils.CheckPanic(err)
     vc.SetToken(user)
     secret, err := vc.Auth().Token().LookupSelf()
-    HttpCheckPanic(err, NotAuthorized)
+    mutils.HttpCheckPanic(err, mutils.NotAuthorized)
     CheckSecretFailIfIsNull(secret)
     if (secret.WrapInfo != nil) {
         creationTimeMillisecond = secret.WrapInfo.CreationTime.UnixNano() / int64(time.Millisecond)
@@ -83,9 +86,9 @@ func (*AuthResource)accountStatus(request *restful.Request, response *restful.Re
     
     ls := LoginStatus{
         IsLogged: true,
-        IsAdmin: IsAdmin(user),
-        CanImpersonate: CanImpersonate(user),
+        IsAdmin: mfilters.IsAdmin(user),
+        CanImpersonate: mfilters.CanImpersonate(user),
         SessionExpiresAt: creationTimeMillisecond + ttl,
     }
-    response.WriteEntity(ls)
+    mutils.HttpCheckPanic(response.WriteEntity(ls), mutils.InternalError)
 }

@@ -7,49 +7,54 @@ import (
     "github.com/emicklei/go-restful"
     "github.com/mitchellh/mapstructure"
     "fmt"
-    . "github.com/nebtex/menshend/pkg/apis/menshend"
-    . "github.com/nebtex/menshend/pkg/config"
-    . "github.com/nebtex/menshend/pkg/utils"
     "github.com/fatih/structs"
     "strings"
     vault "github.com/hashicorp/vault/api"
     "github.com/nebtex/menshend/pkg/strategy"
     "github.com/nebtex/menshend/pkg/resolvers"
+    mutils "github.com/nebtex/menshend/pkg/utils"
+    mfilters "github.com/nebtex/menshend/pkg/filters"
+    mconfig "github.com/nebtex/menshend/pkg/config"
+    "github.com/Sirupsen/logrus"
 )
 
 func init() {
     restful.PrettyPrintResponses = false
 }
 
+//ServiceCache activate a cache for the resolvers result
 type ServiceCache struct {
     // time to live seconds
     TTL    int `json:"ttl"`
     Active bool `json:"active"`
 }
 
+//ServiceStrategy defines how menshend will handle the user request
 type ServiceStrategy struct {
     Proxy       *strategy.Proxy `json:"proxy"`
     PortForward *strategy.PortForward `json:"portForward"`
     Redirect    *strategy.Redirect `json:"redirect"`
 }
 
+//Validate a service can only contains a strategy
 func (ss *ServiceStrategy) Validate() {
     defined := 0
     if ss.Proxy != nil {
-        defined += 1
+        defined ++
     }
     if ss.PortForward != nil {
-        defined += 1
+        defined  ++
     }
     if ss.Redirect != nil {
-        defined += 1
+        defined ++
     }
     
     if defined != 1 {
-        panic(BadRequest.WithUserMessage("Please define only one strategy, you have not define one!! or have multiples defined"))
+        panic(mutils.BadRequest.WithUserMessage("Please define only one strategy, you have not define one!! or have multiples defined"))
     }
 }
 
+//Get returns the active strategy
 func (ss *ServiceStrategy)Get() strategy.Strategy {
     if ss.Proxy != nil {
         return ss.Proxy
@@ -60,25 +65,28 @@ func (ss *ServiceStrategy)Get() strategy.Strategy {
     return ss.Redirect
 }
 
+//ServiceResolver ..
 type ServiceResolver struct {
     Yaml  *resolvers.YAMLResolver `json:"yaml"`
     Lua   *resolvers.LuaResolver `json:"lua"`
     Cache *ServiceCache `json:"cache"`
 }
 
+//Validate a service can only contains an resolver (lua, yaml, js, etc..)
 func (sr *ServiceResolver) Validate() {
     defined := 0
     if sr.Yaml != nil {
-        defined += 1
+        defined  ++
     }
     if sr.Lua != nil {
-        defined += 1
+        defined  ++
     }
-    
     if defined != 1 {
-        panic(BadRequest.WithUserMessage("Please define only one resolver, you have not define one!! or have multiples defined"))
+        panic(mutils.BadRequest.WithUserMessage("Please define only one resolver, you have not define one!! or have multiples defined"))
     }
 }
+
+//Get returns the active resolver
 func (sr *ServiceResolver) Get() resolvers.Resolver {
     if sr.Lua != nil {
         return sr.Lua
@@ -86,25 +94,103 @@ func (sr *ServiceResolver) Get() resolvers.Resolver {
     return sr.Yaml
 }
 
-type ServiceMetadata struct {
-    ID        string `json:"id"`
-    RoleID    string `json:"roleId"`
-    SubDomain string `json:"subDomain"`
-    Name      string `json:"name"`
+//SimpleLongDescription the user defines the contents manually - supports markdown
+type SimpleLongDescription struct {
+    Content string `json:"content"`
 }
 
-//Service service definition struct
+//LongDescription ...
+func (sld *SimpleLongDescription)LongDescription() string {
+    return sld.Content
+}
+
+//Load ...
+func (sld *SimpleLongDescription) Load() {}
+
+//URLLongDescription allow to the user to load the service long description from a remote url
+//a README.md file is preferred
+type URLLongDescription struct {
+    URL     string `json:"url"`
+    Content string `json:"content"`
+}
+
+//LongDescription ...
+func (uld *URLLongDescription)LongDescription() string {
+    return uld.Content
+}
+
+//Load query the remote endpoint and load the content from there
+func (uld *URLLongDescription) Load() {
+    if uld.URL != "" {
+        _, err := url.ParseRequestURI(uld.URL)
+        mutils.HttpCheckPanic(err, mutils.BadRequest.WithUserMessage("Long description remote url is not valid"))
+        r, err := getReadme(uld.URL)
+        mutils.HttpCheckPanic(err, mutils.BadRequest.WithUserMessage("Long description remote url not responding"))
+        uld.Content = string(r)
+    }
+}
+
+//ServiceLongDescription long description options
+type ServiceLongDescription struct {
+    Remote *URLLongDescription `json:"remote"`
+    Local  *SimpleLongDescription `json:"local"`
+}
+
+
+//Validate ...
+func (sldn *ServiceLongDescription)Validate() {
+    defined := 0
+    if sldn.Local != nil {
+        defined ++
+    }
+    if sldn.Remote != nil {
+        defined ++
+    }
+    if defined != 1 {
+        panic(mutils.BadRequest.WithUserMessage("Please define only a way to pull the service long description"))
+    }
+}
+
+//Load load long description from remote/local or whatever resource
+func (sldn *ServiceLongDescription)Load() {
+    if sldn.Local != nil {
+        sldn.Local.Load()
+    } else if sldn.Remote != nil {
+        sldn.Remote.Load()
+    }
+}
+
+//LongDescription ...
+func (sldn *ServiceLongDescription)LongDescription() string {
+    if sldn.Local != nil {
+        return sldn.Local.LongDescription()
+    } else if sldn.Remote != nil {
+        return sldn.Remote.LongDescription()
+    }
+    return ""
+}
+
+
+//ServiceMetadata ...
+type ServiceMetadata struct {
+    ID              string `json:"id"`
+    RoleID          string `json:"roleId"`
+    SubDomain       string `json:"subDomain"`
+    Name            string `json:"name"`
+    Logo            string `json:"logo"`
+    Description     string `json:"description"`
+    Tags            []string `json:"tags"`
+    LongDescription *ServiceLongDescription `json:"longDescription"`
+}
+
+//AdminServiceResource service definition struct
 type AdminServiceResource struct {
-    Meta                  *ServiceMetadata  `json:"meta"`
-    Logo                  string `json:"logo"`
-    ShortDescription      string `json:"shortDescription"`
-    LongDescription       string `json:"longDescription"`
-    LongDescriptionUrl    string `json:"longDescriptionUrl"`
+    ImpersonateWithinRole bool             `json:"impersonateWithinRole"`
+    IsActive              *bool            `json:"isActive"`
+    SecretPaths           []string         `json:"secretPaths"`
+    Meta                  *ServiceMetadata `json:"meta"`
     Resolver              *ServiceResolver `json:"Resolver"`
-    ImpersonateWithinRole bool   `json:"impersonateWithinRole"`
     Strategy              *ServiceStrategy `json:"strategy"`
-    IsActive              *bool `json:"isActive"`
-    SecretPaths           []string `json:"secretPaths"`
 }
 
 func getReadme(url string) ([]byte, error) {
@@ -112,33 +198,25 @@ func getReadme(url string) ([]byte, error) {
     if err != nil {
         return []byte{}, err
     }
-    defer r.Body.Close()
+    defer func() {
+        err := r.Body.Close()
+        if err != nil {
+            logrus.Error(":O")
+            logrus.Error(err)
+        }
+    }()
     return ioutil.ReadAll(r.Body)
 }
 
-func (s *AdminServiceResource) LoadLongDescriptionUrl() error {
-    if s.LongDescriptionUrl != "" {
-        _, err := url.ParseRequestURI(s.LongDescriptionUrl)
-        if err != nil {
-            return err
-        }
-        r, err := getReadme(s.LongDescriptionUrl)
-        if err != nil {
-            return err
-        }
-        s.LongDescription = string(r)
-    }
-    return nil
-}
-
+//Register ...
 func (as *AdminServiceResource) Register(container *restful.Container) {
     ws := new(restful.WebService).
         Consumes(restful.MIME_JSON).
         Produces(restful.MIME_JSON)
     
     ws.Path("/v1/adminServices").
-        Filter(LoginFilter).
-        Filter(AdminFilter).
+        Filter(mfilters.LoginFilter).
+        Filter(mfilters.AdminFilter).
         Doc("Manage Services")
     
     ws.Route(ws.GET("").To(as.listServiceHandler).
@@ -177,107 +255,106 @@ func getRoleAndSubdomain(id string) (role string, subdomain string) {
 }
 
 func (as *AdminServiceResource) putServiceHandler(request *restful.Request, response *restful.Response) {
-    user := GetTokenFromContext(request)
-    serviceId := request.PathParameter("id")
-    ValidateService(serviceId)
+    user := mfilters.GetTokenFromContext(request)
+    serviceID := request.PathParameter("id")
+    ValidateService(serviceID)
     nService := &AdminServiceResource{}
     err := request.ReadEntity(nService)
-    HttpCheckPanic(err, BadRequest.WithUserMessage("error decoding request"))
+    mutils.HttpCheckPanic(err, mutils.BadRequest.WithUserMessage("error decoding request"))
     
     if nService.Resolver == nil {
-        panic(BadRequest.WithUserMessage("Please create a resolver section"))
+        panic(mutils.BadRequest.WithUserMessage("Please create a resolver section"))
     }
     if nService.Strategy == nil {
-        panic(BadRequest.WithUserMessage("Please create a strategy section"))
+        panic(mutils.BadRequest.WithUserMessage("Please create a strategy section"))
     }
     if nService.Meta == nil {
-        panic(BadRequest.WithUserMessage("Service metadata is not defined"))
+        panic(mutils.BadRequest.WithUserMessage("Service metadata is not defined"))
     }
     
-    nService.Meta.RoleID, nService.Meta.SubDomain = getRoleAndSubdomain(serviceId)
+    nService.Meta.RoleID, nService.Meta.SubDomain = getRoleAndSubdomain(serviceID)
     
     nService.Resolver.Validate()
     nService.Strategy.Validate()
     
-    err = nService.LoadLongDescriptionUrl()
-    HttpCheckPanic(err, BadRequest.WithUserMessage("invalid LongDescriptionUrl or can't connecto to remote address"))
+    if nService.Meta.LongDescription != nil {
+        nService.Meta.LongDescription.Validate()
+        nService.Meta.LongDescription.Load()
+    }
     
     vaultClient, err := vault.NewClient(vault.DefaultConfig())
-    HttpCheckPanic(err, InternalError)
+    mutils.HttpCheckPanic(err, mutils.InternalError)
     vaultClient.SetToken(user)
-    key := fmt.Sprintf("%s/%s", Config.VaultPath, serviceId)
+    key := fmt.Sprintf("%s/%s", mconfig.Config.VaultPath, serviceID)
     _, vaultErr := vaultClient.Logical().Write(key, structs.Map(nService))
-    HttpCheckPanic(vaultErr, PermissionError)
-    response.WriteEntity(nService)
+    mutils.HttpCheckPanic(vaultErr, mutils.PermissionError)
+    mutils.HttpCheckPanic(response.WriteEntity(nService), mutils.InternalError)
 }
 
 //DeleteServiceHandler delete a  service
 func (as *AdminServiceResource)deleteServiceHandler(request *restful.Request, response *restful.Response) {
-    user := GetTokenFromContext(request)
-    serviceId := request.PathParameter("id")
-    ValidateService(serviceId)
+    user := mfilters.GetTokenFromContext(request)
+    serviceID := request.PathParameter("id")
+    ValidateService(serviceID)
     
-    key := fmt.Sprintf("%s/%s", Config.VaultPath, serviceId)
+    key := fmt.Sprintf("%s/%s", mconfig.Config.VaultPath, serviceID)
     vaultClient, err := vault.NewClient(vault.DefaultConfig())
-    HttpCheckPanic(err, InternalError)
+    mutils.HttpCheckPanic(err, mutils.InternalError)
     vaultClient.SetToken(user)
-    HttpCheckPanic(err, InternalError.WithUserMessage("error decoding service"))
+    mutils.HttpCheckPanic(err, mutils.InternalError.WithUserMessage("error decoding service"))
     _, err = vaultClient.Logical().Delete(key)
-    HttpCheckPanic(err, PermissionError)
-    response.WriteEntity(nil)
+    mutils.HttpCheckPanic(err, mutils.PermissionError)
+    mutils.HttpCheckPanic(response.WriteEntity(nil), mutils.InternalError)
 }
 
 func (as *AdminServiceResource)getService(request *restful.Request, response *restful.Response) {
-    user := GetTokenFromContext(request)
-    serviceId := request.PathParameter("id")
-    ValidateService(serviceId)
-    key := fmt.Sprintf("%s/%s", Config.VaultPath, serviceId)
+    user := mfilters.GetTokenFromContext(request)
+    serviceID := request.PathParameter("id")
+    ValidateService(serviceID)
+    key := fmt.Sprintf("%s/%s", mconfig.Config.VaultPath, serviceID)
     vaultClient, err := vault.NewClient(vault.DefaultConfig())
-    HttpCheckPanic(err, InternalError)
+    mutils.HttpCheckPanic(err, mutils.InternalError)
     vaultClient.SetToken(user)
     secret, err := vaultClient.Logical().Read(key)
-    HttpCheckPanic(err, PermissionError)
+    mutils.HttpCheckPanic(err, mutils.PermissionError)
     CheckSecretFailIfIsNull(secret)
     
     nService := &AdminServiceResource{}
     err = mapstructure.Decode(secret.Data, nService)
-    HttpCheckPanic(err, InternalError.WithUserMessage("error decoding service"))
-    response.WriteEntity(nService)
+    mutils.HttpCheckPanic(err, mutils.InternalError.WithUserMessage("error decoding service"))
+    mutils.HttpCheckPanic(response.WriteEntity(nService), mutils.InternalError)
     
 }
 
 func (as *AdminServiceResource) listServiceHandler(request *restful.Request, response *restful.Response) {
-    type ListResult struct {
-        Keys []string
-    }
-    user := GetTokenFromContext(request)
+    user := mfilters.GetTokenFromContext(request)
     subdomain := request.QueryParameter("subdomain")
     ValidateSubdomain(subdomain)
-    key := fmt.Sprintf("%s/roles", Config.VaultPath)
+    key := fmt.Sprintf("%s/roles", mconfig.Config.VaultPath)
     vaultClient, err := vault.NewClient(vault.DefaultConfig())
-    HttpCheckPanic(err, InternalError)
+    mutils.HttpCheckPanic(err, mutils.InternalError)
     vaultClient.SetToken(user)
     secret, err := vaultClient.Logical().List(key)
-    HttpCheckPanic(err, PermissionError)
+    mutils.HttpCheckPanic(err, mutils.PermissionError)
     CheckSecretFailIfIsNull(secret)
     
-    sr := &ListResult{}
+    sr := &listResult{}
     err = mapstructure.Decode(secret.Data, sr)
-    HttpCheckPanic(err, InternalError)
+    mutils.HttpCheckPanic(err, mutils.InternalError)
     
     roleList := sr.Keys
     
     ret := []*AdminServiceResource{}
     for _, role := range roleList {
-        key := fmt.Sprintf("%s/roles/%s/%s", Config.VaultPath, role, subdomain)
+        key := fmt.Sprintf("%s/roles/%s/%s", mconfig.Config.VaultPath, role, subdomain)
         secret, err := vaultClient.Logical().Read(key)
         if !(err != nil || secret == nil || secret.Data == nil) {
             nService := &AdminServiceResource{}
             err = mapstructure.Decode(secret.Data, nService)
-            HttpCheckPanic(err, InternalError.WithUserMessage("error decoding service"))
+            mutils.HttpCheckPanic(err, mutils.InternalError.WithUserMessage("error decoding service"))
             ret = append(ret, nService)
         }
     }
-    response.WriteEntity(ret)
+    mutils.HttpCheckPanic(response.WriteEntity(ret), mutils.InternalError)
 }
 

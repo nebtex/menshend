@@ -5,8 +5,8 @@ import (
     . "github.com/smartystreets/goconvey/convey"
     "net/http/httptest"
     "net/http"
-    . "github.com/nebtex/menshend/pkg/utils"
-    . "github.com/nebtex/menshend/pkg/utils/test"
+    mutils "github.com/nebtex/menshend/pkg/utils"
+    testutils "github.com/nebtex/menshend/pkg/utils/test"
     "github.com/emicklei/go-restful"
     "github.com/ansel1/merry"
     vault "github.com/hashicorp/vault/api"
@@ -20,11 +20,11 @@ import (
 )
 
 func TestCreateEditServiceHandler(t *testing.T) {
-    os.Setenv("VAULT_ADDR", "http://127.0.0.1:8200")
+    mutils.CheckPanic(os.Setenv(vault.EnvVaultAddress, "http://127.0.0.1:8200"))
     Convey("Should create or modify a service", t, func() {
         Convey("Should save the service and return it as response",
             func(c C) {
-                CleanVault()
+                testutils.CleanVault()
                 
                 wsContainer := restful.NewContainer()
                 u := AdminServiceResource{}
@@ -53,21 +53,35 @@ func TestCreateEditServiceHandler(t *testing.T) {
 }
 
 func Test_LoadLongDescriptionFromUrl(t *testing.T) {
-    os.Setenv("VAULT_ADDR", "http://127.0.0.1:8200")
-    
+    mutils.CheckPanic(os.Setenv(vault.EnvVaultAddress, "http://127.0.0.1:8200"))
+    capturePanic := func(c C) {
+        r := recover()
+        if (r == nil) {
+            t.Error("did not panicked")
+            t.Fail()
+        }
+        switch x := r.(type) {
+        case error:
+            c.So(merry.Is(x, mutils.BadRequest), ShouldBeTrue)
+        default:
+            t.Errorf("%v", x)
+            t.Fail()
+        }
+    }
     Convey("if long description url is defined should use it for populate " +
         "long description", t, func(c C) {
         
-        CleanVault()
+        testutils.CleanVault()
         wsContainer := restful.NewContainer()
         u := AdminServiceResource{}
         u.Register(wsContainer)
         postBody, err := json.Marshal(
             &AdminServiceResource{
-                Meta:&ServiceMetadata{Name:"gitlab"},
+                Meta:&ServiceMetadata{Name:"gitlab",
+                    LongDescription: &ServiceLongDescription{
+                        Remote:&URLLongDescription{URL: "https://raw.githubusercontent.com/gitlabhq/gitlabhq/master/README.md"}}},
                 Resolver:&ServiceResolver{Yaml: &resolvers.YAMLResolver{}},
                 Strategy:&ServiceStrategy{Proxy: &strategy.Proxy{}},
-                LongDescriptionUrl:"https://raw.githubusercontent.com/gitlabhq/gitlabhq/master/README.md",
             })
         So(err, ShouldBeNil)
         httpReq, err := http.NewRequest("PUT", "/v1/adminServices/roles/ml-team/gitlab.", bytes.NewReader(postBody))
@@ -85,35 +99,20 @@ func Test_LoadLongDescriptionFromUrl(t *testing.T) {
         So(err, ShouldBeNil)
         So(rService.Meta.RoleID, ShouldEqual, "ml-team")
         So(rService.Meta.SubDomain, ShouldEqual, "gitlab.")
-        So(rService.LongDescription, ShouldNotBeEmpty)
+        So(rService.Meta.LongDescription.LongDescription(), ShouldNotBeEmpty)
     })
     
     Convey("should return error with a invalid url", t, func(c C) {
-        defer func() {
-            r := recover()
-            if (r == nil) {
-                t.Error("did not panicked")
-                t.Fail()
-            }
-            switch x := r.(type) {
-            case error:
-                c.So(merry.Is(x, BadRequest), ShouldBeTrue)
-            default:
-                t.Errorf("%v", x)
-                t.Fail()
-            }
-        }()
-        
-        CleanVault()
+        defer capturePanic(c)
+        testutils.CleanVault()
         wsContainer := restful.NewContainer()
         u := AdminServiceResource{}
         u.Register(wsContainer)
         postBody, err := json.Marshal(
             &AdminServiceResource{
-                Meta:&ServiceMetadata{Name:"gitlab"},
+                Meta:&ServiceMetadata{Name:"gitlab", LongDescription: &ServiceLongDescription{Remote:&URLLongDescription{URL: "httpsinvali¡d/"}}},
                 Resolver:&ServiceResolver{Yaml: &resolvers.YAMLResolver{}},
                 Strategy:&ServiceStrategy{Proxy: &strategy.Proxy{}},
-                LongDescriptionUrl:"httpsinvali¡d/",
             })
         So(err, ShouldBeNil)
         httpReq, err := http.NewRequest("PUT", "/v1/adminServices/roles/ml-team/gitlab.", bytes.NewReader(postBody))
@@ -128,35 +127,21 @@ func Test_LoadLongDescriptionFromUrl(t *testing.T) {
     })
     
     Convey("should return error if it cant load the url", t, func(c C) {
-        defer func() {
-            r := recover()
-            if (r == nil) {
-                t.Error("did not panicked")
-                t.Fail()
-            }
-            switch x := r.(type) {
-            case error:
-                c.So(merry.Is(x, BadRequest), ShouldBeTrue)
-            default:
-                t.Errorf("%v", x)
-                t.Fail()
-            }
-        }()
-        
-        CleanVault()
+        defer capturePanic(c)
+        testutils.CleanVault()
         wsContainer := restful.NewContainer()
         u := AdminServiceResource{}
         u.Register(wsContainer)
         postBody, err := json.Marshal(&AdminServiceResource{
-            Meta:&ServiceMetadata{Name:"gitlab"},
+            Meta:&ServiceMetadata{Name:"gitlab",
+                LongDescription:&ServiceLongDescription{
+                    Remote:&URLLongDescription{URL: "http://example.loca:54545/Readme.md"}}},
             Resolver:&ServiceResolver{Yaml: &resolvers.YAMLResolver{}},
             Strategy:&ServiceStrategy{Proxy: &strategy.Proxy{}},
-            LongDescriptionUrl:"http://example.loca:54545/Readme.md",
         })
         So(err, ShouldBeNil)
         httpReq, err := http.NewRequest("PUT", "/v1/adminServices/roles/ml-team/gitlab.", bytes.NewReader(postBody))
         So(err, ShouldBeNil)
-        
         httpReq.Header.Set("Content-Type", "application/json")
         So(err, ShouldBeNil)
         httpReq.Header.Add("X-Vault-Token", "myroot")
@@ -167,7 +152,7 @@ func Test_LoadLongDescriptionFromUrl(t *testing.T) {
 }
 
 func TestDeleteServiceHandler_Permissions(t *testing.T) {
-    os.Setenv("VAULT_ADDR", "http://127.0.0.1:8200")
+    mutils.CheckPanic(os.Setenv(vault.EnvVaultAddress, "http://127.0.0.1:8200"))
     
     Convey("Should return permission error if the user can't delete a " +
         "service in the role", t, func(c C) {
@@ -180,13 +165,13 @@ func TestDeleteServiceHandler_Permissions(t *testing.T) {
             switch x := r.(type) {
             case error:
                 fmt.Println(x)
-                c.So(merry.Is(x, PermissionError), ShouldBeTrue)
+                c.So(merry.Is(x, mutils.PermissionError), ShouldBeTrue)
             default:
                 t.Errorf("%v", x)
                 t.Fail()
             }
         }()
-        CleanVault()
+        testutils.CleanVault()
         vClient, err := vault.NewClient(vault.DefaultConfig())
         So(err, ShouldBeNil)
         vClient.SetToken("myroot")
@@ -194,8 +179,8 @@ func TestDeleteServiceHandler_Permissions(t *testing.T) {
         path "secret/menshend/roles/devops/*" { policy = "write" }
         path "secret/menshend/Admin" { policy = "write" }`)
         So(err, ShouldBeNil)
-        secret, err := vClient.Auth().Token().Create(&vault.TokenCreateRequest{
-            Policies:[]string{"admin-test-cesh"}})
+        secret, err := vClient.Auth().Token().Create(&vault.TokenCreateRequest{Policies:[]string{"admin-test-cesh"}})
+        So(err, ShouldBeNil)
         httpReq, err := http.NewRequest("DELETE", "/v1/adminServices/roles/ml-team/gitlab.", nil)
         So(err, ShouldBeNil)
         httpReq.Header.Set("Content-Type", "application/json")
@@ -211,7 +196,7 @@ func TestDeleteServiceHandler_Permissions(t *testing.T) {
 }
 
 func TestGetServiceHandler(t *testing.T) {
-    os.Setenv("VAULT_ADDR", "http://127.0.0.1:8200")
+    mutils.CheckPanic(os.Setenv(vault.EnvVaultAddress, "http://127.0.0.1:8200"))
     Convey("Should get a service by its path", t, func() {
         Convey("if service does not exist should return error",
             func(c C) {
@@ -223,14 +208,14 @@ func TestGetServiceHandler(t *testing.T) {
                     }
                     switch x := r.(type) {
                     case error:
-                        c.So(merry.Is(x, NotFound), ShouldBeTrue)
+                        c.So(merry.Is(x, mutils.NotFound), ShouldBeTrue)
                     default:
                         t.Errorf("%v", x)
                         t.Fail()
                     }
                 }()
                 
-                CleanVault()
+                testutils.CleanVault()
                 
                 wsContainer := restful.NewContainer()
                 u := AdminServiceResource{}
@@ -244,8 +229,8 @@ func TestGetServiceHandler(t *testing.T) {
         
         Convey("Should return  the service",
             func(c C) {
-                CleanVault()
-                PopulateVault()
+                testutils.CleanVault()
+                testutils.PopulateVault()
                 wsContainer := restful.NewContainer()
                 u := AdminServiceResource{}
                 u.Register(wsContainer)
@@ -260,10 +245,10 @@ func TestGetServiceHandler(t *testing.T) {
 }
 
 func TestListServiceHandler(t *testing.T) {
-    os.Setenv("VAULT_ADDR", "http://127.0.0.1:8200")
+    mutils.CheckPanic(os.Setenv(vault.EnvVaultAddress, "http://127.0.0.1:8200"))
     Convey("Should get all the services with the same subdomian across roles", t, func() {
-        CleanVault()
-        PopulateVault()
+        testutils.CleanVault()
+        testutils.PopulateVault()
         wsContainer := restful.NewContainer()
         u := AdminServiceResource{}
         u.Register(wsContainer)

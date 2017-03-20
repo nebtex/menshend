@@ -2,18 +2,20 @@ package v1
 
 import (
     "github.com/emicklei/go-restful"
-    . "github.com/nebtex/menshend/pkg/config"
+    "github.com/nebtex/menshend/pkg/config"
+    mutils "github.com/nebtex/menshend/pkg/utils"
 )
 
-//Space ..
+//SpaceResource ...
 type SpaceResource struct {
-    Logo               string `json:"logo"`
-    Name               string `json:"name"`
-    ShortDescription   string `json:"shortDescription"`
-    LongDescription    string `json:"longDescription"`
-    Host               string `json:"host"`
+    Logo             string `json:"logo"`
+    Name             string `json:"name"`
+    ShortDescription string `json:"shortDescription"`
+    LongDescription  string `json:"longDescription"`
+    Host             string `json:"host"`
 }
 
+//Register ...
 func (s *SpaceResource) Register(container *restful.Container) {
     ws := new(restful.WebService).
         Consumes(restful.MIME_JSON).
@@ -31,11 +33,11 @@ func (s *SpaceResource) Register(container *restful.Container) {
 
 func (s *SpaceResource) info(request *restful.Request, response *restful.Response) {
     ns := SpaceResource{}
-    ns.LongDescription = Config.GetLongDescription()
-    ns.ShortDescription = Config.GetShortDescription()
-    ns.Name = Config.GetName()
-    ns.Logo = Config.GetLogo()
-    ns.Host = Config.Host()
-    response.WriteEntity(ns)
+    ns.LongDescription = config.Config.GetLongDescription()
+    ns.ShortDescription = config.Config.GetShortDescription()
+    ns.Name = config.Config.GetName()
+    ns.Logo = config.Config.GetLogo()
+    ns.Host = config.Config.Host()
+    mutils.HttpCheckPanic(response.WriteEntity(ns), mutils.InternalError)
 }
 

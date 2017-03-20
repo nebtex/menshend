@@ -107,7 +107,7 @@ func TestLoginFilter(t *testing.T) {
         " is valid", t, func(c C) {
         httpReq, _ := http.NewRequest("GET", "/", nil)
         req := restful.NewRequest(httpReq)
-        req.Request.Header.Add("X-Vault-Token", "test-token")
+        req.Request.Header.Add("Authorization", "Bearer test-token")
         
         recorder := new(httptest.ResponseRecorder)
         resp := restful.NewResponse(recorder)

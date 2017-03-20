@@ -9,10 +9,10 @@ import (
     "strings"
 )
 
-func parseBearerAuth(auth string) (token string, ok bool) {
+func parseBearerAuth(auth string) (string, bool) {
     const prefix = "Bearer "
     if !strings.HasPrefix(auth, prefix) {
-        return
+        return "", false
     }
     return auth[len(prefix):], true
 }
@@ -25,6 +25,7 @@ func GetTokenFromRequest(r *restful.Request) string {
             vaultToken = bearerToken
         }
     }
+    
     return vaultToken
 }
 

@@ -3,10 +3,11 @@ package v1
 import (
     "testing"
     . "github.com/smartystreets/goconvey/convey"
-    . "github.com/nebtex/menshend/pkg/utils/test"
-    . "github.com/nebtex/menshend/pkg/utils"
+    testutils "github.com/nebtex/menshend/pkg/utils/test"
+    mutils "github.com/nebtex/menshend/pkg/utils"
     "github.com/ansel1/merry"
     "os"
+    vault "github.com/hashicorp/vault/api"
 )
 
 func Test_ValidateService(t *testing.T) {
@@ -105,9 +106,8 @@ func Test_ValidateSubdomain(t *testing.T) {
     })
 }
 
-
 func Test_ValidateSecret(t *testing.T) {
-    os.Setenv("VAULT_ADDR", "http://127.0.0.1:8200")
+    mutils.CheckPanic(os.Setenv(vault.EnvVaultAddress, "http://127.0.0.1:8200"))
     Convey("Test_ValidateSecret", t, func() {
         Convey("should fails if service does not exists", func(c C) {
             defer func() {
@@ -118,13 +118,13 @@ func Test_ValidateSecret(t *testing.T) {
                 }
                 switch x := r.(type) {
                 case error:
-                    c.So(merry.Is(x, NotFound), ShouldBeTrue)
+                    c.So(merry.Is(x, mutils.NotFound), ShouldBeTrue)
                 default:
                     t.Errorf("%v", x)
                     t.Fail()
                 }
             }()
-            CleanVault()
+            testutils.CleanVault()
             ValidateSecret("roles/admin/consul./consul/creds/readonly", "myroot")
         })
         
@@ -137,20 +137,20 @@ func Test_ValidateSecret(t *testing.T) {
                 }
                 switch x := r.(type) {
                 case error:
-                    c.So(merry.Is(x, NotFound), ShouldBeTrue)
+                    c.So(merry.Is(x, mutils.NotFound), ShouldBeTrue)
                 default:
                     t.Errorf("%v", x)
                     t.Fail()
                 }
             }()
-            CleanVault()
-            PopulateVault()
+            testutils.CleanVault()
+            testutils.PopulateVault()
             ValidateSecret("roles/ml-team/consul./consul/creds/readonly", "myroot")
         })
         
         Convey("should return vault path", func(c C) {
-            CleanVault()
-            PopulateVault()
+            testutils.CleanVault()
+            testutils.PopulateVault()
             key := ValidateSecret("roles/ml-team/gitlab./secret/gitlab/password", "myroot")
             So(key, ShouldEqual, "secret/gitlab/password")
         })

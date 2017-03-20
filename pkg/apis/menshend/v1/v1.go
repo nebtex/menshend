@@ -5,7 +5,8 @@ import (
     "github.com/emicklei/go-restful"
 )
 
-func ApiHandler() http.Handler {
+//APIHandler menshend api endpoint handler
+func APIHandler() http.Handler {
     wsContainer := restful.NewContainer()
     account:= &AuthResource{}
     account.Register(wsContainer)

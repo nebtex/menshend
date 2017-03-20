@@ -5,34 +5,31 @@ import (
     "github.com/mitchellh/mapstructure"
     vault "github.com/hashicorp/vault/api"
     "fmt"
-    . "github.com/nebtex/menshend/pkg/apis/menshend"
-    . "github.com/nebtex/menshend/pkg/config"
-    . "github.com/nebtex/menshend/pkg/utils"
+    mfilters "github.com/nebtex/menshend/pkg/filters"
+    "github.com/nebtex/menshend/pkg/config"
+    mutils "github.com/nebtex/menshend/pkg/utils"
 )
 
-type ListResult struct {
+type listResult struct {
     Keys []string
 }
 
-//Service service definition struct
+//ClientServiceResource part of the service that is accessible to not admin users
 type ClientServiceResource struct {
     Meta                  *ServiceMetadata  `json:"meta"`
-    Logo                  string `json:"logo"`
-    ShortDescription      string `json:"shortDescription"`
-    LongDescription       string `json:"longDescription"`
-    LongDescriptionUrl    string `json:"longDescriptionUrl"`
-    ImpersonateWithinRole bool   `json:"impersonateWithinRole"`
-    IsActive              *bool `json:"isActive"`
-    SecretPaths           []string `json:"secretPaths"`
+    ImpersonateWithinRole bool              `json:"impersonateWithinRole"`
+    IsActive              *bool             `json:"isActive"`
+    SecretPaths           []string          `json:"secretPaths"`
 }
 
+//Register ...
 func (cs *ClientServiceResource) Register(container *restful.Container) {
     ws := new(restful.WebService).
         Consumes(restful.MIME_JSON).
         Produces(restful.MIME_JSON)
     
     ws.Path("/v1/clientServices").
-        Filter(LoginFilter).
+        Filter(mfilters.LoginFilter).
         Doc("List and search available Services")
     
     ws.Route(ws.GET("").To(cs.listServiceHandler).
@@ -45,14 +42,15 @@ func (cs *ClientServiceResource) Register(container *restful.Container) {
     container.Add(ws)
     
 }
+//CheckSecretFailIfIsNull panic if vault backend return a empty secret
 func CheckSecretFailIfIsNull(s *vault.Secret) {
     if s == nil || s.Data == nil {
-        panic(NotFound)
+        panic(mutils.NotFound)
     }
 }
 
 func (cs *ClientServiceResource) listServiceHandler(request *restful.Request, response *restful.Response) {
-    user := GetTokenFromContext(request)
+    user := mfilters.GetTokenFromContext(request)
     subdomain := request.QueryParameter("subdomain")
     role := request.QueryParameter("role")
     ret := []*ClientServiceResource{}
@@ -60,88 +58,88 @@ func (cs *ClientServiceResource) listServiceHandler(request *restful.Request, re
     if role != "" && subdomain != "" {
         ValidateSubdomain(subdomain)
         ValidateRole(role)
-        key := fmt.Sprintf("%s/roles/%s/%s", Config.VaultPath, role, subdomain)
+        key := fmt.Sprintf("%s/roles/%s/%s", config.Config.VaultPath, role, subdomain)
         vaultClient, err := vault.NewClient(vault.DefaultConfig())
-        HttpCheckPanic(err, InternalError)
+        mutils.HttpCheckPanic(err, mutils.InternalError)
         vaultClient.SetToken(user)
         secret, err := vaultClient.Logical().Read(key)
-        HttpCheckPanic(err, PermissionError)
+        mutils.HttpCheckPanic(err, mutils.PermissionError)
         CheckSecretFailIfIsNull(secret)
         nService := &ClientServiceResource{}
         err = mapstructure.Decode(secret.Data, nService)
-        HttpCheckPanic(err, InternalError.WithUserMessage("error decoding service"))
+        mutils.HttpCheckPanic(err, mutils.InternalError.WithUserMessage("error decoding service"))
         ret = append(ret, nService)
-        response.WriteEntity(ret)
+        mutils.HttpCheckPanic(response.WriteEntity(ret), mutils.InternalError)
         return
     }
     
     if role != "" {
-        response.WriteEntity(getServiceByRole(user, role))
+        mutils.HttpCheckPanic(response.WriteEntity(getServiceByRole(user, role)), mutils.InternalError)
         return
     }
     
     if subdomain != "" {
-        response.WriteEntity(getServiceBySubdomain(user, subdomain))
+        mutils.HttpCheckPanic(response.WriteEntity(getServiceBySubdomain(user, subdomain)), mutils.InternalError)
         return
     }
     
-    key := fmt.Sprintf("%s/roles", Config.VaultPath)
+    key := fmt.Sprintf("%s/roles", config.Config.VaultPath)
     vaultClient, err := vault.NewClient(vault.DefaultConfig())
-    HttpCheckPanic(err, InternalError)
+    mutils.HttpCheckPanic(err, mutils.InternalError)
     vaultClient.SetToken(user)
     secret, err := vaultClient.Logical().List(key)
-    HttpCheckPanic(err, PermissionError)
+    mutils.HttpCheckPanic(err, mutils.PermissionError)
     CheckSecretFailIfIsNull(secret)
-    sr := &ListResult{}
+    sr := &listResult{}
     err = mapstructure.Decode(secret.Data, sr)
-    HttpCheckPanic(err, InternalError)
+    mutils.HttpCheckPanic(err, mutils.InternalError)
     roleList := sr.Keys
     
     for _, role := range roleList {
-        rKey := fmt.Sprintf("%s/roles/%s", Config.VaultPath, role)
+        rKey := fmt.Sprintf("%s/roles/%s", config.Config.VaultPath, role)
         rSecret, err := vaultClient.Logical().List(rKey)
         if !(err != nil || rSecret == nil || rSecret.Data == nil) {
-            sr := &ListResult{}
+            sr := &listResult{}
             err = mapstructure.Decode(rSecret.Data, sr)
-            HttpCheckPanic(err, InternalError.WithUserMessage("there is something really wrong contact your admin"))
+            mutils.HttpCheckPanic(err, mutils.InternalError.WithUserMessage("there is something really wrong contact your admin"))
             serviceList := sr.Keys
             for _, service := range serviceList {
-                sKey := fmt.Sprintf("%s/roles/%s/%s", Config.VaultPath, role, service)
+                sKey := fmt.Sprintf("%s/roles/%s/%s", config.Config.VaultPath, role, service)
                 sSecret, err := vaultClient.Logical().Read(sKey)
                 if !(err != nil || sSecret == nil || sSecret.Data == nil) {
                     cs := &ClientServiceResource{}
                     err := mapstructure.Decode(sSecret.Data, cs)
-                    HttpCheckPanic(err, InternalError.WithUserMessage("there is something really wrong contact your admin"))
+                    mutils.HttpCheckPanic(err, mutils.InternalError.WithUserMessage("there is something really wrong contact your admin"))
                     ret = append(ret, cs)
                 }
             }
         }
     }
-    response.WriteEntity(ret)
+    mutils.HttpCheckPanic(response.WriteEntity(ret), mutils.InternalError)
 }
 
 func getServiceByRole(user string, role string) []*ClientServiceResource {
     ValidateRole(role)
-    key := fmt.Sprintf("%s/roles/%s", Config.VaultPath, role)
+    key := fmt.Sprintf("%s/roles/%s", config.Config.VaultPath, role)
     vaultClient, err := vault.NewClient(vault.DefaultConfig())
-    HttpCheckPanic(err, InternalError)
+    mutils.HttpCheckPanic(err, mutils.InternalError)
     vaultClient.SetToken(user)
     secret, err := vaultClient.Logical().List(key)
-    HttpCheckPanic(err, PermissionError)
+    mutils.HttpCheckPanic(err, mutils.PermissionError)
     CheckSecretFailIfIsNull(secret)
-    sr := &ListResult{}
+    sr := &listResult{}
     err = mapstructure.Decode(secret.Data, sr)
-    HttpCheckPanic(err, InternalError)
+    mutils.HttpCheckPanic(err, mutils.InternalError)
     sList := sr.Keys
     ret := []*ClientServiceResource{}
     
     for _, subdomain := range sList {
-        key := fmt.Sprintf("%s/roles/%s/%s", Config.VaultPath, role, subdomain)
+        key := fmt.Sprintf("%s/roles/%s/%s", config.Config.VaultPath, role, subdomain)
         secret, err := vaultClient.Logical().Read(key)
         if !(err != nil || secret == nil || secret.Data == nil) {
             nService := &ClientServiceResource{}
             err = mapstructure.Decode(secret.Data, nService)
-            HttpCheckPanic(err, InternalError.WithUserMessage("there is something really wrong contact your admin"))
+            mutils.HttpCheckPanic(err, mutils.InternalError.WithUserMessage("there is something really wrong contact your admin"))
             ret = append(ret, nService)
         }
         
@@ -152,31 +150,30 @@ func getServiceByRole(user string, role string) []*ClientServiceResource {
 
 func getServiceBySubdomain(user string, subDomain string) []*ClientServiceResource {
     ValidateSubdomain(subDomain)
-    key := fmt.Sprintf("%s/roles", Config.VaultPath)
+    key := fmt.Sprintf("%s/roles", config.Config.VaultPath)
     vaultClient, err := vault.NewClient(vault.DefaultConfig())
-    HttpCheckPanic(err, InternalError)
+    mutils.HttpCheckPanic(err, mutils.InternalError)
     vaultClient.SetToken(user)
     secret, err := vaultClient.Logical().List(key)
-    HttpCheckPanic(err, PermissionError)
+    mutils.HttpCheckPanic(err, mutils.PermissionError)
     CheckSecretFailIfIsNull(secret)
-    sr := &ListResult{}
+    sr := &listResult{}
     err = mapstructure.Decode(secret.Data, sr)
-    HttpCheckPanic(err, InternalError)
+    mutils.HttpCheckPanic(err, mutils.InternalError)
     
     roleList := sr.Keys
     
     ret := []*ClientServiceResource{}
     for _, role := range roleList {
-        key := fmt.Sprintf("%s/roles/%s/%s", Config.VaultPath, role, subDomain)
+        key := fmt.Sprintf("%s/roles/%s/%s", config.Config.VaultPath, role, subDomain)
         secret, err := vaultClient.Logical().Read(key)
         if !(err != nil || secret == nil || secret.Data == nil) {
             nService := &ClientServiceResource{}
             err = mapstructure.Decode(secret.Data, nService)
-            HttpCheckPanic(err, InternalError.WithUserMessage("there is something really wrong contact your admin"))
+            mutils.HttpCheckPanic(err, mutils.InternalError.WithUserMessage("there is something really wrong contact your admin"))
             ret = append(ret, nService)
         }
         
     }
     return ret
-    
 }

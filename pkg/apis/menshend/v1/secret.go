@@ -3,18 +3,18 @@ package v1
 import (
     "github.com/emicklei/go-restful"
     vault "github.com/hashicorp/vault/api"
-    . "github.com/nebtex/menshend/pkg/utils"
-    . "github.com/nebtex/menshend/pkg/apis/menshend"
+    mutils "github.com/nebtex/menshend/pkg/utils"
+    mfilters "github.com/nebtex/menshend/pkg/filters"
 )
 
-//Space ..
+//SecretResource ...
 type SecretResource struct {
 }
-
+//Register ...
 func (s *SecretResource) Register(container *restful.Container) {
     ws := new(restful.WebService).
         Consumes(restful.MIME_JSON).
-        Produces(restful.MIME_JSON).Filter(LoginFilter)
+        Produces(restful.MIME_JSON).Filter(mfilters.LoginFilter)
     
     ws.Path("/v1/secret").
         Doc("return secret associate with a service")
@@ -29,14 +29,14 @@ func (s *SecretResource) Register(container *restful.Container) {
 
 func (s *SecretResource) read(request *restful.Request, response *restful.Response) {
     secretID := request.PathParameter("id")
-    user := GetTokenFromContext(request)
+    user := mfilters.GetTokenFromContext(request)
     key := ValidateSecret(secretID, user)
     vaultClient, err := vault.NewClient(vault.DefaultConfig())
-    HttpCheckPanic(err, InternalError)
+    mutils.HttpCheckPanic(err, mutils.InternalError)
     vaultClient.SetToken(user)
     secret, err := vaultClient.Logical().Read(key)
-    HttpCheckPanic(err, PermissionError)
+    mutils.HttpCheckPanic(err, mutils.PermissionError)
     CheckSecretFailIfIsNull(secret)
-    response.WriteEntity(secret)
+    mutils.HttpCheckPanic(response.WriteEntity(secret), mutils.InternalError)
 }
 
