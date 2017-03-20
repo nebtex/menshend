@@ -7,6 +7,8 @@ import (
 
 func ApiHandler() http.Handler {
     wsContainer := restful.NewContainer()
+    account:= &AuthResource{}
+    account.Register(wsContainer)
     admin := &AdminServiceResource{}
     admin.Register(wsContainer)
     client := &ClientServiceResource{}

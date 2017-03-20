@@ -8,7 +8,7 @@ import (
 
 func TestYAMLResolve_Resolve(t *testing.T) {
     Convey("should return backend", t, func() {
-        Yaml := &YAMLResolve{}
+        Yaml := &YAMLResolver{}
         Yaml.Content = `baseUrl: http://google.db:27072
 headersMap:
   h1: t1

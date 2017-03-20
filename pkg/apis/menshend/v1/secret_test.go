@@ -14,10 +14,11 @@ import (
     "github.com/ansel1/merry"
     vault "github.com/hashicorp/vault/api"
     "encoding/json"
+    "os"
 )
 
 func Test_SecretEndpoint(t *testing.T) {
-    VaultConfig.Address = "http://localhost:8200"
+    os.Setenv("VAULT_ADDR", "http://127.0.0.1:8200")
     Convey("should return info about the envirenment", t, func(c C) {
         CleanVault()
         PopulateVault()

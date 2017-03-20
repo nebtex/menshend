@@ -25,7 +25,6 @@ func GetTokenFromRequest(r *restful.Request) string {
             vaultToken = bearerToken
         }
     }
-    r.Request.BasicAuth()
     return vaultToken
 }
 
@@ -86,7 +85,7 @@ func IsAdmin(vaultToken string) bool {
                 ret = false
             }
         }()
-        CheckAdminPermission(vaultToken, VaultConfig)
+        CheckAdminPermission(vaultToken, vault.DefaultConfig())
     }()
     return ret
 }
@@ -101,7 +100,7 @@ func CanImpersonate(vaultToken string) bool {
                 ret = false
             }
         }()
-        CheckImpersonatePermission(vaultToken, VaultConfig)
+        CheckImpersonatePermission(vaultToken, vault.DefaultConfig())
     }()
     return ret
 }
@@ -109,7 +108,7 @@ func CanImpersonate(vaultToken string) bool {
 
 //AdminFilter fail if the user is not an admin
 func AdminFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
-    CheckAdminPermission(GetTokenFromContext(req), VaultConfig)
+    CheckAdminPermission(GetTokenFromContext(req), vault.DefaultConfig())
     chain.ProcessFilter(req, resp)
 }
 
@@ -117,6 +116,9 @@ func AdminFilter(req *restful.Request, resp *restful.Response, chain *restful.Fi
 //LoginFilter fail if the user is not logged in
 func LoginFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
     vaultToken := GetTokenFromRequest(req)
+    if vaultToken==""{
+        panic(NotAuthorized)
+    }
     req.SetAttribute("VaultToken", vaultToken)
     chain.ProcessFilter(req, resp)
 }
@@ -124,6 +126,6 @@ func LoginFilter(req *restful.Request, resp *restful.Response, chain *restful.Fi
 
 //ImpersonateFilter ....
 func ImpersonateFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
-    CheckImpersonatePermission(GetTokenFromContext(req), VaultConfig)
+    CheckImpersonatePermission(GetTokenFromContext(req), vault.DefaultConfig())
     chain.ProcessFilter(req, resp)
 }

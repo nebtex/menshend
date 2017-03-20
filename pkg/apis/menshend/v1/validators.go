@@ -19,19 +19,19 @@ func ValidateRegExp(s string, r string) bool {
 
 func ValidateService(s string) {
     if !ValidateRegExp(s, "^roles/[a-z0-9\\-]+/([a-z0-9\\-]+\\.)+$") {
-        panic(BadRequest.Append("Invalid service").Append(s))
+        panic(BadRequest.WithUserMessage("Invalid service").WithUserMessage(s))
     }
 }
 
 func ValidateSubdomain(s string) {
     if !ValidateRegExp(s, "^([a-z0-9\\-]+\\.)+$") {
-        panic(BadRequest.Append("Invalid service").Append(s))
+        panic(BadRequest.WithUserMessage("Invalid service").WithUserMessage(s))
     }
 }
 
 func ValidateRole(s string) {
     if !ValidateRegExp(s, "^[a-z0-9\\-]+$") {
-        panic(BadRequest.Append("Invalid role").Append(s))
+        panic(BadRequest.WithUserMessage("Invalid role").WithUserMessage(s))
     }
 }
 
@@ -45,7 +45,7 @@ func ValidateSecret(secretId string, user string) (vaultSecretPath string) {
     serviceId := fmt.Sprintf("roles/%s/%s", role, subdomain)
     vaultSecretPath = strings.Replace(secretId, serviceId + "/", "", 1)
     //load service
-    vc, err := vault.NewClient(VaultConfig)
+    vc, err := vault.NewClient(vault.DefaultConfig())
     HttpCheckPanic(err, InternalError)
     vc.SetToken(user)
     secret, err := vc.Logical().Read(fmt.Sprintf("%s/%s", Config.VaultPath, serviceId))
@@ -54,7 +54,7 @@ func ValidateSecret(secretId string, user string) (vaultSecretPath string) {
     
     nService := &AdminServiceResource{}
     err = mapstructure.Decode(secret.Data, nService)
-    HttpCheckPanic(err, InternalError.Append("error decoding service"))
+    HttpCheckPanic(err, InternalError.WithUserMessage("error decoding service"))
     //check if secret exist in service
     if !SliceStringContains(nService.SecretPaths, vaultSecretPath) {
         panic(NotFound)

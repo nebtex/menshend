@@ -8,13 +8,15 @@ import (
     . "github.com/nebtex/menshend/pkg/utils"
     "strings"
     "github.com/fatih/structs"
+    "github.com/nebtex/menshend/pkg/strategy"
+    "github.com/nebtex/menshend/pkg/resolvers"
 )
 
 func CleanVault() {
     type ListResult struct {
         Keys []string
     }
-    vc, err := vault.NewClient(VaultConfig)
+    vc, err := vault.NewClient(vault.DefaultConfig())
     CheckPanic(err)
     vc.SetToken("myroot")
     
@@ -55,12 +57,35 @@ func CleanVault() {
 
 type Role map[string]*Service
 
+type TestServiceStrategy struct {
+    Proxy       *strategy.Proxy `json:"proxy"`
+    PortForward *strategy.PortForward `json:"portForward"`
+    Redirect    *strategy.Redirect `json:"redirect"`
+}
+
+type TestServiceMetadata struct {
+    ID        string `json:"id"`
+    RoleID    string `json:"roleId"`
+    SubDomain string `json:"subDomain"`
+    Name      string `json:"name"`
+}
+
+type TestServiceCache struct {
+    // time to live seconds
+    TTL    int `json:"ttl"`
+    Active bool `json:"active"`
+}
+type TestServiceResolver struct {
+    Yaml  *resolvers.YAMLResolver `json:"yaml"`
+    Lua   *resolvers.LuaResolver `json:"lua"`
+    Cache *TestServiceCache `json:"cache"`
+}
+
 //Service service definition struct
 type Service struct {
-    Logo                  string
-    SubDomain             string
-    Name                  string
-    ShortDescription      string
+    Meta                  *TestServiceMetadata `json:"meta"`
+    Logo                  string `json:"logo"`
+    ShortDescription      string `json:"shortDescription"`
     LongDescription       string
     ProxyCode             string
     ProxyLanguage         string
@@ -69,54 +94,40 @@ type Service struct {
     IsActive              bool
     SecretPaths           []string
     CSRF                  bool
-    Strategy              string
+    Strategy              *TestServiceStrategy `json:"strategy"`
+    Resolver              *TestServiceResolver `json:"resolver"`
 }
 
 func PopulateVault() {
-    vc, err := vault.NewClient(VaultConfig)
+    vc, err := vault.NewClient(vault.DefaultConfig())
     vc.SetToken("myroot")
     CheckPanic(err)
     roles := map[string]Role{
         "ml-team": map[string]*Service{
             "consul.":{IsActive:true,
-                SubDomain: "consul.",
+                Meta: &TestServiceMetadata{SubDomain: "consul."},
                 ImpersonateWithinRole: true,
                 CSRF: true,
-                Strategy: "proxy",
-                ProxyCode: `function getBackend (Username, Groups, AuthProvider)
+                Strategy: &TestServiceStrategy{Proxy:&strategy.Proxy{}},
+                Resolver: &TestServiceResolver{Lua: &resolvers.LuaResolver{Content: `function getBackend (tokenInfo, request)
     return "http://localhost:5454", {}
-end`,
-                ProxyLanguage:"lua"},
+end`}}, },
             "consul-2.":{IsActive:true,
-                SubDomain: "consul-2.",
+                Meta: &TestServiceMetadata{SubDomain: "consul-2."},
                 ImpersonateWithinRole: true,
                 CSRF: false,
-                Strategy: "proxy",
-                ProxyCode: `function getBackend (Username, Groups, AuthProvider)
+                Strategy: &TestServiceStrategy{Proxy:&strategy.Proxy{}},
+                Resolver: &TestServiceResolver{Lua: &resolvers.LuaResolver{Content: `function getBackend (tokenInfo, request)
     return "http://localhost:5454", {}
-end`,
-                ProxyLanguage:"lua"},
+end`}}, },
             "gitlab.":{IsActive:false, SecretPaths:[]string{"secret/gitlab/password", Config.VaultPath + "/roles/ml-team/gitlab."},
-                ProxyCode:`
-    function getBackend ()
-        return "http://gitlab"
-    end
-    `},
+            },
             "postgres.":{},
-            "redis.":{}},
+            "redis.":{IsActive:true, Meta: &TestServiceMetadata{SubDomain: "redis."}, ShortDescription: "redisdb"}, },
         "admin":map[string]*Service{
-            "kubernetes":{IsActive:true,
-                ProxyCode:`
-    function getBackend ()
-        return "invalid_url"
-    end
-    `},
+            "kubernetes":{IsActive:true},
             "vault.":{},
-            "redis.":{IsActive:true, ProxyCode:`
-    function getBackend ()
-        return "http://redis.kv"
-    end
-    `},
+            "redis.":{IsActive:true, Meta: &TestServiceMetadata{SubDomain: "redis."}, ShortDescription: "redisdb"},
         }}
     for role, services := range roles {
         for service, val := range services {

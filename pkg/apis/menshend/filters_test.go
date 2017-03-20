@@ -8,21 +8,19 @@ import (
     "net/http/httptest"
     "github.com/emicklei/go-restful"
     "net/http"
-    "github.com/Sirupsen/logrus"
     . "github.com/nebtex/menshend/pkg/utils/test"
-    . "github.com/nebtex/menshend/pkg/config"
     . "github.com/nebtex/menshend/pkg/utils"
-
+    "os"
 )
 
 func Test_IsAdmin(t *testing.T) {
-    VaultConfig.Address = "http://localhost:8200"
+    os.Setenv("VAULT_ADDR", "http://127.0.0.1:8200")
     Convey("This function should indicate if the user is admin or" +
         " not", t, func() {
         Convey("Should return false if th user is not an admin", func() {
             CleanVault()
             So(IsAdmin("test_token"), ShouldBeFalse)
-            vaultClient, vaultErr := vault.NewClient(VaultConfig)
+            vaultClient, vaultErr := vault.NewClient(vault.DefaultConfig())
             So(vaultErr, ShouldBeNil)
             vaultClient.SetToken("myroot")
             
@@ -44,7 +42,7 @@ func Test_IsAdmin(t *testing.T) {
 }
 
 func Test_CanImpersonateHandler(t *testing.T) {
-    VaultConfig.Address = "http://localhost:8200"
+    os.Setenv("VAULT_ADDR", "http://127.0.0.1:8200")
     
     Convey("This endpoint should indicate if the user can impersonate or" +
         " not", t, func() {
@@ -52,7 +50,7 @@ func Test_CanImpersonateHandler(t *testing.T) {
             CleanVault()
             So(CanImpersonate("test_token"), ShouldBeFalse)
             
-            vaultClient, vaultErr := vault.NewClient(VaultConfig)
+            vaultClient, vaultErr := vault.NewClient(vault.DefaultConfig())
             So(vaultErr, ShouldBeNil)
             vaultClient.SetToken("myroot")
             
@@ -77,13 +75,15 @@ func Test_CanImpersonateHandler(t *testing.T) {
 }
 
 func TestLoginFilter(t *testing.T) {
-    Convey("Should panic when there is not a jwt token", t,
+    Convey("Should panic when there is not vault token", t,
         func(c C) {
             defer func() {
                 r := recover()
                 switch x := r.(type) {
                 case error:
-                    c.So(merry.Is(x, NotAuthorized), ShouldBeTrue)
+                    if !merry.Is(x, NotAuthorized){
+                        panic(x)
+                    }
                 default:
                     t.Errorf("%v", x)
                     t.Fail()
@@ -101,37 +101,7 @@ func TestLoginFilter(t *testing.T) {
             So(panicked, ShouldBeTrue)
             
         })
-    
-    Convey("Should panic if there is an invalid token", t,
-        func(c C) {
-            defer func() {
-                r := recover()
-                logrus.Error(r)
-                
-                switch x := r.(type) {
-                case error:
-                    c.So(merry.Is(x, NotAuthorized), ShouldBeTrue)
-                case nil:
-                    t.Errorf("%v", "does not panic")
-                    t.Fail()
-                default:
-                    t.Errorf("%v", x)
-                    t.Fail()
-                }
-            }()
-            httpReq, _ := http.NewRequest("GET", "/", nil)
-            req := restful.NewRequest(httpReq)
-            req.Request.Header.Add("X-Vault-Token", "test-token")
-            
-            recorder := new(httptest.ResponseRecorder)
-            resp := restful.NewResponse(recorder)
-            target := func(freq *restful.Request, fresp *restful.Response) {}
-            tf := &restful.FilterChain{Target:target}
-            LoginFilter(req, resp, tf)
-            panicked := false
-            So(panicked, ShouldBeTrue)
-            
-        })
+
     
     Convey("Should make the user available in the context if the token" +
         " is valid", t, func(c C) {

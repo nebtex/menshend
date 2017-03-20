@@ -4,16 +4,16 @@ import (
     "testing"
     . "github.com/smartystreets/goconvey/convey"
     . "github.com/nebtex/menshend/pkg/utils/test"
-    . "github.com/nebtex/menshend/pkg/config"
     "net/http"
     "net/http/httptest"
     "github.com/emicklei/go-restful"
     "io/ioutil"
     "encoding/json"
+    "os"
 )
 
 func Test_ListClientService(t *testing.T) {
-    VaultConfig.Address = "http://localhost:8200"
+    os.Setenv("VAULT_ADDR", "http://127.0.0.1:8200")
     Convey("get by role", t, func(c C) {
         CleanVault()
         PopulateVault()

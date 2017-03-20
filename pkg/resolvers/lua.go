@@ -21,7 +21,8 @@ type LuaResolver struct {
 func (lr *LuaResolver) SetBody(s string) {
     lr.Body = s
 }
-
+//TODO: add method
+//TODO: end test
 func (lr *LuaResolver)Resolve(v *vault.Secret) (Backend) {
     
     script := lr.Content

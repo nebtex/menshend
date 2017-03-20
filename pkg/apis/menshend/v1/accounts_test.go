@@ -9,19 +9,16 @@ import (
     "github.com/emicklei/go-restful"
     "io/ioutil"
     . "github.com/nebtex/menshend/pkg/utils/test"
-    . "github.com/nebtex/menshend/pkg/config"
     "fmt"
     vault "github.com/hashicorp/vault/api"
+    "os"
 )
 
 func TestAccountStatus(t *testing.T) {
-    VaultConfig.Address = "http://127.0.0.1:8200"
+    os.Setenv("VAULT_ADDR", "http://127.0.0.1:8200")
     Convey("Should return user status", t, func() {
-        
         CleanVault()
-        wsContainer := restful.NewContainer()
-        ar := AuthResource{}
-        ar.Register(wsContainer)
+        wsContainer := ApiHandler()
         httpReq, err := http.NewRequest("GET", "/v1/account", nil)
         So(err, ShouldBeNil)
         httpReq.Header.Set("Content-Type", "application/json")
@@ -41,35 +38,33 @@ func TestAccountStatus(t *testing.T) {
         
     })
     Convey("Test when user is not logged", t, func() {
-        
-        CleanVault()
-        wsContainer := restful.NewContainer()
-        ar := AuthResource{}
-        ar.Register(wsContainer)
-        httpReq, err := http.NewRequest("GET", "/v1/account", nil)
-        So(err, ShouldBeNil)
-        httpReq.Header.Set("Content-Type", "application/json")
-        httpWriter := httptest.NewRecorder()
-        wsContainer.ServeHTTP(httpWriter, httpReq)
-        jsres, err := ioutil.ReadAll(httpWriter.Body)
-        So(err, ShouldBeNil)
-        status := &LoginStatus{}
-        fmt.Println(string(jsres))
-        err = json.Unmarshal(jsres, status)
-        So(err, ShouldBeNil)
-        So(status.IsLogged, ShouldEqual, false)
-        So(status.IsAdmin, ShouldEqual, false)
-        So(status.CanImpersonate, ShouldEqual, false)
-        
+		  CleanVault()
+		  wsContainer := restful.NewContainer()
+		  ar := AuthResource{}
+		  ar.Register(wsContainer)
+		  httpReq, err := http.NewRequest("GET", "/v1/account", nil)
+		  So(err, ShouldBeNil)
+		  httpReq.Header.Set("Content-Type", "application/json")
+		  httpWriter := httptest.NewRecorder()
+		  wsContainer.ServeHTTP(httpWriter, httpReq)
+		  jsres, err := ioutil.ReadAll(httpWriter.Body)
+		  So(err, ShouldBeNil)
+		  status := &LoginStatus{}
+		  fmt.Println(string(jsres))
+		  err = json.Unmarshal(jsres, status)
+		  So(err, ShouldBeNil)
+		  So(status.IsLogged, ShouldEqual, false)
+		  So(status.IsAdmin, ShouldEqual, false)
+		  So(status.CanImpersonate, ShouldEqual, false)
     })
 }
 
 func TestLogout(t *testing.T) {
-    VaultConfig.Address = "http://127.0.0.1:8200"
+    os.Setenv("VAULT_ADDR", "http://127.0.0.1:8200")
     Convey("Should logout", t, func() {
         CleanVault()
         //create token
-        vc, err := vault.NewClient(VaultConfig)
+        vc, err := vault.NewClient(vault.DefaultConfig())
         So(err, ShouldBeNil)
         vc.SetToken("myroot")
         secret, err := vc.Auth().Token().Create(nil)
@@ -87,5 +82,4 @@ func TestLogout(t *testing.T) {
         _, err = vc.Auth().Token().Lookup(secret.Auth.ClientToken)
         So(err, ShouldNotBeNil)
     })
-    
 }

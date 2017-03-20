@@ -16,16 +16,13 @@ type ListResult struct {
 
 //Service service definition struct
 type ClientServiceResource struct {
-    IsActive              bool `json:"isActive"`
-    ID                    string `json:"id"`
-    RoleID                string `json:"roleId"`
-    SubDomain             string `json:"subDomain"`
+    Meta                  *ServiceMetadata  `json:"meta"`
     Logo                  string `json:"logo"`
-    Name                  string `json:"name"`
-    Strategy              string `json:"strategy"`
     ShortDescription      string `json:"shortDescription"`
     LongDescription       string `json:"longDescription"`
+    LongDescriptionUrl    string `json:"longDescriptionUrl"`
     ImpersonateWithinRole bool   `json:"impersonateWithinRole"`
+    IsActive              *bool `json:"isActive"`
     SecretPaths           []string `json:"secretPaths"`
 }
 
@@ -64,7 +61,7 @@ func (cs *ClientServiceResource) listServiceHandler(request *restful.Request, re
         ValidateSubdomain(subdomain)
         ValidateRole(role)
         key := fmt.Sprintf("%s/roles/%s/%s", Config.VaultPath, role, subdomain)
-        vaultClient, err := vault.NewClient(VaultConfig)
+        vaultClient, err := vault.NewClient(vault.DefaultConfig())
         HttpCheckPanic(err, InternalError)
         vaultClient.SetToken(user)
         secret, err := vaultClient.Logical().Read(key)
@@ -72,7 +69,7 @@ func (cs *ClientServiceResource) listServiceHandler(request *restful.Request, re
         CheckSecretFailIfIsNull(secret)
         nService := &ClientServiceResource{}
         err = mapstructure.Decode(secret.Data, nService)
-        HttpCheckPanic(err, InternalError.Append("error decoding service"))
+        HttpCheckPanic(err, InternalError.WithUserMessage("error decoding service"))
         ret = append(ret, nService)
         response.WriteEntity(ret)
         return
@@ -89,7 +86,7 @@ func (cs *ClientServiceResource) listServiceHandler(request *restful.Request, re
     }
     
     key := fmt.Sprintf("%s/roles", Config.VaultPath)
-    vaultClient, err := vault.NewClient(VaultConfig)
+    vaultClient, err := vault.NewClient(vault.DefaultConfig())
     HttpCheckPanic(err, InternalError)
     vaultClient.SetToken(user)
     secret, err := vaultClient.Logical().List(key)
@@ -106,7 +103,7 @@ func (cs *ClientServiceResource) listServiceHandler(request *restful.Request, re
         if !(err != nil || rSecret == nil || rSecret.Data == nil) {
             sr := &ListResult{}
             err = mapstructure.Decode(rSecret.Data, sr)
-            HttpCheckPanic(err, InternalError.Append("there is something really wrong contact your admin"))
+            HttpCheckPanic(err, InternalError.WithUserMessage("there is something really wrong contact your admin"))
             serviceList := sr.Keys
             for _, service := range serviceList {
                 sKey := fmt.Sprintf("%s/roles/%s/%s", Config.VaultPath, role, service)
@@ -114,7 +111,7 @@ func (cs *ClientServiceResource) listServiceHandler(request *restful.Request, re
                 if !(err != nil || sSecret == nil || sSecret.Data == nil) {
                     cs := &ClientServiceResource{}
                     err := mapstructure.Decode(sSecret.Data, cs)
-                    HttpCheckPanic(err, InternalError.Append("there is something really wrong contact your admin"))
+                    HttpCheckPanic(err, InternalError.WithUserMessage("there is something really wrong contact your admin"))
                     ret = append(ret, cs)
                 }
             }
@@ -126,7 +123,7 @@ func (cs *ClientServiceResource) listServiceHandler(request *restful.Request, re
 func getServiceByRole(user string, role string) []*ClientServiceResource {
     ValidateRole(role)
     key := fmt.Sprintf("%s/roles/%s", Config.VaultPath, role)
-    vaultClient, err := vault.NewClient(VaultConfig)
+    vaultClient, err := vault.NewClient(vault.DefaultConfig())
     HttpCheckPanic(err, InternalError)
     vaultClient.SetToken(user)
     secret, err := vaultClient.Logical().List(key)
@@ -144,7 +141,7 @@ func getServiceByRole(user string, role string) []*ClientServiceResource {
         if !(err != nil || secret == nil || secret.Data == nil) {
             nService := &ClientServiceResource{}
             err = mapstructure.Decode(secret.Data, nService)
-            HttpCheckPanic(err, InternalError.Append("there is something really wrong contact your admin"))
+            HttpCheckPanic(err, InternalError.WithUserMessage("there is something really wrong contact your admin"))
             ret = append(ret, nService)
         }
         
@@ -156,7 +153,7 @@ func getServiceByRole(user string, role string) []*ClientServiceResource {
 func getServiceBySubdomain(user string, subDomain string) []*ClientServiceResource {
     ValidateSubdomain(subDomain)
     key := fmt.Sprintf("%s/roles", Config.VaultPath)
-    vaultClient, err := vault.NewClient(VaultConfig)
+    vaultClient, err := vault.NewClient(vault.DefaultConfig())
     HttpCheckPanic(err, InternalError)
     vaultClient.SetToken(user)
     secret, err := vaultClient.Logical().List(key)
@@ -175,7 +172,7 @@ func getServiceBySubdomain(user string, subDomain string) []*ClientServiceResour
         if !(err != nil || secret == nil || secret.Data == nil) {
             nService := &ClientServiceResource{}
             err = mapstructure.Decode(secret.Data, nService)
-            HttpCheckPanic(err, InternalError.Append("there is something really wrong contact your admin"))
+            HttpCheckPanic(err, InternalError.WithUserMessage("there is something really wrong contact your admin"))
             ret = append(ret, nService)
         }
         

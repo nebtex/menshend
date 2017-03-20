@@ -33,7 +33,7 @@ func TestPortForward_Execute(t *testing.T) {
     
     Convey("Should forward port", t, func(c C) {
         
-        tb := &resolvers.YAMLResolve{}
+        tb := &resolvers.YAMLResolver{}
         tb.Content = `baseUrl: http://localhost:8200
 headersMap:
   h1: t1

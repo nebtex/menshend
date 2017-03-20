@@ -39,7 +39,7 @@ func (t *testBackend)Headers() map[string]string {
 func TestRedirect_Execute(t *testing.T) {
     Convey("Should redirect to backend", t, func() {
         
-        tb := &resolvers.YAMLResolve{}
+        tb := &resolvers.YAMLResolver{}
         tb.Content = `baseUrl: http://google.db:27072
 headersMap:
   h1: t1

@@ -19,7 +19,7 @@ type Resolver interface {
     SetBody(s string)
 }
 
-type YAMLResolve struct {
+type YAMLResolver struct {
     Content string `json:"content"`
 }
 type backendValues struct {
@@ -33,7 +33,7 @@ type SimpleBackend struct {
     ys *backendValues
 }
 
-func (yr *YAMLResolve) SetBody(s string) {}
+func (yr *YAMLResolver) SetBody(s string) {}
 
 func (ym *SimpleBackend)BaseUrl() string {
     return ym.ys.BaseUrl
@@ -54,7 +54,7 @@ func (ym *SimpleBackend)Passed() bool {
     return *ym.ys.Passed
 }
 
-func (yr *YAMLResolve)Resolve(u *vault.Secret) (Backend) {
+func (yr *YAMLResolver)Resolve(u *vault.Secret) (Backend) {
     ys := &backendValues{}
     err := yaml.Unmarshal([]byte(yr.Content), ys)
     HttpCheckPanic(err, InternalError)

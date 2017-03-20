@@ -12,12 +12,12 @@ func getSubDomain(s string) string {
     
 }
 
-
 func mainHandler(response http.ResponseWriter, request *http.Request) {
    
     
 }
-
+//TODO: add in config read token from custom param
+//Deactivate cache usign query params
 func proxyServer() http.Handler {
     r := mux.NewRouter()
     handler := TokenRealmSecurityHandler(RoleHandler(GetServiceHandler(ImpersonateWithinRoleHandler(ProxyHandlers()))))

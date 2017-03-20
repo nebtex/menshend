@@ -46,7 +46,7 @@ func (ss *ServiceStrategy) Validate() {
     }
     
     if defined != 1 {
-        panic(BadRequest.Append("Please define only one strategy, you have not define one!! or have multiples defined"))
+        panic(BadRequest.WithUserMessage("Please define only one strategy, you have not define one!! or have multiples defined"))
     }
 }
 
@@ -61,7 +61,7 @@ func (ss *ServiceStrategy)Get() strategy.Strategy {
 }
 
 type ServiceResolver struct {
-    Yaml  *resolvers.YAMLResolve `json:"yaml"`
+    Yaml  *resolvers.YAMLResolver `json:"yaml"`
     Lua   *resolvers.LuaResolver `json:"lua"`
     Cache *ServiceCache `json:"cache"`
 }
@@ -76,7 +76,7 @@ func (sr *ServiceResolver) Validate() {
     }
     
     if defined != 1 {
-        panic(BadRequest.Append("Please define only one resolver, you have not define one!! or have multiples defined"))
+        panic(BadRequest.WithUserMessage("Please define only one resolver, you have not define one!! or have multiples defined"))
     }
 }
 func (sr *ServiceResolver) Get() resolvers.Resolver {
@@ -182,25 +182,27 @@ func (as *AdminServiceResource) putServiceHandler(request *restful.Request, resp
     ValidateService(serviceId)
     nService := &AdminServiceResource{}
     err := request.ReadEntity(nService)
-    HttpCheckPanic(err, BadRequest.Append("error decoding request"))
+    HttpCheckPanic(err, BadRequest.WithUserMessage("error decoding request"))
     
-    nService.Meta.RoleID, nService.Meta.SubDomain = getRoleAndSubdomain(serviceId)
     if nService.Resolver == nil {
-        HttpCheckPanic(err, BadRequest.Append("Please create a resolver section"))
+        panic(BadRequest.WithUserMessage("Please create a resolver section"))
     }
     if nService.Strategy == nil {
-        HttpCheckPanic(err, BadRequest.Append("Please create a strategy section"))
+        panic(BadRequest.WithUserMessage("Please create a strategy section"))
     }
     if nService.Meta == nil {
-        HttpCheckPanic(err, BadRequest.Append("Service metadata is not defined"))
+        panic(BadRequest.WithUserMessage("Service metadata is not defined"))
     }
+    
+    nService.Meta.RoleID, nService.Meta.SubDomain = getRoleAndSubdomain(serviceId)
+    
     nService.Resolver.Validate()
     nService.Strategy.Validate()
     
     err = nService.LoadLongDescriptionUrl()
-    HttpCheckPanic(err, BadRequest.Append("invalid LongDescriptionUrl or can't connecto to remote address"))
+    HttpCheckPanic(err, BadRequest.WithUserMessage("invalid LongDescriptionUrl or can't connecto to remote address"))
     
-    vaultClient, err := vault.NewClient(VaultConfig)
+    vaultClient, err := vault.NewClient(vault.DefaultConfig())
     HttpCheckPanic(err, InternalError)
     vaultClient.SetToken(user)
     key := fmt.Sprintf("%s/%s", Config.VaultPath, serviceId)
@@ -216,10 +218,10 @@ func (as *AdminServiceResource)deleteServiceHandler(request *restful.Request, re
     ValidateService(serviceId)
     
     key := fmt.Sprintf("%s/%s", Config.VaultPath, serviceId)
-    vaultClient, err := vault.NewClient(VaultConfig)
+    vaultClient, err := vault.NewClient(vault.DefaultConfig())
     HttpCheckPanic(err, InternalError)
     vaultClient.SetToken(user)
-    HttpCheckPanic(err, InternalError.Append("error decoding service"))
+    HttpCheckPanic(err, InternalError.WithUserMessage("error decoding service"))
     _, err = vaultClient.Logical().Delete(key)
     HttpCheckPanic(err, PermissionError)
     response.WriteEntity(nil)
@@ -230,7 +232,7 @@ func (as *AdminServiceResource)getService(request *restful.Request, response *re
     serviceId := request.PathParameter("id")
     ValidateService(serviceId)
     key := fmt.Sprintf("%s/%s", Config.VaultPath, serviceId)
-    vaultClient, err := vault.NewClient(VaultConfig)
+    vaultClient, err := vault.NewClient(vault.DefaultConfig())
     HttpCheckPanic(err, InternalError)
     vaultClient.SetToken(user)
     secret, err := vaultClient.Logical().Read(key)
@@ -239,7 +241,7 @@ func (as *AdminServiceResource)getService(request *restful.Request, response *re
     
     nService := &AdminServiceResource{}
     err = mapstructure.Decode(secret.Data, nService)
-    HttpCheckPanic(err, InternalError.Append("error decoding service"))
+    HttpCheckPanic(err, InternalError.WithUserMessage("error decoding service"))
     response.WriteEntity(nService)
     
 }
@@ -252,7 +254,7 @@ func (as *AdminServiceResource) listServiceHandler(request *restful.Request, res
     subdomain := request.QueryParameter("subdomain")
     ValidateSubdomain(subdomain)
     key := fmt.Sprintf("%s/roles", Config.VaultPath)
-    vaultClient, err := vault.NewClient(VaultConfig)
+    vaultClient, err := vault.NewClient(vault.DefaultConfig())
     HttpCheckPanic(err, InternalError)
     vaultClient.SetToken(user)
     secret, err := vaultClient.Logical().List(key)
@@ -272,7 +274,7 @@ func (as *AdminServiceResource) listServiceHandler(request *restful.Request, res
         if !(err != nil || secret == nil || secret.Data == nil) {
             nService := &AdminServiceResource{}
             err = mapstructure.Decode(secret.Data, nService)
-            HttpCheckPanic(err, InternalError.Append("error decoding service"))
+            HttpCheckPanic(err, InternalError.WithUserMessage("error decoding service"))
             ret = append(ret, nService)
         }
     }

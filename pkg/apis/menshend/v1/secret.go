@@ -2,7 +2,6 @@ package v1
 
 import (
     "github.com/emicklei/go-restful"
-    . "github.com/nebtex/menshend/pkg/config"
     vault "github.com/hashicorp/vault/api"
     . "github.com/nebtex/menshend/pkg/utils"
     . "github.com/nebtex/menshend/pkg/apis/menshend"
@@ -32,7 +31,7 @@ func (s *SecretResource) read(request *restful.Request, response *restful.Respon
     secretID := request.PathParameter("id")
     user := GetTokenFromContext(request)
     key := ValidateSecret(secretID, user)
-    vaultClient, err := vault.NewClient(VaultConfig)
+    vaultClient, err := vault.NewClient(vault.DefaultConfig())
     HttpCheckPanic(err, InternalError)
     vaultClient.SetToken(user)
     secret, err := vaultClient.Logical().Read(key)

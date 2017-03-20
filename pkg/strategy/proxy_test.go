@@ -15,7 +15,7 @@ import (
 
 func TestProxy_Execute(t *testing.T) {
     Convey("Should proxy http/https", t, func() {
-        tb := &resolvers.YAMLResolve{}
+        tb := &resolvers.YAMLResolver{}
         tb.Content = `baseUrl: http://localhost:8200
 headersMap:
   X-Vault-Token: myroot
@@ -49,7 +49,7 @@ headersMap:
                 t.Fail()
             }
         }()
-        tb := &resolvers.YAMLResolve{}
+        tb := &resolvers.YAMLResolver{}
         tb.Content = `baseUrl: http://example.local:444
 headersMap:
   X-Vault-Token: myroot
@@ -69,7 +69,7 @@ func TestProxyHandlersCSRF(t *testing.T) {
             Convey(" csrf is not pressent", func(c C) {
                 httpReq, err := http.NewRequest("PUT", "http://consul.menshend.com", nil)
                 So(err, ShouldBeNil)
-                tb := &resolvers.YAMLResolve{}
+                tb := &resolvers.YAMLResolver{}
                 tb.Content = `baseUrl: http://example.local:444
 headersMap:
   X-Vault-Token: myroot
@@ -98,7 +98,7 @@ headersMap:
                 
                 httpReq, err := http.NewRequest("GET", "http://consul.menshend.com", nil)
                 So(err, ShouldBeNil)
-                tb := &resolvers.YAMLResolve{}
+                tb := &resolvers.YAMLResolver{}
                 tb.Content = `baseUrl: http://example.local:444
 headersMap:
   X-Vault-Token: myroot
@@ -137,7 +137,7 @@ headersMap:
                 
                 httpReq, err := http.NewRequest("GET", "http://consul-2.menshend.com", nil)
                 So(err, ShouldBeNil)
-                tb := &resolvers.YAMLResolve{}
+                tb := &resolvers.YAMLResolver{}
                 tb.Content = `baseUrl: http://example.local:444
 headersMap:
   X-Vault-Token: myroot
@@ -151,7 +151,7 @@ headersMap:
             
             Convey("csrf should not be set", func(c C) {
           
-                tb := &resolvers.YAMLResolve{}
+                tb := &resolvers.YAMLResolver{}
                 
                 tb.Content = `baseUrl: http://localhost:8200
 headersMap:
@@ -188,7 +188,7 @@ headersMap:
                     
                     httpReq, err := http.NewRequest("GET", "http://consul-2.menshend.com", nil)
                     So(err, ShouldBeNil)
-                    tb := &resolvers.YAMLResolve{}
+                    tb := &resolvers.YAMLResolver{}
                     tb.Content = `baseUrl: http://example.local:444
 headersMap:
   X-Vault-Token: myroot
@@ -201,7 +201,7 @@ headersMap:
 				})
 				Convey("csrf is present", func(c C) {
                     
-                    tb := &resolvers.YAMLResolve{}
+                    tb := &resolvers.YAMLResolver{}
                     
                     tb.Content = `baseUrl: http://localhost:8200
 headersMap:

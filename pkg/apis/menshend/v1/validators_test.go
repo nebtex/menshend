@@ -3,10 +3,10 @@ package v1
 import (
     "testing"
     . "github.com/smartystreets/goconvey/convey"
-    . "github.com/nebtex/menshend/pkg/config"
     . "github.com/nebtex/menshend/pkg/utils/test"
     . "github.com/nebtex/menshend/pkg/utils"
     "github.com/ansel1/merry"
+    "os"
 )
 
 func Test_ValidateService(t *testing.T) {
@@ -107,7 +107,7 @@ func Test_ValidateSubdomain(t *testing.T) {
 
 
 func Test_ValidateSecret(t *testing.T) {
-    VaultConfig.Address = "http://localhost:8200"
+    os.Setenv("VAULT_ADDR", "http://127.0.0.1:8200")
     Convey("Test_ValidateSecret", t, func() {
         Convey("should fails if service does not exists", func(c C) {
             defer func() {

@@ -4,9 +4,9 @@ import (
     vault "github.com/hashicorp/vault/api"
     "github.com/emicklei/go-restful"
     . "github.com/nebtex/menshend/pkg/apis/menshend"
-    . "github.com/nebtex/menshend/pkg/config"
     . "github.com/nebtex/menshend/pkg/utils"
     "time"
+    "fmt"
 )
 
 type AuthResource struct {
@@ -38,26 +38,27 @@ func (a *AuthResource) Register(container *restful.Container) {
     container.Add(ws)
     
 }
+
+//logout try to revoke the vault token, just  a wrap over the vault enpoint
 func (a *AuthResource) logout(request *restful.Request, response *restful.Response) {
     defer func() {}()
     user := GetTokenFromRequest(request)
-    vc, err := vault.NewClient(VaultConfig)
+    vc, err := vault.NewClient(vault.DefaultConfig())
     CheckPanic(err)
     vc.SetToken(user)
     err = vc.Auth().Token().RevokeSelf(user)
     HttpCheckPanic(err, PermissionError)
 }
 
-func MakeTimestampMillisecond() int64 {
-    return time.Now().UnixNano() / int64(time.Millisecond)
-}
-
+//accountStatus, if the token is active this will return some important info like
+//admin and impersonate capabilities
 func (*AuthResource)accountStatus(request *restful.Request, response *restful.Response) {
     var creationTimeMillisecond int64
     var ttl int64
     
     defer func() {
         r := recover()
+        fmt.Println(r)
         if r != nil {
             ls := LoginStatus{
                 IsLogged: false,
@@ -69,7 +70,7 @@ func (*AuthResource)accountStatus(request *restful.Request, response *restful.Re
         }
     }()
     user := GetTokenFromRequest(request)
-    vc, err := vault.NewClient(VaultConfig)
+    vc, err := vault.NewClient(vault.DefaultConfig())
     CheckPanic(err)
     vc.SetToken(user)
     secret, err := vc.Auth().Token().LookupSelf()
