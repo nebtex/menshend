@@ -105,65 +105,6 @@ func Test_ValidateSubdomain(t *testing.T) {
     })
 }
 
-func Test_ValidateLanguageTypes(t *testing.T) {
-    lts := []string{
-        "yaml",
-        "lua",
-    }
-    Convey("Test ValidateLanguageTypes", t, func() {
-        for _, l := range lts {
-            ValidateLanguageTypes(l)
-        }
-    })
-    
-    wrong_lts := []string{
-        "dsd",
-        "sdsxxxxx",
-    }
-    
-    Convey("Test ValidateLanguageTypes (not found)", t, func(c C) {
-        wraper := func(lt string) {
-            defer func() {
-                r := recover()
-                c.So(r, ShouldNotBeNil)
-            }()
-            ValidateLanguageTypes(lt)
-        }
-        for _, lt := range wrong_lts {
-            wraper(lt)
-        }
-    })
-}
-
-func Test_ValidateStrategyTypes(t *testing.T) {
-    lts := []string{
-        "proxy",
-        "port-forward",
-        "redirect",
-    }
-    Convey("Test ValidateStrategyTypes", t, func() {
-        for _, l := range lts {
-            ValidateStrategyTypes(l)
-        }
-    })
-    wrong_lts := []string{
-        "dsdsdsd",
-        "sdsddd",
-    }
-    
-    Convey("Test ValidateStrategyTypes (not found)", t, func(c C) {
-        wraper := func(lt string) {
-            defer func() {
-                r := recover()
-                c.So(r, ShouldNotBeNil)
-            }()
-            ValidateStrategyTypes(lt)
-        }
-        for _, lt := range wrong_lts {
-            wraper(lt)
-        }
-    })
-}
 
 func Test_ValidateSecret(t *testing.T) {
     VaultConfig.Address = "http://localhost:8200"

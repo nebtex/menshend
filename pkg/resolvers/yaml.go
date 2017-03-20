@@ -1,44 +1,64 @@
 package resolvers
 
 import (
-    . "github.com/nebtex/menshend/pkg/backend"
-    "gopkg.in/yaml.v2"
-    . "github.com/nebtex/menshend/pkg/apis/menshend/v1"
-    . "github.com/nebtex/menshend/pkg/utils"
-    . "github.com/nebtex/menshend/pkg/apis/menshend"
+    "github.com/ghodss/yaml"
     "net/url"
     vault "github.com/hashicorp/vault/api"
+    "fmt"
+    . "github.com/nebtex/menshend/pkg/utils"
 )
+type Backend interface {
+    BaseUrl() string
+    Headers() map[string]string
+    Passed() bool
+    Error() error
+}
 
 type Resolver interface {
-    Resolve(*AdminServiceResource, *vault.Secret) Backend
+    Resolve(tokenData *vault.Secret) Backend
+    SetBody(s string)
 }
 
 type YAMLResolve struct {
-    
+    Content string `json:"content"`
 }
 type backendValues struct {
-    BaseUrl    string `yaml:"baseUrl"`
-    HeadersMap map[string]string `yaml:"headersMap"`
+    BaseUrl   string `json:"baseUrl"`
+    HeaderMap map[string]string `json:"headersMap"`
+    Error     string `json:"error"`
+    Passed    *bool `json:"passed"`
 }
 
-type backendImplementation struct {
+type SimpleBackend struct {
     ys *backendValues
 }
 
-func (ym *backendImplementation)BaseUrl() string {
+func (yr *YAMLResolve) SetBody(s string) {}
+
+func (ym *SimpleBackend)BaseUrl() string {
     return ym.ys.BaseUrl
 }
 
-func (ym *backendImplementation)Headers() map[string]string {
-    return ym.ys.HeadersMap
+func (ym *SimpleBackend)Headers() map[string]string {
+    return ym.ys.HeaderMap
 }
 
-func (yr *YAMLResolve)Resolve(c *AdminServiceResource, u *vault.Secret) (*backendImplementation) {
+func (ym *SimpleBackend)Error() error {
+    return fmt.Errorf("%v", ym.ys.Error)
+}
+
+func (ym *SimpleBackend)Passed() bool {
+    if ym.ys.Passed == nil {
+        return true
+    }
+    return *ym.ys.Passed
+}
+
+func (yr *YAMLResolve)Resolve(u *vault.Secret) (Backend) {
     ys := &backendValues{}
-    err := yaml.Unmarshal([]byte(c.ProxyCode), ys)
+    err := yaml.Unmarshal([]byte(yr.Content), ys)
     HttpCheckPanic(err, InternalError)
     _, parseErr := url.ParseRequestURI(ys.BaseUrl)
-    HttpCheckPanic(parseErr, InternalError.WithValue("user", u).WithValue("service", c))
-    return &backendImplementation{ys:ys}
+    HttpCheckPanic(parseErr, InternalError)
+    return &SimpleBackend{ys:ys}
 }

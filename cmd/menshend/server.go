@@ -74,3 +74,5 @@ func setExpirationTime(u *User, expiresIn int64) *User {
 }
 */
 
+
+//TODO: prefiling check in server mode check if vault token is present

@@ -3,27 +3,45 @@ package strategy
 import (
     "testing"
     "net/http"
+    "github.com/nebtex/menshend/pkg/resolvers"
     . "github.com/smartystreets/goconvey/convey"
     . "github.com/nebtex/menshend/pkg/pfclient"
-    . "github.com/nebtex/menshend/pkg/users"
     "os"
-    . "github.com/nebtex/menshend/pkg/utils"
     "github.com/parnurzeal/gorequest"
     "fmt"
     "time"
+    vault "github.com/hashicorp/vault/api"
+    "context"
 )
+
+func noBrowserHandler(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        ctx := context.WithValue(r.Context(), "IsBrowserRequest", false)
+        ctx = context.WithValue(ctx, "subdomain", "consul.")
+       next.ServeHTTP(w, r.WithContext(ctx))
+    })
+}
+func browserHandler(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        ctx := context.WithValue(r.Context(), "IsBrowserRequest", true)
+        ctx = context.WithValue(ctx, "subdomain", "consul.")
+        next.ServeHTTP(w, r.WithContext(ctx))
+    })
+}
 
 func TestPortForward_Execute(t *testing.T) {
     
     Convey("Should forward port", t, func(c C) {
-        user, err := NewUser("myroot")
-        So(err, ShouldBeNil)
-        user.SetExpiresAt(GetNow() + 3600)
-        os.Setenv("MENSHEND_TOKEN", user.GenerateJWT())
         
-        tb := &testBackend{url:"http://localhost:8200"}
+        tb := &resolvers.YAMLResolve{}
+        tb.Content = `baseUrl: http://localhost:8200
+headersMap:
+  h1: t1
+  h2: t2`
+        
+        os.Setenv("VAULT_TOKEN", "myroot")
         r := PortForward{}
-        http.HandleFunc("/", r.Execute(tb))
+        http.HandleFunc("/", noBrowserHandler(r.Execute(tb, &vault.Secret{})).ServeHTTP)
         go http.ListenAndServe(":9090", nil)
         go PFConnect(true, 0, "http://vault.localhost:9090", "25300:8200")
         go PFConnect(true, 0, "http://vault.localhost:9090", "25400:8200")
@@ -43,3 +61,4 @@ func TestPortForward_Execute(t *testing.T) {
     })
     
 }
+

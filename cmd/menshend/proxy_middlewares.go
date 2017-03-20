@@ -26,7 +26,10 @@ func GetSubDomainHandler(next http.Handler) http.Handler {
     })
 }
 //TODO: add impersonate handler
-//TODO: add role handler - {map menshend-role, vault-role}
+//TODO: portfoward from broser should return error
+//TODO: add role handler - {map menshend-role, vault-role}.
+//TODO: panic handler when ui is not active should print error
+//TODO: read browser header
 //TokenRealmSecurity don't allow api token to be used in the browser as cookies or headers
 func TokenRealmSecurityHandler(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -65,7 +68,7 @@ func DetectBrowser(next http.Handler) http.Handler {
     })
 }
 
-
+//put in the pat service that the user is triying to access
 //PanicHandler
 func PanicHandler(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -194,7 +197,7 @@ func GetServiceHandler(next http.Handler) http.Handler {
         as := &v1.AdminServiceResource{}
         mapstructure.Decode(secret.Data, as)
         if !as.IsActive {
-            panic(NotAuthorized.Append("service " + as.ID + " is deactivated"))
+            panic(NotAuthorized.WithUserMessage("service " + as.ID + " is deactivated"))
         }
         ctx := context.WithValue(r.Context(), "service", as)
         next.ServeHTTP(w, r.WithContext(ctx))
@@ -277,7 +280,7 @@ func ProxyHandlers() http.Handler {
             handler.ServeHTTP(w, r)
             return
         default:
-            panic(InternalError.Append("strategy for service " + service.ID + " was not recognized"))
+            panic(InternalError.WithUserMessage("strategy for service " + service.ID + " was not recognized"))
         }
         
     })

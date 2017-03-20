@@ -43,7 +43,7 @@ type MenshendConfig struct {
     //default time to live for the jwt token in seconds
     //this value will be used only when the expiration time cant be guessed
     //using the vault api
-    DefaultTTL        int64
+    DefaultTTL        int
 }
 
 func (k *MenshendConfig) Host() string {

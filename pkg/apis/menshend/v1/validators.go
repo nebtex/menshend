@@ -36,20 +36,6 @@ func ValidateRole(s string) {
 }
 
 
-
-func ValidateLanguageTypes(value string) {
-    if !SliceStringContains(AllLanguageTypes, value) {
-        panic(BadRequest.Append("language type not supported"))
-    }
-}
-
-
-func ValidateStrategyTypes(value string) {
-    if !SliceStringContains(AllStrategyTypes, value) {
-        panic(BadRequest.Append("strategy type not supported"))
-    }
-}
-
 func ValidateSecret(secretId string, user string) (vaultSecretPath string) {
     items := strings.Split(secretId, "/")
     role := items[1]

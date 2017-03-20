@@ -3,91 +3,40 @@ package resolvers
 import (
     "testing"
     . "github.com/smartystreets/goconvey/convey"
-    . "github.com/nebtex/menshend/pkg/apis/menshend/v1"
-    . "github.com/nebtex/menshend/pkg/apis/menshend"
-    
-    . "github.com/nebtex/menshend/pkg/users"
+    vault "github.com/hashicorp/vault/api"
     . "github.com/nebtex/menshend/pkg/utils"
+    "github.com/nebtex/menshend/pkg/config"
     "github.com/ansel1/merry"
 )
 
-func TestService_CreateLuaScript(t *testing.T) {
-    Convey("Should genrate the lua script that will be used for get the full" +
-        " backend url", t, func() {
-        
-        Convey("should use the user script if is defined ", func() {
-            s := &AdminServiceResource{}
-            s.ProxyCode = `function getBackend (Username, Groups, AuthProvider)
-    return "www.google.com", {}
-end`
-            u, err := NewUser("xxx")
-            u.SetExpiresAt(GetNow() + 3600 * 1000)
-            u.TokenLogin()
-            So(err, ShouldBeNil)
-            ls := CreateLuaScript(s, u)
-            So(ls, ShouldEqual, `math.randomseed(os.time())
-math.random(); math.random(); math.random()
-
-username = ""
-groups = {""}
-authProvider = "token"
-
-function getBackend (Username, Groups, AuthProvider)
-    return "www.google.com", {}
-end`)
-        })
-        
-        Convey("should show user and groups if the github provider is used",
-            func() {
-                s := &AdminServiceResource{}
-                s.ProxyCode = `function getBackend (Username, Groups, AuthProvider)
-    return "www.google.com", {}
-end`
-                u, err := NewUser("test-acl")
-                u.SetExpiresAt(GetNow() + 1000)
-                So(err, ShouldBeNil)
-                u.GitHubLogin("criloz", "admin", "delos", "umbrella")
-                ls := CreateLuaScript(s, u)
-                So(err, ShouldBeNil)
-                
-                So(ls, ShouldEqual, `math.randomseed(os.time())
-math.random(); math.random(); math.random()
-
-username = "criloz"
-groups = {"admin", "delos", "umbrella"}
-authProvider = "github"
-
-function getBackend (Username, Groups, AuthProvider)
-    return "www.google.com", {}
-end`)
-            })
-    })
-}
-
 func TestService_GetBackend(t *testing.T) {
+    config.VaultConfig.Address = "http://127.0.0.1:8200"
+    vc, err := vault.NewClient(config.VaultConfig)
+    CheckPanic(err)
+    vc.SetToken("myroot")
     Convey("Should return Full url backend", t, func() {
         
         Convey("Should return url and headers", func() {
-            s := &AdminServiceResource{}
-            s.ProxyCode = `function getBackend (Username, Groups, AuthProvider)
+            lr := &LuaResolver{}
+            lr.Content = `
+
+function getBackend (tokenInfo, body)
     tt = {}
-    tt["user"] = Username
-    tt["AuthProvider"] = AuthProvider
-    return "http://www.google.com", tt
+    tt["BaseUrl"] = "http://www.google.com"
+    tt["HeaderMap"] = {}
+    tt["HeaderMap"]["X-User"] = tokenInfo.Data.display_name
+    return tt
 end`
             
-            u, err := NewUser("test-acl")
-            u.SetExpiresAt(GetNow() + 1000)
+            tokenInfo, err := vc.Auth().Token().LookupSelf()
             So(err, ShouldBeNil)
-            u.UsernamePasswordLogin("test-token")
-            cr := &CacheResolver{}
-            s.ProxyLanguage = "lua"
-            bi := cr.Resolve(s, u)
+            bi := lr.Resolve(tokenInfo)
             So(bi.BaseUrl(), ShouldEqual, "http://www.google.com")
-            So(bi.Headers()["user"], ShouldEqual, "test-token")
-            So(bi.Headers()["AuthProvider"], ShouldEqual, "userpass")
+            So(bi.Headers()["X-User"], ShouldEqual, "token")
+            So(bi.Passed(), ShouldEqual, true)
             
         })
+        
         Convey("Should return error if the lua script fails", func(c C) {
             defer func() {
                 r := recover()
@@ -103,16 +52,12 @@ end`
                     t.Fail()
                 }
             }()
-            s := &AdminServiceResource{}
-            s.ProxyCode = `bad line of code`
             
-            u, err := NewUser("test-acl")
-            u.SetExpiresAt(GetNow() + 1000)
+            tokenInfo, err := vc.Auth().Token().LookupSelf()
             So(err, ShouldBeNil)
-            u.UsernamePasswordLogin("test-token")
-            cr := &CacheResolver{}
-            s.ProxyLanguage = "lua"
-            cr.Resolve(s, u)
+            lr := &LuaResolver{}
+            lr.Content = `bad line of code`
+            lr.Resolve(tokenInfo)
         })
         
         Convey("Should return error if the backend url is not valid",
@@ -131,24 +76,42 @@ end`
                         t.Fail()
                     }
                 }()
-                s := &AdminServiceResource{}
-                s.ProxyCode = `function getBackend (Username, Groups, AuthProvider)
+                s := &LuaResolver{}
+                s.Content = `function getBackend (Username, Groups, AuthProvider)
     tt = {}
     tt["user"] = Username
     tt["AuthProvider"] = AuthProvider
     return "&www.$google.com", tt
 end`
-    
-                u, err := NewUser("test-acl")
-                u.SetExpiresAt(GetNow() + 1000)
+                tokenInfo, err := vc.Auth().Token().LookupSelf()
                 So(err, ShouldBeNil)
-                u.UsernamePasswordLogin("test-token")
-                cr := &CacheResolver{}
-                s.ProxyLanguage = "lua"
-                cr.Resolve(s, u)
-
+                So(err, ShouldBeNil)
+                s.Resolve(tokenInfo)
                 
             })
+        Convey("Should be able to read the body if this is set", func(c C) {
+            
+            lr := &LuaResolver{}
+            lr.Content = `
+
+function getBackend (tokenInfo, body)
+    local json = require("json")
+    tt = {}
+    tt["BaseUrl"] = "http://www.google.com"
+    tt["HeaderMap"] = {}
+    tt["Passed"] = false
+    tt["HeaderMap"]["X-Operation"] = json.decode(body).operation
+    return tt
+end`
+            
+            tokenInfo, err := vc.Auth().Token().LookupSelf()
+            So(err, ShouldBeNil)
+            lr.SetBody(`{"operation": "post"}`)
+            bi := lr.Resolve(tokenInfo)
+            So(bi.Headers()["X-Operation"], ShouldEqual, "post")
+            So(bi.Passed(), ShouldEqual, false)
+    
+        })
         
     })
 }

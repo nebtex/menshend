@@ -1,10 +1,11 @@
 package strategy
 
-import "github.com/nebtex/menshend/pkg/backend"
 import (
     "net/http"
+    "github.com/nebtex/menshend/pkg/resolvers"
+    vault "github.com/hashicorp/vault/api"
 )
 
 type Strategy  interface {
-    Execute(backend.Backend) http.HandlerFunc
+    Execute(resolvers.Resolver, *vault.Secret) http.Handler
 }

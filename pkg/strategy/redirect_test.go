@@ -2,14 +2,17 @@ package strategy
 
 import (
     "testing"
-    "net/http"
-    "net/http/httptest"
     . "github.com/smartystreets/goconvey/convey"
     "net/url"
+    "github.com/nebtex/menshend/pkg/resolvers"
+    "net/http/httptest"
+    "net/http"
+    
+    vault "github.com/hashicorp/vault/api"
 )
 
 type testBackend struct {
-    url    string
+    url     string
     headers map[string]string
     user    string
     pass    string
@@ -35,17 +38,21 @@ func (t *testBackend)Headers() map[string]string {
 
 func TestRedirect_Execute(t *testing.T) {
     Convey("Should redirect to backend", t, func() {
-        tb := &testBackend{url:"https://google.com:3000",
-            headers:map[string]string{"test":"true"},
-            user:"criloz", pass:"criloz"}
+        
+        tb := &resolvers.YAMLResolve{}
+        tb.Content = `baseUrl: http://google.db:27072
+headersMap:
+  h1: t1
+  h2: t2`
+        
         r := Redirect{}
         httpReq, err := http.NewRequest("GET", "http://google.menshend.local/search?q=google&x=mars", nil)
         So(err, ShouldBeNil)
         httpWriter := httptest.NewRecorder()
-        r.Execute(tb)(httpWriter, httpReq)
+        r.Execute(tb, &vault.Secret{}).ServeHTTP(httpWriter, httpReq)
         header := httpWriter.Header()
-        So(header["Test"][0], ShouldEqual, "true")
-        So(header["Location"][0], ShouldEqual, "https://google.com:3000/search?q=google&x=mars")
+        So(header.Get("h1"), ShouldEqual, "t1")
+        So(header.Get("Location"), ShouldEqual, "http://google.db:27072/search?q=google&x=mars")
         
     })
     

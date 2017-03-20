@@ -13,6 +13,8 @@ import (
     "github.com/fatih/structs"
     "strings"
     vault "github.com/hashicorp/vault/api"
+    "github.com/nebtex/menshend/pkg/strategy"
+    "github.com/nebtex/menshend/pkg/resolvers"
 )
 
 func init() {
@@ -25,74 +27,84 @@ type ServiceCache struct {
     Active bool `json:"active"`
 }
 
-type StrategyTypes int
-
-var AllStrategyTypes = []string{
-    "proxy",
-    "redirect",
-    "port-forward",
+type ServiceStrategy struct {
+    Proxy       *strategy.Proxy `json:"proxy"`
+    PortForward *strategy.PortForward `json:"portForward"`
+    Redirect    *strategy.Redirect `json:"redirect"`
 }
 
-type LanguageTypes int
-
-var AllLanguageTypes = []string{
-    "lua",
-    "yaml",
+func (ss *ServiceStrategy) Validate() {
+    defined := 0
+    if ss.Proxy != nil {
+        defined += 1
+    }
+    if ss.PortForward != nil {
+        defined += 1
+    }
+    if ss.Redirect != nil {
+        defined += 1
+    }
+    
+    if defined != 1 {
+        panic(BadRequest.Append("Please define only one strategy, you have not define one!! or have multiples defined"))
+    }
 }
-// Options is a configuration container to setup the CORS middleware.
-type CorsOptions struct {
-    // AllowedOrigins is a list of origins a cross-domain request can be executed from.
-    // If the special "*" value is present in the list, all origins will be allowed.
-    // An origin may contain a wildcard (*) to replace 0 or more characters
-    // (i.e.: http://*.domain.com). Usage of wildcards implies a small performance penality.
-    // Only one wildcard can be used per origin.
-    // Default value is ["*"]
-    AllowedOrigins     []string
-    // AllowedMethods is a list of methods the client is allowed to use with
-    // cross-domain requests. Default value is simple methods (GET and POST)
-    AllowedMethods     []string
-    // AllowedHeaders is list of non simple headers the client is allowed to use with
-    // cross-domain requests.
-    // If the special "*" value is present in the list, all headers will be allowed.
-    // Default value is [] but "Origin" is always appended to the list.
-    AllowedHeaders     []string
-    // ExposedHeaders indicates which headers are safe to expose to the API of a CORS
-    // API specification
-    ExposedHeaders     []string
-    // AllowCredentials indicates whether the request can include user credentials like
-    // cookies, HTTP authentication or client side SSL certificates.
-    AllowCredentials   bool
-    // MaxAge indicates how long (in seconds) the results of a preflight request
-    // can be cached
-    MaxAge             int
-    // OptionsPassthrough instructs preflight to let other potential next handlers to
-    // process the OPTIONS method. Turn this on if your application handles OPTIONS.
-    OptionsPassthrough bool
-    // Debugging flag adds additional output to debug server side CORS issues
-    Debug              bool
+
+func (ss *ServiceStrategy)Get() strategy.Strategy {
+    if ss.Proxy != nil {
+        return ss.Proxy
+    }
+    if ss.PortForward != nil {
+        return ss.PortForward
+    }
+    return ss.Redirect
+}
+
+type ServiceResolver struct {
+    Yaml  *resolvers.YAMLResolve `json:"yaml"`
+    Lua   *resolvers.LuaResolver `json:"lua"`
+    Cache *ServiceCache `json:"cache"`
+}
+
+func (sr *ServiceResolver) Validate() {
+    defined := 0
+    if sr.Yaml != nil {
+        defined += 1
+    }
+    if sr.Lua != nil {
+        defined += 1
+    }
+    
+    if defined != 1 {
+        panic(BadRequest.Append("Please define only one resolver, you have not define one!! or have multiples defined"))
+    }
+}
+func (sr *ServiceResolver) Get() resolvers.Resolver {
+    if sr.Lua != nil {
+        return sr.Lua
+    }
+    return sr.Yaml
+}
+
+type ServiceMetadata struct {
+    ID        string `json:"id"`
+    RoleID    string `json:"roleId"`
+    SubDomain string `json:"subDomain"`
+    Name      string `json:"name"`
 }
 
 //Service service definition struct
 type AdminServiceResource struct {
-    ID                    string `json:"id"`
-    RoleID                string `json:"roleId"`
-    SubDomain             string `json:"subDomain"`
+    Meta                  *ServiceMetadata  `json:"meta"`
     Logo                  string `json:"logo"`
-    Name                  string `json:"name"`
     ShortDescription      string `json:"shortDescription"`
     LongDescription       string `json:"longDescription"`
     LongDescriptionUrl    string `json:"longDescriptionUrl"`
-    ProxyCode             string `json:"proxyCode"`
-    ProxyLanguage         string `json:"proxyCodeLanguage"`
-    Cache                 ServiceCache `json:"cache"`
+    Resolver              *ServiceResolver `json:"Resolver"`
     ImpersonateWithinRole bool   `json:"impersonateWithinRole"`
-    Strategy              string `json:"strategy"`
-    IsActive              bool `json:"isActive"`
+    Strategy              *ServiceStrategy `json:"strategy"`
+    IsActive              *bool `json:"isActive"`
     SecretPaths           []string `json:"secretPaths"`
-    Cors                  CorsOptions `json:"cors"`
-    EnableCustomCors      bool `json:"enableCustomCors"`
-    CSRF                  bool `json:"csrf"`
-    Stream                bool `json:"stream"`
 }
 
 func getReadme(url string) ([]byte, error) {
@@ -172,9 +184,18 @@ func (as *AdminServiceResource) putServiceHandler(request *restful.Request, resp
     err := request.ReadEntity(nService)
     HttpCheckPanic(err, BadRequest.Append("error decoding request"))
     
-    nService.RoleID, nService.SubDomain = getRoleAndSubdomain(serviceId)
-    ValidateLanguageTypes(nService.ProxyLanguage)
-    ValidateStrategyTypes(nService.Strategy)
+    nService.Meta.RoleID, nService.Meta.SubDomain = getRoleAndSubdomain(serviceId)
+    if nService.Resolver == nil {
+        HttpCheckPanic(err, BadRequest.Append("Please create a resolver section"))
+    }
+    if nService.Strategy == nil {
+        HttpCheckPanic(err, BadRequest.Append("Please create a strategy section"))
+    }
+    if nService.Meta == nil {
+        HttpCheckPanic(err, BadRequest.Append("Service metadata is not defined"))
+    }
+    nService.Resolver.Validate()
+    nService.Strategy.Validate()
     
     err = nService.LoadLongDescriptionUrl()
     HttpCheckPanic(err, BadRequest.Append("invalid LongDescriptionUrl or can't connecto to remote address"))

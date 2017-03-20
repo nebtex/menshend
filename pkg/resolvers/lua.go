@@ -1,48 +1,34 @@
 package resolvers
 
 import (
-    "strings"
-    "fmt"
     "github.com/yuin/gopher-lua"
     "net/url"
-    . "github.com/nebtex/menshend/pkg/apis/menshend/v1"
-    . "github.com/nebtex/menshend/pkg/users"
-    . "github.com/nebtex/menshend/pkg/apis/menshend"
+    "net/http"
     . "github.com/nebtex/menshend/pkg/utils"
+    vault "github.com/hashicorp/vault/api"
+    "github.com/cjoudrey/gluahttp"
+    luajson "layeh.com/gopher-json"
+    "github.com/yuin/gluamapper"
+    "fmt"
+    st "layeh.com/gopher-luar"
 )
 
 type LuaResolver struct {
+    Content string `json:"content"`
+    Body    string `json:"-"`
 }
 
-func (lr *LuaResolver)Resolve(c *AdminServiceResource, u *User) (*backendImplementation) {
-    ys := GetBackend(c, u)
-    return &backendImplementation{ys:ys}
+func (lr *LuaResolver) SetBody(s string) {
+    lr.Body = s
 }
 
-
-
-//CreateLuaScript create the lua script that will be execute to obtain the full
-//backend url
-func CreateLuaScript(s *AdminServiceResource, u *User) string {
-    script := `math.randomseed(os.time())
-math.random(); math.random(); math.random()
-`
-    script += fmt.Sprintf("\nusername = \"%s\"", u.Menshend.Username)
-    script += fmt.Sprintf("\ngroups = {\"%s\"}", strings.Join(u.Menshend.Groups, "\", \""))
-    script += fmt.Sprintf("\nauthProvider = \"%s\"", u.Menshend.AuthProvider)
+func (lr *LuaResolver)Resolve(v *vault.Secret) (Backend) {
     
-    return script + "\n\n" + s.ProxyCode
-}
-
-//GetBackend execute the custom or default lua script and calculate the backend
-//full url
-//TODO: add vault token metadata
-func GetBackend(s *AdminServiceResource, u *User) (*backendValues) {
-    var baseUrl *string
-    var headerMaps map[string]string
+    script := lr.Content
+    script += "\nreturnBackend(getBackend(TokenInfo, Body))"
     
-    script := CreateLuaScript(s, u)
     l := lua.NewState()
+   
     lua.OpenBase(l)
     lua.OpenString(l)
     lua.OpenTable(l)
@@ -51,30 +37,29 @@ func GetBackend(s *AdminServiceResource, u *User) (*backendValues) {
     lua.OpenIo(l)
     lua.OpenPackage(l)
     
+    l.PreloadModule("http", gluahttp.NewHttpModule(&http.Client{}).Loader)
+    luajson.Preload(l)
+    l.SetGlobal("TokenInfo", st.New(l, v))
+    l.SetGlobal("Body", st.New(l, lr.Body))
+    ret := &SimpleBackend{}
+    ret.ys = &backendValues{}
+    
     returnBackend := func(L *lua.LState) int {
-        ret := L.ToString(1)
-        table := L.ToTable(2)
-        headerMaps = map[string]string{}
-        table.ForEach(func(k lua.LValue, v lua.LValue) {
-            headerMaps[k.String()] = v.String()
-        })
-        baseUrl = &ret
+        table := L.ToTable(1)
+        err := gluamapper.Map(table, ret.ys)
+        HttpCheckPanic(err, InternalError)
         return 0 // Notify that we pushed 0 value to the stack
     }
     
     l.SetGlobal("returnBackend", l.NewFunction(returnBackend))
-    script += "\nreturnBackend(getBackend(username, groups, authProvider))"
-    
     err := l.DoString(script)
-    HttpCheckPanic(err, InternalError.WithValue("user", u).WithValue("service", s).
-        WithValue("script", script))
+    HttpCheckPanic(err, InternalError.WithValue("script", script))
     
-    _, parseErr := url.ParseRequestURI(*baseUrl)
-    HttpCheckPanic(parseErr, InternalError.WithValue("user", u).WithValue("service", s).
-        WithValue("script", script).WithValue("backend", *baseUrl))
-    return &backendValues{BaseUrl:*baseUrl, HeadersMap:headerMaps}
+    _, parseErr := url.ParseRequestURI(ret.ys.BaseUrl)
+    HttpCheckPanic(parseErr, InternalError.WithValue("script", lr.Content).WithValue("backend", fmt.Sprintf("%v", ret)))
+    return ret
 }
-    
-    
-    
+
+
+
     
