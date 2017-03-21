@@ -156,21 +156,6 @@ func TestDeleteServiceHandler_Permissions(t *testing.T) {
     
     Convey("Should return permission error if the user can't delete a " +
         "service in the role", t, func(c C) {
-        defer func() {
-            r := recover()
-            if (r == nil) {
-                t.Error("did not panicked")
-                t.Fail()
-            }
-            switch x := r.(type) {
-            case error:
-                fmt.Println(x)
-                c.So(merry.Is(x, mutils.PermissionError), ShouldBeTrue)
-            default:
-                t.Errorf("%v", x)
-                t.Fail()
-            }
-        }()
         testutils.CleanVault()
         vClient, err := vault.NewClient(vault.DefaultConfig())
         So(err, ShouldBeNil)
@@ -186,11 +171,9 @@ func TestDeleteServiceHandler_Permissions(t *testing.T) {
         httpReq.Header.Set("Content-Type", "application/json")
         httpReq.Header.Add("X-Vault-Token", secret.Auth.ClientToken)
         httpWriter := httptest.NewRecorder()
-        
-        wsContainer := restful.NewContainer()
-        u := AdminServiceResource{}
-        u.Register(wsContainer)
+        wsContainer := APIHandler()
         wsContainer.ServeHTTP(httpWriter, httpReq)
+        So(httpWriter.Result().StatusCode, ShouldEqual, 403)
         
     })
 }

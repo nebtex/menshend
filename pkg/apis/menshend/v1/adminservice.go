@@ -300,9 +300,11 @@ func (as *AdminServiceResource)deleteServiceHandler(request *restful.Request, re
     vaultClient, err := vault.NewClient(vault.DefaultConfig())
     mutils.HttpCheckPanic(err, mutils.InternalError)
     vaultClient.SetToken(user)
-    mutils.HttpCheckPanic(err, mutils.InternalError.WithUserMessage("error decoding service"))
     _, err = vaultClient.Logical().Delete(key)
+    fmt.Println(key, "!!!!!!!!!!!!!!!!!!!!!!!")
     mutils.HttpCheckPanic(err, mutils.PermissionError)
+    fmt.Println(key, "!!!!!!!!!!!!!!!!!!!!!!!")
+    
     mutils.HttpCheckPanic(response.WriteEntity(nil), mutils.InternalError)
 }
 

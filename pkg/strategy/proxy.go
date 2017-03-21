@@ -58,7 +58,6 @@ func (*errorHandler)ServeHTTP(w http.ResponseWriter, req *http.Request, err erro
 type Proxy struct {
     Cors              *CorsOptions `json:"cors"`
     CSRF              bool `json:"csrf"`
-    MakeBodyAvailable bool `json:"makeBodyAvailable"`
 }
 
 func NextCSRFHandler(next http.Handler) http.Handler {
@@ -70,7 +69,7 @@ func NextCSRFHandler(next http.Handler) http.Handler {
     })
 }
 
-
+//TODO: fix pass body
 //ProxyHandler forward request to the backend services
 func (ps *Proxy) Execute(rs resolvers.Resolver, tokenInfo *vault.Secret) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -81,7 +80,7 @@ func (ps *Proxy) Execute(rs resolvers.Resolver, tokenInfo *vault.Secret) http.Ha
         Fwd, err := forward.New(forward.ErrorHandler(&errorHandler{}))
         HttpCheckPanic(err, InternalError)
         
-        if ps.MakeBodyAvailable {
+        if true{
             data, err := ioutil.ReadAll(r.Body)
             HttpCheckPanic(err, InternalError)
             rs.SetBody(string(data))
@@ -102,6 +101,7 @@ func (ps *Proxy) Execute(rs resolvers.Resolver, tokenInfo *vault.Secret) http.Ha
         r.URL.User = bUrl.User
         r.URL.Scheme = bUrl.Scheme
         handler = Fwd
+        //TODO: check logic
         if IsBrowserRequest {
             if ps.CSRF {
                 if Config.Scheme() == "http" {

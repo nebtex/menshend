@@ -9,7 +9,7 @@ import (
 )
 
 func Test_SpaceEndpoint(t *testing.T) {
-    Convey("sgould return info about the envirenment", t, func(c C) {
+    Convey("Should return info about the envirenment", t, func(c C) {
         
         httpReq, err := http.NewRequest("GET", "/v1/space", nil)
         So(err, ShouldBeNil)
