@@ -11,4 +11,4 @@ spec:
     description: active csrf protection on this endpoint
   - name: cors
     schema: io.menshend.v1alpha/Resource/AdminService/Table/Cors
-    description: active csrf protection on this endpoint
+    description: enable cross-origin resource sharing
