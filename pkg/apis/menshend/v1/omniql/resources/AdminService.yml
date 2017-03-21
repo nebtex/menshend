@@ -1,0 +1,33 @@
+api: io.omniql.core.v1alpha
+kind: Resource
+spec:
+  meta:
+    application: io.menshend.v1alpha
+    name: AdminService
+    description: full Service schema
+  fields:
+    - name: impersonateWithinRole
+      schema: io.omniql.core.v1alpha/Boolean
+      description: give to all the users the habilility to change their vault token display_name within this role/service
+    - name: isActive
+      schema: io.omniql.core.v1alpha/Boolean
+      description: enable/disable this service
+    - name: secretPaths
+      schema: io.omniql.core.v1alpha/Vector
+      items: io.omniql.core.v1alpha/string
+      description: vault secrets asociate with this service.
+    - name: meta
+      schema: io.menshend.v1alpha/Resource/AdminService/Table/Metadata
+      description: Metadata associate with this service, name, logo, etc.
+      required: true
+    - name: resolver
+      schema: io.menshend.v1alpha/Resource/AdminService/Table/Resolver
+      description: allow to define services policies programatically (suported: lua and yaml)
+      required: true
+    - name: strategy
+      schema: io.menshend.v1alpha/Resource/AdminService/Table/Strategy
+      description: this  defines how the reverse proxy works
+      required: true
+    - name: cache
+      schema: io.menshend.v1alpha/Resource/AdminService/Table/Cache
+      description: enable cache over the result of a Resolver

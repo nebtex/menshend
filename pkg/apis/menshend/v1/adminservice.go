@@ -26,14 +26,13 @@ func init() {
 type ServiceCache struct {
     // time to live seconds
     TTL    int `json:"ttl"`
-    Active bool `json:"active"`
 }
 
 //ServiceStrategy defines how menshend will handle the user request
 type ServiceStrategy struct {
-    Proxy       *strategy.Proxy `json:"proxy"`
+    Proxy       *strategy.Proxy       `json:"proxy"`
     PortForward *strategy.PortForward `json:"portForward"`
-    Redirect    *strategy.Redirect `json:"redirect"`
+    Redirect    *strategy.Redirect    `json:"redirect"`
 }
 
 //Validate a service can only contains a strategy
@@ -67,9 +66,8 @@ func (ss *ServiceStrategy)Get() strategy.Strategy {
 
 //ServiceResolver ..
 type ServiceResolver struct {
-    Yaml  *resolvers.YAMLResolver `json:"yaml"`
-    Lua   *resolvers.LuaResolver `json:"lua"`
-    Cache *ServiceCache `json:"cache"`
+    Yaml *resolvers.YAMLResolver `json:"yaml"`
+    Lua  *resolvers.LuaResolver `json:"lua"`
 }
 
 //Validate a service can only contains an resolver (lua, yaml, js, etc..)
@@ -191,6 +189,7 @@ type AdminServiceResource struct {
     Meta                  *ServiceMetadata `json:"meta"`
     Resolver              *ServiceResolver `json:"Resolver"`
     Strategy              *ServiceStrategy `json:"strategy"`
+    Cache                 *ServiceCache    `json:"cache"`
 }
 
 func getReadme(url string) ([]byte, error) {

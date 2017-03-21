@@ -1,0 +1,11 @@
+api: io.omniql.core.v1alpha
+kind: Union
+spec:
+  meta:
+    application: io.menshend.v1alpha
+    name: Strategy
+    resource: AdminService
+  schemas:
+    - io.menshend.v1alpha/Resource/AdminService/Table/Proxy
+    - io.menshend.v1alpha/Resource/AdminService/Table/PortForward
+    - io.menshend.v1alpha/Resource/AdminService/Table/Redirect

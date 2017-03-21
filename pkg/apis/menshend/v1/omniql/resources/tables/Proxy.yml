@@ -1,0 +1,14 @@
+api: io.omniql.core.v1alpha
+kind: Table
+spec:
+  meta:
+    application: io.menshend.v1alpha
+    resource: AdminService
+    name: Proxy
+  fields:
+  - name: csrf
+    schema: io.omniql.core.v1alpha/Boolean
+    description: active csrf protection on this endpoint
+  - name: cors
+    schema: io.menshend.v1alpha/Resource/AdminService/Table/Cors
+    description: active csrf protection on this endpoint

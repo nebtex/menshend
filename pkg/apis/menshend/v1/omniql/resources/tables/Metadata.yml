@@ -1,0 +1,34 @@
+api: io.omniql.core.v1alpha
+kind: Table
+spec:
+  meta:
+    application: io.menshend.v1alpha
+    resource: AdminService
+    name: Metadata
+    description: AdminService metadata
+  fields:
+  - name: id
+    schema: io.omniql.core.v1alpha/String
+    description: unique id of the service
+    required: true
+  - name: roleId
+    schema: io.omniql.core.v1alpha/String
+    description: role unique id
+  - name: subDomain
+    schema: io.omniql.core.v1alpha/String
+    description: should ends in .
+  - name: name
+    schema: io.omniql.core.v1alpha/String
+    description: human readable service name
+  - name: logo
+    schema: io.omniql.core.v1alpha/String
+    description:  full url of the service logo a image with 64x64px
+  - name: description
+    schema:  io.omniql.core.v1alpha/String
+    description: service description
+  - name: tags
+    schema: io.omniql.core.v1alpha/Vector
+    items: io.omniql.core.v1alpha/String
+    description: tags
+  - name: longDescription
+    schema: io.menshend.v1alpha/Resource/AdminService/Union/LongDescription

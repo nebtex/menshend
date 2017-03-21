@@ -1,0 +1,12 @@
+api: io.omniql.core.v1alpha
+kind: Table
+spec:
+  meta:
+    application: io.menshend.v1alpha
+    resource: AdminService
+    name: Cache
+  fields:
+  - name: ttl
+    schema: io.omniql.core.v1alpha/Integer
+    description: cache time to live in seconds
+    required: true

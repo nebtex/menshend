@@ -1,0 +1,14 @@
+api: io.omniql.core.v1alpha
+kind: Table
+spec:
+  meta:
+    application: io.menshend.v1alpha
+    resource: AdminService
+    name: LongDescriptionRemote
+  fields:
+  - name: url
+    schema: io.omniql.core.v1alpha/String
+    description: URL of the README.md file
+  - name: content
+    schema: io.omniql.core.v1alpha/String
+    description: this will store the README.md contents

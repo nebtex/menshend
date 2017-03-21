@@ -1,0 +1,12 @@
+api: io.omniql.core.v1alpha
+kind: Table
+spec:
+  meta:
+    application: io.menshend.v1alpha
+    resource: AdminService
+    name: YAMLResolver
+    description: Allow define the backend service as yaml
+  fields:
+  - name: content
+    schema: io.omniql.core.v1alpha/String
+    required: true
