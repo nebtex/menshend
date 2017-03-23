@@ -15,7 +15,7 @@ import (
     "github.com/nebtex/menshend/pkg/resolvers"
 )
 
-func TestPApiCSRFHandler(t *testing.T) {
+func TestCSRFHandler(t *testing.T) {
     mutils.CheckPanic(os.Setenv(vault.EnvVaultAddress, "http://127.0.0.1:8200"))
     config.Config.Uris.BaseUrl = "http://example.com"
     config.Config.Uris.Api = "lab."
@@ -26,7 +26,7 @@ func TestPApiCSRFHandler(t *testing.T) {
             ct := &http.Cookie{Path: "/", Name: "X-Vault-Token", Value: "myroot"}
             cm := &http.Cookie{Path: "/", Name: "md-role", Value: "admin"}
             httpReq.Header.Set("Content-Type", "application/json")
-    
+            
             httpReq.AddCookie(ct)
             httpReq.AddCookie(cm)
             So(err, ShouldBeNil)

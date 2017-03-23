@@ -25,7 +25,20 @@ func TestAccountStatus(t *testing.T) {
         So(err, ShouldBeNil)
         httpReq.Header.Set("Content-Type", "application/json")
         So(err, ShouldBeNil)
-        httpReq.Header.Add("X-Vault-Token", "myroot")
+    
+        vClient, err := vault.NewClient(vault.DefaultConfig())
+        So(err, ShouldBeNil)
+        vClient.SetToken("myroot")
+        err = vClient.Sys().PutPolicy("admin-test-cesh", `
+        path "secret/menshend/roles/devops/*" { policy = "write" }
+        path "secret/menshend/Admin" { policy = "write" },
+        path "/auth/token/lookup-self"  { policy = "read" } `)
+        So(err, ShouldBeNil)
+        secret, err := vClient.Auth().Token().Create(&vault.TokenCreateRequest{Policies:[]string{"admin-test-cesh"}, TTL:"1h"})
+        So(err, ShouldBeNil)
+        
+    
+        httpReq.Header.Add("X-Vault-Token", secret.Auth.ClientToken)
         httpWriter := httptest.NewRecorder()
         wsContainer.ServeHTTP(httpWriter, httpReq)
         jsres, err := ioutil.ReadAll(httpWriter.Body)
@@ -36,7 +49,7 @@ func TestAccountStatus(t *testing.T) {
         So(err, ShouldBeNil)
         So(status.IsLogged, ShouldEqual, true)
         So(status.IsAdmin, ShouldEqual, true)
-        So(status.CanImpersonate, ShouldEqual, true)
+        So(status.CanImpersonate, ShouldEqual, false)
         
     })
     Convey("Test when user is not logged", t, func() {

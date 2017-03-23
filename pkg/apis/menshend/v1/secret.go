@@ -10,6 +10,7 @@ import (
 //SecretResource ...
 type SecretResource struct {
 }
+
 //Register ...
 func (s *SecretResource) Register(container *restful.Container) {
     ws := new(restful.WebService).

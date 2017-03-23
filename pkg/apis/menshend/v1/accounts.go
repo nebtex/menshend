@@ -3,10 +3,11 @@ package v1
 import (
     vault "github.com/hashicorp/vault/api"
     "github.com/emicklei/go-restful"
-    "time"
     "fmt"
     mfilters "github.com/nebtex/menshend/pkg/filters"
     mutils "github.com/nebtex/menshend/pkg/utils"
+    "encoding/json"
+    "time"
 )
 
 //AuthResource ...
@@ -56,7 +57,6 @@ func (a *AuthResource) logout(request *restful.Request, response *restful.Respon
 //accountStatus, if the token is active this will return some important info like
 //admin and impersonate capabilities
 func (*AuthResource)accountStatus(request *restful.Request, response *restful.Response) {
-    var creationTimeMillisecond int64
     var ttl int64
     
     defer func() {
@@ -79,16 +79,19 @@ func (*AuthResource)accountStatus(request *restful.Request, response *restful.Re
     secret, err := vc.Auth().Token().LookupSelf()
     mutils.HttpCheckPanic(err, mutils.NotAuthorized)
     CheckSecretFailIfIsNull(secret)
-    if (secret.WrapInfo != nil) {
-        creationTimeMillisecond = secret.WrapInfo.CreationTime.UnixNano() / int64(time.Millisecond)
-        ttl = int64(secret.WrapInfo.TTL) * 1000
+    r1, err := secret.Data["ttl"].(json.Number).Int64()
+    mutils.HttpCheckPanic(err, mutils.InternalError)
+    
+    ttl = r1 * 1000
+    if r1 != 0 {
+        ttl += time.Now().UnixNano() / int64(time.Millisecond)
     }
     
     ls := LoginStatus{
         IsLogged: true,
         IsAdmin: mfilters.IsAdmin(user),
         CanImpersonate: mfilters.CanImpersonate(user),
-        SessionExpiresAt: creationTimeMillisecond + ttl,
+        SessionExpiresAt: ttl,
     }
     mutils.HttpCheckPanic(response.WriteEntity(ls), mutils.InternalError)
 }

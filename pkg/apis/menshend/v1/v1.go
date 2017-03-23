@@ -25,40 +25,39 @@ func APIHandler() http.Handler {
     secret.Register(wsContainer)
     space := SpaceResource{}
     space.Register(wsContainer)
-    
-    wsContainer.RecoverHandler(ApiPanicHandler)
+    flash := FlashResource{}
+    flash.Register(wsContainer)
+    wsContainer.RecoverHandler(APIPanicHandler)
     wsContainer.DoNotRecover(false)
-    
-    return BrowserDetectorHandler(ApiCSRFHandler(wsContainer))
+    return BrowserDetectorHandler(APICSRFHandler(wsContainer))
 }
 
 
-//ApiPanicHandler handle any panic in the api endpoint
-func ApiPanicHandler(rec interface{}, w http.ResponseWriter) {
-    var errorMessage string
-    var errorCode int
+//APIPanicHandler handle any panic in the api endpoint
+func APIPanicHandler(rec interface{}, w http.ResponseWriter) {
+    
+    logrus.Errorln(rec)
+    errorMessage := "Internal server error"
+    errorCode := http.StatusInternalServerError
     
     switch x := rec.(type) {
     case merry.Error:
-        logrus.Errorln(merry.Details(x))
         errorMessage = merry.UserMessage(x)
         errorCode = merry.HTTPCode(x)
-    case error:
-        logrus.Errorln(x)
-        errorMessage = "Internal server error"
-        errorCode = http.StatusInternalServerError
-    default:
-        logrus.Errorln(x)
-        errorMessage = "Uknown error"
-        errorCode = http.StatusInternalServerError
     }
+    
     w.WriteHeader(errorCode)
     
-    w.Write([]byte(fmt.Sprintf(`{"message": "%s"}`, errorMessage)))
+    _, err := w.Write([]byte(fmt.Sprintf(`{"message": "%s"}`, errorMessage)))
+    if (err != nil) { logrus.Error(err)}
     w.Header().Set("Content-Type", "application/json")
 }
 
+//RequestType ..
+type RequestType int
 
+//IsBrowserRequest ...
+const IsBrowserRequest RequestType = 0
 
 //BrowserDetectorHandler If the vault token is read from the cookie it will assume that is a browser
 //vault token from the cookie will always be selected if both header and cookie are present
@@ -81,7 +80,7 @@ func BrowserDetectorHandler(next http.Handler) http.Handler {
                 }
             }
         }
-        ctx := context.WithValue(r.Context(), "isBrowserRequest", ibr)
+        ctx := context.WithValue(r.Context(), IsBrowserRequest, ibr)
         next.ServeHTTP(w, r.WithContext(ctx))
     })
 }
@@ -96,21 +95,20 @@ func NextCSRFHandler(next http.Handler) http.Handler {
     })
 }
 
-//ApiCSRFHandler add csrf protection only for browsers (see BrowserDetectorHandler)
-func ApiCSRFHandler(next http.Handler) http.Handler {
+//APICSRFHandler add csrf protection only for browsers (see BrowserDetectorHandler)
+func APICSRFHandler(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         var CSRF func(http.Handler) http.Handler
         var handler http.Handler
         handler = next
-        isBrowserRequest := r.Context().Value("isBrowserRequest").(bool)
+        isBrowserRequest := r.Context().Value(IsBrowserRequest).(bool)
         if r.Method == "GET" || isBrowserRequest {
+            CSRF = csrf.Protect([]byte(config.Config.BlockKey), csrf.Domain(config.Config.Uris.Api + config.Config.HostWithoutPort()))
             if config.Config.Scheme() == "http" {
                 CSRF = csrf.Protect([]byte(config.Config.BlockKey), csrf.Secure(false), csrf.Domain(config.Config.Uris.Api + config.Config.HostWithoutPort()))
             }
-            CSRF = csrf.Protect([]byte(config.Config.BlockKey), csrf.Domain(config.Config.Uris.Api + config.Config.HostWithoutPort()))
             handler = CSRF(NextCSRFHandler(handler))
         }
-        
         handler.ServeHTTP(w, r)
     })
 }
