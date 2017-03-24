@@ -5,7 +5,7 @@ spec:
     application: io.menshend.v1alpha
     resource: AdminService
     name: LuaResolver
-    description: Allow define the backend service as a lua script
+    description: define the backend service as a lua script
   fields:
   - name: content
     schema: io.omniql.core.v1alpha/String

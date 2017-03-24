@@ -15,7 +15,7 @@ paths:
     get:
       tags:
       - Space
-      description: get the current space
+      description: get lab metadata (name, log, description)
       operationId: getSpace
       responses:
         200:
@@ -33,7 +33,7 @@ paths:
     get:
       tags:
       - Flashes
-      description: list current flashes and delete them
+      description: list current flashes (only makes sense in browsers)
       operationId: getFlashes
       responses:
         200:
@@ -183,62 +183,6 @@ paths:
             properties:
               message:
                 type: string
-    put:
-      parameters:
-      - name: "auth"
-        in: "body"
-        required: true
-        schema:
-          type: object
-          properties:
-            data:
-              type:
-                object
-            authProvider:
-              type: string
-              enum:
-                - token
-                - userpass
-                - github
-        description: auth object
-      tags:
-      - Auth
-      description: login
-      operationId: Login
-      responses:
-        200:
-          description: ok
-          schema:
-            $ref: "#/definitions/LoginStatus"
-        403:
-          description: Permission Error
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-        400:
-          description: Bad request
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-        404:
-          description: Not found
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-        500:
-          description: Internal error
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-
 
   /v1/adminServices/{id}:
     parameters:
@@ -417,7 +361,6 @@ paths:
             properties:
               message:
                 type: string
-
 definitions:
   Space:
     type: object
@@ -432,7 +375,6 @@ definitions:
         type: string
       host:
         type: string
-
   Flash:
     type: object
     properties:
@@ -451,7 +393,49 @@ definitions:
         type: boolean
       sessionExpiresAt:
         type: integer
-  AdminService:
+  ServiceCache:
+    type: object
+    properties:
+      ttl:
+        type: integer
+  Cors:
+    type: object
+    properties:
+      allowedOrigins:
+        type: array
+        items:
+          type: string
+      allowedMethods:
+        type: array
+        items:
+          type: string
+      allowedHeaders:
+        type: array
+        items:
+          type: string
+      allowCredentials:
+        type: boolean
+      optionsPassthrough:
+        type: boolean
+      maxAge:
+        type: boolean
+      exposedHeaders:
+        type: array
+        items:
+          type: string
+  LongDescriptionLocal:
+    type: object
+    properties:
+      content:
+        type: string
+  LongDescriptionRemote:
+    type: object
+    properties:
+      content:
+        type: string
+      url:
+        type: string
+  Metadata:
     type: object
     properties:
       id:
@@ -462,63 +446,71 @@ definitions:
         type: string
       name:
         type: string
-      shortDescription:
+      description:
         type: string
+      subDomain:
+        type: string
+      tags:
+        type: array
+        items:
+          type: string
       longDescription:
+        type: object
+        properties:
+          remote:
+            $ref: '#/definitions/LongDescriptionLocal'
+          local:
+            $ref: '#/definitions/LongDescriptionRemote'
+  LuaResolver:
+    type: object
+    properties:
+      content:
         type: string
-      longDescriptionUrl:
+      makeBodyAvailable:
+        type: boolean
+  YAMLResolver:
+    type: object
+    properties:
+      content:
         type: string
-      proxyCode:
-        type: string
-      proxyCodeLanguage:
-        type: string
-        enum:
-        - yaml
-        - lua
+  Proxy:
+    type: object
+    properties:
+      cors:
+        $ref: '#/definitions/Cors'
       csrf:
         type: boolean
+  Redirect:
+    type: object
+  PortForward:
+    type: object
+  AdminService:
+    type: object
+    properties:
+      meta:
+        $ref: '#/definitions/Metadata'
+      strategy:
+        type: object
+        properties:
+          proxy:
+            $ref: '#/definitions/Proxy'
+          redirect:
+            $ref: '#/definitions/Redirect'
+          portForward:
+            $ref: '#/definitions/PortForward'
+      resolver:
+        type: object
+        properties:
+          lua:
+            $ref: '#/definitions/LuaResolver'
+          yaml:
+            $ref: '#/definitions/YAMLResolver'
+      cache:
+        $ref: '#/definitions/ServiceCache'
       impersonateWithinRole:
         type: boolean
       isActive:
         type: boolean
-      strategy:
-        type: string
-        enum:
-        - proxy
-        - redirect
-        - port-forward
-      cache:
-        type: object
-        properties:
-          active:
-            type: boolean
-          ttl:
-            type: integer
-      cors:
-        type: object
-        properties:
-          allowedOrigins:
-            type: array
-            items:
-              type: string
-          allowedMethods:
-            type: array
-            items:
-              type: string
-          allowedHeaders:
-            type: array
-            items:
-              type: string
-          allowCredentials:
-            type: boolean
-          optionsPassthrough:
-            type: boolean
-          maxAge:
-            type: boolean
-          exposedHeaders:
-            type: array
-            items:
-              type: string
       secretPaths:
         type: array
         items:
@@ -570,44 +562,15 @@ definitions:
 
   ClientService:
     type: object
-    required: [id]
-    description: this object represent a service for user without admin access
     properties:
-      isActive:
-        type: boolean
-      strategy:
-        type: string
-        enum:
-        - proxy
-        - redirect
-        - port-forward
-      id:
-        type: string
-        description: service id `/roles/{role-name}/{subdomain}/`
-      roleId:
-        type: string
-        description: role name
-      subDomain:
-        type: string
-        description: subdomain
-      logo:
-        type: string
-        description: url where the logo of this service is stored
-      name:
-        type: string
-        description: name
-      shortDescription:
-        type: string
-        description: max 100 characters
-      longDescription:
-        type: string
-        description: support markdown
+      meta:
+        $ref: '#/definitions/Metadata'
       impersonateWithinRole:
         type: boolean
-        description: if this propertie is true, any user with access to this service  can impersonate anothers users, this only work within the service and role, without the need of special permission, `md-user` and `md-groups` can be user in the query params to select the user / group to impersonate
+      isActive:
+        type: boolean
       secretPaths:
         type: array
-        description: list of secret vault paths relate with this service.
         items:
           type: string
 

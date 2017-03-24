@@ -21,13 +21,13 @@ spec:
       description: Metadata associate with this service, name, logo, etc.
       required: true
     - name: resolver
-      schema: io.menshend.v1alpha/Resource/AdminService/Table/Resolver
+      schema: io.menshend.v1alpha/Resource/AdminService/Union/Resolver
       description: allow to define services policies programatically (suported: lua and yaml)
       required: true
     - name: strategy
-      schema: io.menshend.v1alpha/Resource/AdminService/Table/Strategy
+      schema: io.menshend.v1alpha/Resource/AdminService/Union/Strategy
       description: this  defines how the reverse proxy works
       required: true
     - name: cache
-      schema: io.menshend.v1alpha/Resource/AdminService/Table/Cache
+      schema: io.menshend.v1alpha/Resource/AdminService/Union/Cache
       description: enable cache over the result of a Resolver
