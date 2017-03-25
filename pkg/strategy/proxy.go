@@ -5,8 +5,8 @@ import (
     "net/http"
     "github.com/vulcand/oxy/forward"
     "net/url"
-    . "github.com/nebtex/menshend/pkg/utils"
-    . "github.com/nebtex/menshend/pkg/config"
+    mutils "github.com/nebtex/menshend/pkg/utils"
+    mconfig "github.com/nebtex/menshend/pkg/config"
     vault "github.com/hashicorp/vault/api"
     "io/ioutil"
     "github.com/gorilla/csrf"
@@ -52,7 +52,7 @@ type CorsOptions struct {
 
 func (*errorHandler)ServeHTTP(w http.ResponseWriter, req *http.Request, err error) {
     logrus.Error(err.Error())
-    panic(BadGateway.WithUserMessage("backend is not responding"))
+    panic(mutils.BadGateway.WithUserMessage("backend is not responding"))
 }
 
 type Proxy struct {
@@ -75,28 +75,28 @@ func (ps *Proxy) Execute(rs resolvers.Resolver, tokenInfo *vault.Secret) http.Ha
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         var CSRF func(http.Handler) http.Handler
         var handler http.Handler
-        IsBrowserRequest := r.Context().Value("IsBrowserRequest").(bool)
+        IsBrowserRequest := r.Context().Value(mutils.IsBrowserRequest).(bool)
         subdomain := r.Context().Value("subdomain").(string)
         Fwd, err := forward.New(forward.ErrorHandler(&errorHandler{}))
-        HttpCheckPanic(err, InternalError)
+        mutils.HttpCheckPanic(err, mutils.InternalError)
         
         if true{
             data, err := ioutil.ReadAll(r.Body)
-            HttpCheckPanic(err, InternalError)
+            mutils.HttpCheckPanic(err, mutils.InternalError)
             rs.SetBody(string(data))
         }
         
         b := rs.Resolve(tokenInfo)
         
         if !b.Passed() {
-            panic(NotAuthorized.WithUserMessage(b.Error().Error()))
+            panic(mutils.NotAuthorized.WithUserMessage(b.Error().Error()))
         }
         
         for key, value := range b.Headers() {
             r.Header.Set(key, value)
         }
         bUrl, err := url.Parse(b.BaseUrl())
-        HttpCheckPanic(err, InternalError)
+        mutils.HttpCheckPanic(err, mutils.InternalError)
         r.URL.Host = bUrl.Host
         r.URL.User = bUrl.User
         r.URL.Scheme = bUrl.Scheme
@@ -104,10 +104,10 @@ func (ps *Proxy) Execute(rs resolvers.Resolver, tokenInfo *vault.Secret) http.Ha
         //TODO: check logic
         if IsBrowserRequest {
             if ps.CSRF {
-                if Config.Scheme() == "http" {
-                    CSRF = csrf.Protect([]byte(Config.BlockKey), csrf.Secure(false), csrf.Domain(subdomain + Config.HostWithoutPort()))
+                if mconfig.Config.Scheme() == "http" {
+                    CSRF = csrf.Protect([]byte(mconfig.Config.BlockKey), csrf.Secure(false), csrf.Domain(subdomain + mconfig.Config.HostWithoutPort()))
                 }
-                CSRF = csrf.Protect([]byte(Config.BlockKey), csrf.Domain(subdomain + Config.HostWithoutPort()))
+                CSRF = csrf.Protect([]byte(mconfig.Config.BlockKey), csrf.Domain(subdomain + mconfig.Config.HostWithoutPort()))
                 handler = CSRF(NextCSRFHandler(handler))
             }
             if ps.Cors != nil {

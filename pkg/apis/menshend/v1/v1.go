@@ -9,6 +9,8 @@ import (
     "context"
     "github.com/gorilla/csrf"
     "github.com/nebtex/menshend/pkg/config"
+    mutils "github.com/nebtex/menshend/pkg/utils"
+
 )
 
 
@@ -55,11 +57,6 @@ func APIPanicHandler(rec interface{}, w http.ResponseWriter) {
     w.Header().Set("Content-Type", "application/json")
 }
 
-//RequestType ..
-type RequestType int
-
-//IsBrowserRequest ...
-const IsBrowserRequest RequestType = 0
 
 //BrowserDetectorHandler If the vault token is read from the cookie it will assume that is a browser
 //vault token from the cookie will always be selected if both header and cookie are present
@@ -82,7 +79,7 @@ func BrowserDetectorHandler(next http.Handler) http.Handler {
                 }
             }
         }
-        ctx := context.WithValue(r.Context(), IsBrowserRequest, ibr)
+        ctx := context.WithValue(r.Context(), mutils.IsBrowserRequest, ibr)
         next.ServeHTTP(w, r.WithContext(ctx))
     })
 }
@@ -103,7 +100,7 @@ func APICSRFHandler(next http.Handler) http.Handler {
         var CSRF func(http.Handler) http.Handler
         var handler http.Handler
         handler = next
-        isBrowserRequest := r.Context().Value(IsBrowserRequest).(bool)
+        isBrowserRequest := r.Context().Value(mutils.IsBrowserRequest).(bool)
         if r.Method == "GET" || isBrowserRequest {
             CSRF = csrf.Protect([]byte(config.Config.BlockKey), csrf.Domain(config.Config.Uris.Api + config.Config.HostWithoutPort()))
             if config.Config.Scheme() == "http" {

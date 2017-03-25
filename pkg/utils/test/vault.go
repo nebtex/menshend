@@ -4,8 +4,8 @@ import (
     "fmt"
     vault "github.com/hashicorp/vault/api"
     "github.com/mitchellh/mapstructure"
-    . "github.com/nebtex/menshend/pkg/config"
-    . "github.com/nebtex/menshend/pkg/utils"
+    mconfig "github.com/nebtex/menshend/pkg/config"
+    mutils "github.com/nebtex/menshend/pkg/utils"
     "strings"
     "github.com/fatih/structs"
     "github.com/nebtex/menshend/pkg/strategy"
@@ -17,25 +17,25 @@ func CleanVault() {
         Keys []string
     }
     vc, err := vault.NewClient(vault.DefaultConfig())
-    CheckPanic(err)
+    mutils.CheckPanic(err)
     vc.SetToken("myroot")
     
-    key := fmt.Sprintf("%s/roles", Config.VaultPath)
+    key := fmt.Sprintf("%s/roles", mconfig.Config.VaultPath)
     secret, err := vc.Logical().List(key)
-    CheckPanic(err)
+    mutils.CheckPanic(err)
     if (secret == nil) || (secret.Data == nil) {
         return
     }
     rr := &ListResult{}
     err = mapstructure.Decode(secret.Data, rr)
-    CheckPanic(err)
+    mutils.CheckPanic(err)
     roleList := rr.Keys
     
     for _, role := range roleList {
         if !strings.HasSuffix(role, "/") {
             continue
         }
-        rKey := fmt.Sprintf("%s/roles/%s", Config.VaultPath, role)
+        rKey := fmt.Sprintf("%s/roles/%s", mconfig.Config.VaultPath, role)
         rSecret, err := vc.Logical().List(rKey)
         if err != nil {
             continue
@@ -43,14 +43,14 @@ func CleanVault() {
         
         sr := &ListResult{}
         err = mapstructure.Decode(rSecret.Data, sr)
-        CheckPanic(err)
+        mutils.CheckPanic(err)
         
         serviceList := sr.Keys
         
         for _, service := range serviceList {
-            sKey := fmt.Sprintf("%s/roles/%s/%s", Config.VaultPath, role, service)
+            sKey := fmt.Sprintf("%s/roles/%s/%s", mconfig.Config.VaultPath, role, service)
             _, err := vc.Logical().Delete(sKey)
-            CheckPanic(err)
+            mutils.CheckPanic(err)
         }
     }
 }
@@ -101,7 +101,7 @@ type Service struct {
 func PopulateVault() {
     vc, err := vault.NewClient(vault.DefaultConfig())
     vc.SetToken("myroot")
-    CheckPanic(err)
+    mutils.CheckPanic(err)
     roles := map[string]Role{
         "ml-team": map[string]*Service{
             "consul.":{IsActive:true,
@@ -120,7 +120,9 @@ end`}}, },
                 Resolver: &TestServiceResolver{Lua: &resolvers.LuaResolver{Content: `function getBackend (tokenInfo, request)
     return "http://localhost:5454", {}
 end`}}, },
-            "gitlab.":{IsActive:false, SecretPaths:[]string{"secret/gitlab/password", Config.VaultPath + "/roles/ml-team/gitlab."},
+            "gitlab.":{
+                Meta: &TestServiceMetadata{SubDomain: "consul-2."},
+                IsActive:false, SecretPaths:[]string{"secret/gitlab/password", mconfig.Config.VaultPath + "/roles/ml-team/gitlab."},
             },
             "postgres.":{},
             "redis.":{IsActive:true, Meta: &TestServiceMetadata{SubDomain: "redis."}, ShortDescription: "redisdb"}, },
@@ -131,9 +133,9 @@ end`}}, },
         }}
     for role, services := range roles {
         for service, val := range services {
-            key := fmt.Sprintf("%s/roles/%s/%s", Config.VaultPath, role, service)
+            key := fmt.Sprintf("%s/roles/%s/%s", mconfig.Config.VaultPath, role, service)
             _, err := vc.Logical().Write(key, structs.Map(val))
-            CheckPanic(err)
+            mutils.CheckPanic(err)
         }
     }
 }

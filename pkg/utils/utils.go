@@ -9,6 +9,18 @@ import (
     "runtime"
     "github.com/Sirupsen/logrus"
 )
+//RequestType ..
+type ContextKey int
+
+const (
+    //IsBrowserRequest ...
+    IsBrowserRequest ContextKey = iota
+    Subdomain
+    Role
+    Service
+    TokenInfo
+    VaultToken
+)
 
 
 //CheckPanic if error exist exit and log the file and line from where

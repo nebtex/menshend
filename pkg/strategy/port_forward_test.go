@@ -16,14 +16,14 @@ import (
 
 func noBrowserHandler(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        ctx := context.WithValue(r.Context(), "IsBrowserRequest", false)
+        ctx := context.WithValue(r.Context(), vI.sBrowserRequest, false)
         ctx = context.WithValue(ctx, "subdomain", "consul.")
        next.ServeHTTP(w, r.WithContext(ctx))
     })
 }
 func browserHandler(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        ctx := context.WithValue(r.Context(), "IsBrowserRequest", true)
+        ctx := context.WithValue(r.Context(), vI.sBrowserRequest, true)
         ctx = context.WithValue(ctx, "subdomain", "consul.")
         next.ServeHTTP(w, r.WithContext(ctx))
     })

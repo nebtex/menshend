@@ -9,7 +9,7 @@ import (
     "strings"
 )
 
-func parseBearerAuth(auth string) (string, bool) {
+func ParseBearerAuth(auth string) (string, bool) {
     const prefix = "Bearer "
     if !strings.HasPrefix(auth, prefix) {
         return "", false
@@ -18,13 +18,15 @@ func parseBearerAuth(auth string) (string, bool) {
 }
 
 func GetTokenFromRequest(r *restful.Request) string {
-    bearerToken, _ := parseBearerAuth(r.Request.Header.Get("Authorization"))
+    bearerToken, _ := ParseBearerAuth(r.Request.Header.Get("Authorization"))
     vaultToken := r.HeaderParameter("X-Vault-Token")
+    
     if bearerToken != "" {
-        if vaultToken != "" {
+        if vaultToken == "" {
             vaultToken = bearerToken
         }
     }
+    
     
     return vaultToken
 }

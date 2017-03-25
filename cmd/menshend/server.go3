@@ -7,14 +7,10 @@ import (
     "github.com/gorilla/mux"
 )
 
-func getSubDomain(s string) string {
-    return strings.TrimSuffix(s, Config.Host())
-    
-}
 
 func mainHandler(response http.ResponseWriter, request *http.Request) {
-   
-    
+
+
 }
 //TODO: add in config read token from custom param
 //Deactivate cache usign query params
@@ -43,22 +39,22 @@ func setToken(u *User, expiresIn int64, response *restful.Response, hasCSRF bool
         expireAt += expiresIn
     }
     u.SetExpiresAt(expireAt)
-    
+
     if !hasCSRF {
         response.AddHeader("X-Menshend-Token", u.GenerateJWT())
-        
+
     } else {
         ct := &http.Cookie{Path: "/", Name: "X-Menshend-Token", Value: u.GenerateJWT(),
             Expires: time.Unix(u.ExpiresAt / 1000, 0),
             HttpOnly:true }
-        
+
         ct.Domain = "." + Config.HostWithoutPort()
-        
+
         if Config.Scheme == "https" {
             ct.Secure = true
         }
         http.SetCookie(response.ResponseWriter, ct)
-        
+
     }
 }
 func setExpirationTime(u *User, expiresIn int64) *User {
@@ -70,7 +66,7 @@ func setExpirationTime(u *User, expiresIn int64) *User {
     }
     u.SetExpiresAt(expireAt)
     return u
-    
+
 }
 */
 

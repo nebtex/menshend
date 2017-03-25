@@ -3,104 +3,59 @@ package main
 import (
     "net/http"
     "context"
-    . "github.com/nebtex/menshend/pkg/utils"
-    . "github.com/nebtex/menshend/pkg/config"
-    . "github.com/nebtex/menshend/pkg/apis/menshend"
+    mconfig "github.com/nebtex/menshend/pkg/config"
+    mutils "github.com/nebtex/menshend/pkg/utils"
+    mfilters "github.com/nebtex/menshend/pkg/filters"
     vault "github.com/hashicorp/vault/api"
     "fmt"
     "github.com/nebtex/menshend/pkg/apis/menshend/v1"
     "github.com/mitchellh/mapstructure"
-    "github.com/nebtex/menshend/pkg/resolvers"
-    "github.com/nebtex/menshend/pkg/strategy"
     "github.com/ansel1/merry"
     "github.com/Sirupsen/logrus"
-    "github.com/gorilla/csrf"
-    "github.com/rs/cors"
+    "strings"
 )
+
+func getSubDomain(s string) string {
+    return strings.TrimSuffix(s, mconfig.Config.Host())
+    
+}
 
 func GetSubDomainHandler(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         subdomain := getSubDomain(r.Host)
-        ctx := context.WithValue(r.Context(), "subdomain", subdomain)
+        ctx := context.WithValue(r.Context(), mutils.Subdomain, subdomain)
         next.ServeHTTP(w, r.WithContext(ctx))
     })
 }
+
 //TODO: add impersonate handler
-//TODO: portfoward from broser should return error
-//TODO: add role handler - {map menshend-role, vault-role}.
-//TODO: panic handler when ui is not active should print error
-//TODO: read browser header
-//TokenRealmSecurity don't allow api token to be used in the browser as cookies or headers
-func TokenRealmSecurityHandler(next http.Handler) http.Handler {
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        IsBrowserRequest := r.Context().Value("IsBrowserRequest").(bool)
-        user := r.Context().Value("User").(*User)
-        if (IsBrowserRequest) {
-            if (user.Menshend.Realm != BrowserRealm) {
-                panic(NotAuthorized)
-            }
-        }
-        next.ServeHTTP(w, r)
-    })
-}
 
-func DetectBrowser(next http.Handler) http.Handler {
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        ibr := false
-        if len(r.Cookies()) > 0 {
-            ck, err := r.Cookie("X-Vault-Token")
-            if err == nil {
-                ibr = true
-                r.Header.Add("X-Vault-Token", ck.Value)
-                // remove menshend cookie
-                cks := r.Cookies()
-                r.Header.Del("Cookie")
-                for _, c := range cks {
-                    if c.Name == "X-Vault-Token" {
-                        continue
-                    }
-                    r.AddCookie(c)
-                }
-            }
-        }
-        ctx := context.WithValue(r.Context(), "IsBrowserRequest", ibr)
-        next.ServeHTTP(w, r.WithContext(ctx))
-    })
-}
+//
 
-//put in the pat service that the user is triying to access
+
 //PanicHandler
 func PanicHandler(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        IsBrowserRequest := r.Context().Value("IsBrowserRequest").(bool)
-        var errorMessage string
-        var errorCode int
-        
+        IsBrowserRequest := r.Context().Value(mutils.IsBrowserRequest).(bool)
         defer func() {
             rec := recover()
             if (rec == nil) {
                 return
             }
+            logrus.Errorln(rec)
+            errorMessage := "Internal server error"
+            errorCode := http.StatusInternalServerError
             switch x := rec.(type) {
             case merry.Error:
                 logrus.Errorln(merry.Details(x))
-                errorMessage = x.Error()
+                errorMessage = merry.UserMessage(x)
                 errorCode = merry.HTTPCode(x)
-            case error:
-                logrus.Errorln(x)
-                errorMessage = "Internal server error"
-                errorCode = http.StatusInternalServerError
-            default:
-                errorMessage = "Uknown error"
-                errorCode = http.StatusInternalServerError
             }
-            
-            if (!IsBrowserRequest) || (!Config.EnableUI) {
+            if (!IsBrowserRequest) {
                 http.Error(w, errorMessage, errorCode)
-                
             } else {
                 // Get a session.
-                session, err := FlashStore.Get(r, "flashes")
+                session, err := mconfig.FlashStore.Get(r, "flashes")
                 if err != nil {
                     http.Error(w, err.Error(), http.StatusInternalServerError)
                     return
@@ -108,49 +63,65 @@ func PanicHandler(next http.Handler) http.Handler {
                 // Set a new flash.
                 session.AddFlash(errorMessage)
                 session.Save(r, w)
-                http.Redirect(w, r, Config.Scheme() + "://" + Config.MenshendSubdomain + Config.Host() + "/ui/login", 302)
+                subdomain := getSubDomain(r.Host)
+                http.Redirect(w, r, mconfig.Config.Scheme() + "://" + mconfig.Config.Uris.Api + mconfig.Config.Host() + "/login?subdomain=" + subdomain, 302)
             }
         }()
-        
         next.ServeHTTP(w, r)
     })
 }
 
-func getUserFromRequest(r *http.Request) *User {
-    jwtCookie := r.Header.Get("X-Vault-Token")
-    user, err := FromJWT(jwtCookie)
-    HttpCheckPanic(err, NotAuthorized)
-    return user
+
+func GetTokenFromRequest(r *http.Request) string {
+    bearerToken, _ := mfilters.ParseBearerAuth(r.Header.Get("Authorization"))
+    vaultToken := r.Header.Get("X-Vault-Token")
+    r.Header.Del("X-Vault-Token")
+    
+    if bearerToken != "" {
+        if vaultToken == "" {
+            vaultToken = bearerToken
+            r.Header.Del("Authorization")
+        }
+    }
+    return vaultToken
 }
+
 
 //NeedLogin auth middleware, for router that need the jwt token
 func NeedLogin(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        user := getUserFromRequest(r)
-        ctx := context.WithValue(r.Context(), "User", user)
-        //remove menshend token from headers
-        r.Header.Del("X-Vault-Token")
+        vaultToken := GetTokenFromRequest(r)
+        ctx := context.WithValue(r.Context(), mutils.VaultToken, vaultToken)
+        vc, err := vault.NewClient(vault.DefaultConfig())
+        mutils.HttpCheckPanic(err, mutils.InternalError)
+        vc.SetToken(vaultToken)
+        tokenInfo, err := vc.Auth().Token().LookupSelf()
+        mutils.HttpCheckPanic(err, mutils.NotAuthorized)
+        ctx = context.WithValue(ctx, mutils.TokenInfo, tokenInfo)
         next.ServeHTTP(w, r.WithContext(ctx))
     })
 }
 
+//RoleHandler pick a role
 func RoleHandler(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         mdRole := r.Header.Get("md-role")
         mdRoleQ := r.FormValue("md-role")
+        if r.PostForm.Get("md-role") != "" {
+            mdRoleQ = r.PostForm.Get("md-role")
+        }
         if mdRoleQ != "" {
             mdRole = mdRoleQ
         }
-        IsBrowserRequest := r.Context().Value("IsBrowserRequest").(bool)
+        IsBrowserRequest := r.Context().Value(mutils.IsBrowserRequest).(bool)
         if !IsBrowserRequest {
-            
             if mdRole != "" {
-                ctx := context.WithValue(r.Context(), "role", mdRole)
+                ctx := context.WithValue(r.Context(), mutils.Role, mdRole)
                 next.ServeHTTP(w, r.WithContext(ctx))
                 return
             }
             
-            ctx := context.WithValue(r.Context(), "role", Config.DefaultRole)
+            ctx := context.WithValue(r.Context(), mutils.Role, mconfig.Config.DefaultRole)
             next.ServeHTTP(w, r.WithContext(ctx))
             return
         }
@@ -170,44 +141,46 @@ func RoleHandler(next http.Handler) http.Handler {
             http.Redirect(w, r, r.URL.String(), 302)
             return
         }
+        
         ck, err := r.Cookie("md-role")
         if err == nil {
-            ctx := context.WithValue(r.Context(), "role", ck.Value)
+            ctx := context.WithValue(r.Context(), mutils.Role, ck.Value)
             next.ServeHTTP(w, r.WithContext(ctx))
             return
         }
-        ctx := context.WithValue(r.Context(), "role", Config.DefaultRole)
+        ctx := context.WithValue(r.Context(), mutils.Role, mconfig.Config.DefaultRole)
         next.ServeHTTP(w, r.WithContext(ctx))
-        
     })
 }
 
+//GetServiceHandler read the service from vault
 func GetServiceHandler(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        role := r.Context().Value("role").(string)
-        subdomain := r.Context().Value("subdomain").(string)
-        user := r.Context().Value("User").(*User)
-        vc, err := vault.NewClient(VaultConfig)
-        HttpCheckPanic(err, InternalError)
-        vc.SetToken(user.Menshend.VaultToken)
+        role := r.Context().Value(mutils.Role).(string)
+        subdomain := r.Context().Value(mutils.Subdomain).(string)
+        vaultToken := r.Context().Value(mutils.VaultToken).(string)
+        vc, err := vault.NewClient(vault.DefaultConfig())
+        mutils.HttpCheckPanic(err, mutils.InternalError)
+        vc.SetToken(vaultToken)
         serviceId := fmt.Sprintf("roles/%s/%s", role, subdomain)
-        secret, err := vc.Logical().Read(fmt.Sprintf("%s/%s", Config.VaultPath, serviceId))
-        HttpCheckPanic(err, InternalError)
+        secret, err := vc.Logical().Read(fmt.Sprintf("%s/%s", mconfig.Config.VaultPath, serviceId))
+        mutils.HttpCheckPanic(err, mutils.InternalError)
         v1.CheckSecretFailIfIsNull(secret)
         as := &v1.AdminServiceResource{}
         mapstructure.Decode(secret.Data, as)
-        if !as.IsActive {
-            panic(NotAuthorized.WithUserMessage("service " + as.ID + " is deactivated"))
+        if !as.Active() {
+            panic(mutils.NotAuthorized.WithUserMessage("service " + as.Meta.ID + " is deactivated"))
         }
-        ctx := context.WithValue(r.Context(), "service", as)
+        ctx := context.WithValue(r.Context(), mutils.Service, as)
         next.ServeHTTP(w, r.WithContext(ctx))
     })
 }
-
+/*
+//ImpersonateWithinRoleHandler
 func ImpersonateWithinRoleHandler(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        service := r.Context().Value("service").(*v1.AdminServiceResource)
-        user := r.Context().Value("User").(*User)
+        service := r.Context().Value(v1.Service).(*v1.AdminServiceResource)
+        tokenInfo := r.Context().Value(v1.TokenInfo).(*vault.Secret)
         
         if service.ImpersonateWithinRole {
             if r.URL.Query().Get("md-user") != "" {
@@ -220,21 +193,12 @@ func ImpersonateWithinRoleHandler(next http.Handler) http.Handler {
         }
         next.ServeHTTP(w, r)
     })
-}
-
-func NextCSRFHandler(next http.Handler) http.Handler {
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        ct := csrf.Token(r)
-        r.Header.Set("X-Next-CSRF-Token", ct)
-        w.Header().Set("X-Next-CSRF-Token", ct)
-        next.ServeHTTP(w, r)
-    })
-}
-
+}*/
+/*
 func ProxyHandlers() http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         var CSRF func(http.Handler) http.Handler
-        IsBrowserRequest := r.Context().Value("IsBrowserRequest").(bool)
+        IsBrowserRequest := r.Context().Value(vI.sBrowserRequest).(bool)
         user := r.Context().Value("User").(*User)
         service := r.Context().Value("service").(*v1.AdminServiceResource)
         cr := &resolvers.CacheResolver{}
@@ -285,3 +249,4 @@ func ProxyHandlers() http.Handler {
         
     })
 }
+*/

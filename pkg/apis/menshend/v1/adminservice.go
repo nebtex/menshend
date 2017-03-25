@@ -194,6 +194,13 @@ type AdminServiceResource struct {
     Cache                 *ServiceCache    `json:"cache,omitempty"`
 }
 
+func (as *AdminServiceResource)Active() bool {
+    if as.IsActive == nil {
+        return true
+    }
+    return *as.IsActive
+}
+
 func getFullUrl(sm *ServiceMetadata) string {
     return mconfig.Config.Scheme() + "://" + sm.SubDomain + mconfig.Config.Host() + "?md-role=" + sm.RoleID
 }
