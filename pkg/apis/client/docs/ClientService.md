@@ -5,6 +5,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Meta** | [**Metadata**](Metadata.md) |  | [optional] [default to null]
 **ImpersonateWithinRole** | **bool** |  | [optional] [default to null]
+**FullUrl** | **string** |  | [optional] [default to null]
 **IsActive** | **bool** |  | [optional] [default to null]
 **SecretPaths** | **[]string** |  | [optional] [default to null]
 

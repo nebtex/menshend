@@ -20,6 +20,8 @@ type ClientServiceResource struct {
     ImpersonateWithinRole bool              `json:"impersonateWithinRole"`
     IsActive              *bool             `json:"isActive"`
     SecretPaths           []string          `json:"secretPaths"`
+    FullURL               string           `json:"fullUrl"`
+    
 }
 
 //Register ...
@@ -68,6 +70,7 @@ func (cs *ClientServiceResource) listServiceHandler(request *restful.Request, re
         nService := &ClientServiceResource{}
         err = mapstructure.Decode(secret.Data, nService)
         mutils.HttpCheckPanic(err, mutils.InternalError.WithUserMessage("error decoding service"))
+        nService.FullURL = getFullUrl(nService.Meta)
         ret = append(ret, nService)
         mutils.HttpCheckPanic(response.WriteEntity(ret), mutils.InternalError)
         return
@@ -109,6 +112,7 @@ func (cs *ClientServiceResource) listServiceHandler(request *restful.Request, re
                 if !(err != nil || sSecret == nil || sSecret.Data == nil) {
                     cs := &ClientServiceResource{}
                     err := mapstructure.Decode(sSecret.Data, cs)
+                    cs.FullURL = getFullUrl(cs.Meta)
                     mutils.HttpCheckPanic(err, mutils.InternalError.WithUserMessage("there is something really wrong contact your admin"))
                     ret = append(ret, cs)
                 }
@@ -140,6 +144,7 @@ func getServiceByRole(user string, role string) []*ClientServiceResource {
             nService := &ClientServiceResource{}
             err = mapstructure.Decode(secret.Data, nService)
             mutils.HttpCheckPanic(err, mutils.InternalError.WithUserMessage("there is something really wrong contact your admin"))
+            nService.FullURL = getFullUrl(nService.Meta)
             ret = append(ret, nService)
         }
         
@@ -171,6 +176,7 @@ func getServiceBySubdomain(user string, subDomain string) []*ClientServiceResour
             nService := &ClientServiceResource{}
             err = mapstructure.Decode(secret.Data, nService)
             mutils.HttpCheckPanic(err, mutils.InternalError.WithUserMessage("there is something really wrong contact your admin"))
+            nService.FullURL = getFullUrl(nService.Meta)
             ret = append(ret, nService)
         }
         

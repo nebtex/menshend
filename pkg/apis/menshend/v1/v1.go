@@ -42,6 +42,8 @@ func APIPanicHandler(rec interface{}, w http.ResponseWriter) {
     
     switch x := rec.(type) {
     case merry.Error:
+        logrus.Errorln(merry.Details(x))
+    
         errorMessage = merry.UserMessage(x)
         errorCode = merry.HTTPCode(x)
     }

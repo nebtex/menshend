@@ -28,6 +28,8 @@ type ClientService struct {
 
 	ImpersonateWithinRole bool `json:"impersonateWithinRole,omitempty"`
 
+	FullUrl string `json:"fullUrl,omitempty"`
+
 	IsActive bool `json:"isActive,omitempty"`
 
 	SecretPaths []string `json:"secretPaths,omitempty"`

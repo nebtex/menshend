@@ -34,7 +34,7 @@ type Cors struct {
 
 	OptionsPassthrough bool `json:"optionsPassthrough,omitempty"`
 
-	MaxAge bool `json:"maxAge,omitempty"`
+	MaxAge int32 `json:"maxAge,omitempty"`
 
 	ExposedHeaders []string `json:"exposedHeaders,omitempty"`
 }

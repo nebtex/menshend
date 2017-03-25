@@ -93,7 +93,7 @@ var SecureCookie *securecookie.SecureCookie
 
 func init() {
     Config = &MenshendConfig{}
-    Config.Uris = &Uris{BaseUrl:"http://test.local", UiSubdomain:"menshend.", Api: "http://test.local"}
+    Config.Uris = &Uris{BaseUrl:"http://test.local", UiSubdomain:"menshend.", Api: "menshend."}
     Config.DevMode = os.Getenv("MENSHEND_DEV_MODE") != ""
     Config.DefaultRole = "default"
     Config.VaultPath = "secret/menshend"

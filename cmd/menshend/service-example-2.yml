@@ -1,0 +1,35 @@
+api: https://lab.example.com/v1
+kind: AdminService
+spec:
+  meta:
+    roleId: frontend
+    subDomain: branch-1.dev.
+    name: transactions-api
+    description: branch for the new login features
+    tags:
+    - frontend
+    - web app
+    - login
+    longDescription:
+      local:
+        content:  |
+          # new features
+          * support menshend for login
+  resolver:
+    lua:
+      content: |
+        function getBackend (tokenInfo, request)
+            tt = {}
+            tt["BaseUrl"] = "http://branch-1.kuebernetes-dev-namespace"
+            tt["HeaderMap"] = {}
+            tt["HeaderMap"]["X-User"] = tokenInfo.Data.display_name
+            return tt
+        end
+  strategy:
+    proxy:
+      csrf: yes
+      cors:
+        allowedOrigins:
+        - "*.dev.lab.example.com"
+  secretPaths:
+  - secret/fronted/mongo-password

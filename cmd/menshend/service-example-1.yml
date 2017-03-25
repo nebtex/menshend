@@ -2,7 +2,7 @@ api: https://lab.example.com/v1
 kind: AdminService
 spec:
   meta:
-    role: secret-lab
+    roleId: secret-lab
     # spark will be accessible on  https://spark.lab.example.com/v1?md-role=secret-lab
     subDomain: spark.
     name: spark
@@ -20,5 +20,6 @@ spec:
       content: |
         baseUrl: spark://spark.secret.cluster.local
   strategy:
-    # User can create secure tunnel to the spark instance and bind it to their localhost
-    portForward:
+    # User can create secure tunnel to the spark instance
+    portForward: {}
+

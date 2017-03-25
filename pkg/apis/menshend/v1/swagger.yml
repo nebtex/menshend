@@ -418,7 +418,7 @@ definitions:
       optionsPassthrough:
         type: boolean
       maxAge:
-        type: boolean
+        type: integer
       exposedHeaders:
         type: array
         items:
@@ -458,9 +458,9 @@ definitions:
         type: object
         properties:
           remote:
-            $ref: '#/definitions/LongDescriptionLocal'
-          local:
             $ref: '#/definitions/LongDescriptionRemote'
+          local:
+            $ref: '#/definitions/LongDescriptionLocal'
   LuaResolver:
     type: object
     properties:
@@ -511,6 +511,8 @@ definitions:
         type: boolean
       isActive:
         type: boolean
+      fullUrl:
+        type: string
       secretPaths:
         type: array
         items:
@@ -567,6 +569,8 @@ definitions:
         $ref: '#/definitions/Metadata'
       impersonateWithinRole:
         type: boolean
+      fullUrl:
+        type: string
       isActive:
         type: boolean
       secretPaths:

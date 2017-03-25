@@ -25,14 +25,14 @@ func init() {
 //ServiceCache activate a cache for the resolvers result
 type ServiceCache struct {
     // time to live seconds
-    TTL    int `json:"ttl"`
+    TTL int `json:"ttl"`
 }
 
 //ServiceStrategy defines how menshend will handle the user request
 type ServiceStrategy struct {
-    Proxy       *strategy.Proxy       `json:"proxy"`
-    PortForward *strategy.PortForward `json:"portForward"`
-    Redirect    *strategy.Redirect    `json:"redirect"`
+    Proxy       *strategy.Proxy       `json:"proxy,omitempty"`
+    PortForward *strategy.PortForward `json:"portForward,omitempty"`
+    Redirect    *strategy.Redirect    `json:"redirect,omitempty"`
 }
 
 //Validate a service can only contains a strategy
@@ -49,7 +49,7 @@ func (ss *ServiceStrategy) Validate() {
     }
     
     if defined != 1 {
-        panic(mutils.BadRequest.WithUserMessage("Please define only one strategy, you have not define one!! or have multiples defined"))
+        panic(mutils.BadRequest.WithUserMessage("Please define only one strategy, you have not define one!! or have multiples defined: " + fmt.Sprintf("%v", defined)))
     }
 }
 
@@ -73,10 +73,11 @@ type ServiceResolver struct {
 //Validate a service can only contains an resolver (lua, yaml, js, etc..)
 func (sr *ServiceResolver) Validate() {
     defined := 0
-    if sr.Yaml != nil {
+    if (sr.Yaml != nil && sr.Yaml.Content != "") {
+        
         defined  ++
     }
-    if sr.Lua != nil {
+    if (sr.Lua != nil && sr.Lua.Content != "") {
         defined  ++
     }
     if defined != 1 {
@@ -86,7 +87,7 @@ func (sr *ServiceResolver) Validate() {
 
 //Get returns the active resolver
 func (sr *ServiceResolver) Get() resolvers.Resolver {
-    if sr.Lua != nil {
+    if (sr.Lua != nil && sr.Lua.Content != "") {
         return sr.Lua
     }
     return sr.Yaml
@@ -130,30 +131,30 @@ func (uld *URLLongDescription) Load() {
 
 //ServiceLongDescription long description options
 type ServiceLongDescription struct {
-    Remote *URLLongDescription `json:"remote"`
-    Local  *SimpleLongDescription `json:"local"`
+    Remote *URLLongDescription `json:"remote,omitempty"`
+    Local  *SimpleLongDescription `json:"local,omitempty"`
 }
 
 
 //Validate ...
 func (sldn *ServiceLongDescription)Validate() {
     defined := 0
-    if sldn.Local != nil {
+    if (sldn.Local != nil &&  sldn.Local.Content != "") {
         defined ++
     }
-    if sldn.Remote != nil {
+    if sldn.Remote != nil && sldn.Remote.URL != "" {
         defined ++
     }
     if defined != 1 {
-        panic(mutils.BadRequest.WithUserMessage("Please define only a way to pull the service long description"))
+        panic(mutils.BadRequest.WithUserMessage("Please define only a way to pull the service long description: " + fmt.Sprintf("%v", defined)))
     }
 }
 
 //Load load long description from remote/local or whatever resource
 func (sldn *ServiceLongDescription)Load() {
-    if sldn.Local != nil {
+    if (sldn.Local != nil &&  sldn.Local.Content != "") {
         sldn.Local.Load()
-    } else if sldn.Remote != nil {
+    } else if (sldn.Remote != nil && sldn.Remote.URL != "") {
         sldn.Remote.Load()
     }
 }
@@ -171,25 +172,30 @@ func (sldn *ServiceLongDescription)LongDescription() string {
 
 //ServiceMetadata ...
 type ServiceMetadata struct {
-    ID              string `json:"id"`
-    RoleID          string `json:"roleId"`
-    SubDomain       string `json:"subDomain"`
-    Name            string `json:"name"`
-    Logo            string `json:"logo"`
-    Description     string `json:"description"`
-    Tags            []string `json:"tags"`
-    LongDescription *ServiceLongDescription `json:"longDescription"`
+    ID              string `json:"id,omitempty"`
+    RoleID          string `json:"roleId,omitempty"`
+    SubDomain       string `json:"subDomain,omitempty"`
+    Name            string `json:"name,omitempty"`
+    Logo            string `json:"logo,omitempty"`
+    Description     string `json:"description,omitempty"`
+    Tags            []string `json:"tags,omitempty"`
+    LongDescription *ServiceLongDescription `json:"longDescription,omitempty"`
 }
 
 //AdminServiceResource service definition struct
 type AdminServiceResource struct {
-    ImpersonateWithinRole bool             `json:"impersonateWithinRole"`
-    IsActive              *bool            `json:"isActive"`
-    SecretPaths           []string         `json:"secretPaths"`
-    Meta                  *ServiceMetadata `json:"meta"`
-    Resolver              *ServiceResolver `json:"Resolver"`
-    Strategy              *ServiceStrategy `json:"strategy"`
-    Cache                 *ServiceCache    `json:"cache"`
+    ImpersonateWithinRole bool             `json:"impersonateWithinRole,omitempty"`
+    IsActive              *bool            `json:"isActive,omitempty"`
+    SecretPaths           []string         `json:"secretPaths,omitempty"`
+    FullURL               string           `json:"fullUrl,omitempty"`
+    Meta                  *ServiceMetadata `json:"meta,omitempty"`
+    Resolver              *ServiceResolver `json:"resolver,omitempty"`
+    Strategy              *ServiceStrategy `json:"strategy,omitempty"`
+    Cache                 *ServiceCache    `json:"cache,omitempty"`
+}
+
+func getFullUrl(sm *ServiceMetadata) string {
+    return mconfig.Config.Scheme() + "://" + sm.SubDomain + mconfig.Config.Host() + "?md-role=" + sm.RoleID
 }
 
 func getReadme(url string) ([]byte, error) {
@@ -260,7 +266,6 @@ func (as *AdminServiceResource) putServiceHandler(request *restful.Request, resp
     nService := &AdminServiceResource{}
     err := request.ReadEntity(nService)
     mutils.HttpCheckPanic(err, mutils.BadRequest.WithUserMessage("error decoding request"))
-    
     if nService.Resolver == nil {
         panic(mutils.BadRequest.WithUserMessage("Please create a resolver section"))
     }
@@ -287,6 +292,7 @@ func (as *AdminServiceResource) putServiceHandler(request *restful.Request, resp
     key := fmt.Sprintf("%s/%s", mconfig.Config.VaultPath, serviceID)
     _, vaultErr := vaultClient.Logical().Write(key, structs.Map(nService))
     mutils.HttpCheckPanic(vaultErr, mutils.PermissionError)
+    nService.FullURL = getFullUrl(nService.Meta)
     mutils.HttpCheckPanic(response.WriteEntity(nService), mutils.InternalError)
 }
 
@@ -303,7 +309,7 @@ func (as *AdminServiceResource)deleteServiceHandler(request *restful.Request, re
     _, err = vaultClient.Logical().Delete(key)
     mutils.HttpCheckPanic(err, mutils.PermissionError)
     
-    mutils.HttpCheckPanic(response.WriteEntity(nil), mutils.InternalError)
+    mutils.HttpCheckPanic(response.WriteEntity(struct{}{}), mutils.InternalError)
 }
 
 func (as *AdminServiceResource)getService(request *restful.Request, response *restful.Response) {
@@ -315,14 +321,16 @@ func (as *AdminServiceResource)getService(request *restful.Request, response *re
     mutils.HttpCheckPanic(err, mutils.InternalError)
     vaultClient.SetToken(user)
     secret, err := vaultClient.Logical().Read(key)
+    fmt.Println(key, secret)
+    
     mutils.HttpCheckPanic(err, mutils.PermissionError)
     CheckSecretFailIfIsNull(secret)
     
     nService := &AdminServiceResource{}
     err = mapstructure.Decode(secret.Data, nService)
     mutils.HttpCheckPanic(err, mutils.InternalError.WithUserMessage("error decoding service"))
+    nService.FullURL = getFullUrl(nService.Meta)
     mutils.HttpCheckPanic(response.WriteEntity(nService), mutils.InternalError)
-    
 }
 
 func (as *AdminServiceResource) listServiceHandler(request *restful.Request, response *restful.Response) {
@@ -351,6 +359,7 @@ func (as *AdminServiceResource) listServiceHandler(request *restful.Request, res
             nService := &AdminServiceResource{}
             err = mapstructure.Decode(secret.Data, nService)
             mutils.HttpCheckPanic(err, mutils.InternalError.WithUserMessage("error decoding service"))
+            nService.FullURL = getFullUrl(nService.Meta)
             ret = append(ret, nService)
         }
     }
