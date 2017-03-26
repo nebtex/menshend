@@ -30,7 +30,7 @@ func TestCacheResolver_Resolve(t *testing.T) {
             tt["HeaderMap"]["X-User"] = tokenInfo.Data.display_name
             return tt
         end`
-        s.Resolver.Cache = &ServiceCache{Active:true, TTL: 3600}
+        s.Cache = &ServiceCache{TTL: 3600}
         tokenInfo, err := vc.Auth().Token().LookupSelf()
         So(err, ShouldBeNil)
         cr := NewCacheResolver(s)

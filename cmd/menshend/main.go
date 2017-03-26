@@ -3,12 +3,70 @@ package main
 import (
     "os"
     "github.com/urfave/cli"
+    vault "github.com/hashicorp/vault/api"
+    "github.com/nebtex/menshend/pkg/pfclient"
 )
 
 func main() {
     app := cli.NewApp()
     
     app.Commands = []cli.Command{
+        {
+            Action: func(c *cli.Context) error {
+                fl := &pfFlags{}
+                fl.token = c.String("token")
+                fl.keepAlive = c.Duration("keepalive")
+                fl.port = c.String("port")
+                fl.verbose = c.Bool("verbose")
+                fl.server = c.String("server")
+                return portForward(fl, pfclient.PFConnect)
+            },
+            Name:    "port-forward",
+            Flags: []cli.Flag{
+                cli.StringFlag{
+                    Name: "server, s",
+                    Value: "",
+                    Usage: "full http(s) url of the service under the Menshend space wanted to be tunneled, ip addresses are not allowed",
+                },
+                cli.StringFlag{
+                    Name: "port, p",
+                    Value: "",
+                    Usage: "[local-host]:[local-port]:<remote-port>",
+                },
+                cli.StringFlag{
+                    Name: "token, t",
+                    Value: "",
+                    Usage: "vault token",
+                    EnvVar: vault.EnvVaultToken,
+                },
+                cli.DurationFlag{
+                    Name: "keepalive, k",
+                    Usage: "An optional keepalive interval. Since the underlying" +
+                        "transport is HTTP, in many instances we'll be traversing through" +
+                        "proxies, often these proxies will close idle connections. You must" +
+                        "specify a time with a unit, for example '30s' or '2m'. Defaults" +
+                        "to '0s' (disabled)",
+                },
+                cli.BoolFlag{
+                    Name: "verbose, v",
+                    Usage: "verbose debug",
+                },
+            },
+            Usage:   `this command is based on the chisel project https://github.com/jpillora/chisel
+	
+	● Examples:
+	    
+	tunneling a mongo database locate in the machine learning lab of the example.com company to the localhost
+	
+	  ♦ make mongo available on localhost:27017
+	    menshend port-forward   --server https://mongo.ml-lab.example.com  --port 27017
+    ♦ mongo ... localhost:3000
+        menshend port-forward	--server https://mongo.ml-lab.example.com  --port 3000:27017
+    ♦ mongo ... 192.168.0.5:3000
+        menshend port-forward	--server https://labs.example.com  --port 192.168.0.5:3000:27017
+    ♦ mongo ... 192.168.0.5:27017
+         menshend port-forward	--server https://labs.example.com  --port 192.168.0.5:27017`,
+        },
         {
             Name:    "admin",
             Aliases: []string{"adminServices"},

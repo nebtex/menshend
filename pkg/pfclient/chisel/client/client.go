@@ -24,7 +24,6 @@ import (
     "github.com/jpillora/chisel/share"
     "golang.org/x/crypto/ssh"
     "golang.org/x/net/websocket"
-    "os"
     "github.com/Sirupsen/logrus"
 )
 
@@ -35,6 +34,7 @@ type Config struct {
     KeepAlive   time.Duration
     Server      string
     Remotes     []string
+    Token       string
 }
 
 type Client struct {
@@ -48,7 +48,7 @@ type Client struct {
     runningc  chan error
 }
 
-func Dial(url_, protocol, origin string, port string) (ws *websocket.Conn, err error) {
+func Dial(url_, protocol, origin string, port string, token string) (ws *websocket.Conn, err error) {
     config, err := websocket.NewConfig(url_, origin)
     if err != nil {
         return nil, err
@@ -57,11 +57,10 @@ func Dial(url_, protocol, origin string, port string) (ws *websocket.Conn, err e
         config.Protocol = []string{protocol}
     }
     
-    mt := os.Getenv("VAULT_TOKEN")
-    if mt == "" {
+    if token == "" {
         logrus.Fatal("Please set the VAULT_TOKEN environment variable")
     }
-    config.Header.Add("X-Vault-Token", mt)
+    config.Header.Add("X-Vault-Token", token)
     config.Header.Add("X-Menshend-Port-Forward", port)
     return websocket.DialConfig(config)
 }
@@ -168,7 +167,7 @@ func (c *Client) start() {
             time.Sleep(d)
         }
         
-        ws, err := Dial(c.server, chshare.ProtocolVersion, "http://menshend.io/", c.config.shared.Remotes[0].RemotePort)
+        ws, err := Dial(c.server, chshare.ProtocolVersion, "http://menshend.io/", c.config.shared.Remotes[0].RemotePort, c.config.Token)
         if err != nil {
             connerr = err
             continue

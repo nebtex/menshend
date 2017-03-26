@@ -9,7 +9,7 @@ import (
     "github.com/emicklei/go-restful"
     "net/http"
     . "github.com/nebtex/menshend/pkg/utils/test"
-    . "github.com/nebtex/menshend/pkg/utils"
+    mutils "github.com/nebtex/menshend/pkg/utils"
     "os"
 )
 
@@ -81,7 +81,7 @@ func TestLoginFilter(t *testing.T) {
                 r := recover()
                 switch x := r.(type) {
                 case error:
-                    if !merry.Is(x, NotAuthorized){
+                    if !merry.Is(x, mutils.NotAuthorized){
                         panic(x)
                     }
                 default:
@@ -128,7 +128,7 @@ func TestAdminFilter(t *testing.T) {
                 r := recover()
                 switch x := r.(type) {
                 case error:
-                    c.So(merry.Is(x, NotAuthorized), ShouldBeTrue)
+                    c.So(merry.Is(x, mutils.NotAuthorized), ShouldBeTrue)
                 default:
                     t.Errorf("%v", x)
                     t.Fail()
@@ -157,7 +157,7 @@ func TestCanImpersonateFilter(t *testing.T) {
                 r := recover()
                 switch x := r.(type) {
                 case error:
-                    c.So(merry.Is(x, NotAuthorized), ShouldBeTrue)
+                    c.So(merry.Is(x, mutils.NotAuthorized), ShouldBeTrue)
                 default:
                     t.Errorf("%v", x)
                     t.Fail()

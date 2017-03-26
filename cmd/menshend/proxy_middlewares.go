@@ -15,7 +15,6 @@ import (
     "github.com/ansel1/merry"
     "github.com/Sirupsen/logrus"
     "strings"
-    "os/user"
 )
 
 func getSubDomain(s string) string {
@@ -172,7 +171,7 @@ func GetServiceHandler(next http.Handler) http.Handler {
         next.ServeHTTP(w, r.WithContext(ctx))
     })
 }
-
+/*
 //ImpersonateWithinRoleHandler
 func ImpersonateWithinRoleHandler(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -191,7 +190,7 @@ func ImpersonateWithinRoleHandler(next http.Handler) http.Handler {
         }
         next.ServeHTTP(w, r)
     })
-}
+}*/
 
 func ProxyHandlers() http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
