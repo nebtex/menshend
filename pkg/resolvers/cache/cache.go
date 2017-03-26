@@ -6,7 +6,6 @@ import (
     "github.com/patrickmn/go-cache"
     "time"
     vault "github.com/hashicorp/vault/api"
-    "github.com/nebtex/menshend/pkg/config"
 )
 
 var subdomainCache *cache.Cache
@@ -19,12 +18,20 @@ type CacheResolver struct {
     service *AdminServiceResource
 }
 
+func (cr *CacheResolver) SetRequest(method string, body string) {
+    cr.service.Resolver.Get().SetRequest(method, body)
+    
+}
+func (cr *CacheResolver) NeedBody() bool {
+   return cr.service.Resolver.Get().NeedBody()
+}
+
 func NewCacheResolver(service *AdminServiceResource) *CacheResolver {
     return &CacheResolver{service}
 }
 
 func (cr *CacheResolver)Resolve(tokenData *vault.Secret) (Backend) {
-    if (cr.service.Resolver.Cache != nil && cr.service.Resolver.Cache.Active &&   tokenData.Data != nil&&
+    if (cr.service.Cache != nil && cr.service.Cache.TTL > 0 &&  tokenData.Data != nil&&
         tokenData.Data["display_name"] != nil && tokenData.Data["display_name"].(string) != "" &&
         tokenData.Data["id"] != nil && tokenData.Data["id"].(string) != "") {
         cacheKey := cr.service.Meta.SubDomain + "_" + tokenData.Data["id"].(string) + "_" + tokenData.Data["display_name"].(string) + "_" + cr.service.Meta.RoleID
@@ -34,11 +41,7 @@ func (cr *CacheResolver)Resolve(tokenData *vault.Secret) (Backend) {
             return backend
         }
         bi := cr.service.Resolver.Get().Resolve(tokenData)
-        ttl := cr.service.Resolver.Cache.TTL
-        if ttl == 0 {
-            ttl = config.Config.DefaultTTL
-        }
-        subdomainCache.Set(cacheKey, bi, time.Duration(ttl) * time.Second)
+        subdomainCache.Set(cacheKey, bi, time.Duration(cr.service.Cache.TTL) * time.Second)
         return bi
         
     } else {

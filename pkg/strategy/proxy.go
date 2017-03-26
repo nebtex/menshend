@@ -26,7 +26,7 @@ type CorsOptions struct {
     // Only one wildcard can be used per origin.
     // Default value is ["*"]
     AllowedOrigins     []string
-    // AllowedMethods is a list of methods the client is allowed to use with
+    // AllowedMethods is a list of me thods the client is allowed to use with
     // cross-domain requests. Default value is simple methods (GET and POST)
     AllowedMethods     []string
     // AllowedHeaders is list of non simple headers the client is allowed to use with
@@ -56,8 +56,8 @@ func (*errorHandler)ServeHTTP(w http.ResponseWriter, req *http.Request, err erro
 }
 
 type Proxy struct {
-    Cors              *CorsOptions `json:"cors"`
-    CSRF              bool `json:"csrf"`
+    Cors *CorsOptions `json:"cors"`
+    CSRF bool `json:"csrf"`
 }
 
 func NextCSRFHandler(next http.Handler) http.Handler {
@@ -69,21 +69,22 @@ func NextCSRFHandler(next http.Handler) http.Handler {
     })
 }
 
-//TODO: fix pass body
 //ProxyHandler forward request to the backend services
 func (ps *Proxy) Execute(rs resolvers.Resolver, tokenInfo *vault.Secret) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         var CSRF func(http.Handler) http.Handler
         var handler http.Handler
         IsBrowserRequest := r.Context().Value(mutils.IsBrowserRequest).(bool)
-        subdomain := r.Context().Value("subdomain").(string)
+        subdomain := r.Context().Value(mutils.Subdomain).(string)
         Fwd, err := forward.New(forward.ErrorHandler(&errorHandler{}))
         mutils.HttpCheckPanic(err, mutils.InternalError)
         
-        if true{
+        if rs.NeedBody() {
             data, err := ioutil.ReadAll(r.Body)
             mutils.HttpCheckPanic(err, mutils.InternalError)
-            rs.SetBody(string(data))
+            rs.SetRequest(r.Method, string(data))
+        } else {
+            rs.SetRequest(r.Method, "")
         }
         
         b := rs.Resolve(tokenInfo)
@@ -101,7 +102,6 @@ func (ps *Proxy) Execute(rs resolvers.Resolver, tokenInfo *vault.Secret) http.Ha
         r.URL.User = bUrl.User
         r.URL.Scheme = bUrl.Scheme
         handler = Fwd
-        //TODO: check logic
         if IsBrowserRequest {
             if ps.CSRF {
                 if mconfig.Config.Scheme() == "http" {

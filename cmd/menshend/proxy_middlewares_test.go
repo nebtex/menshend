@@ -8,7 +8,6 @@ import (
     "github.com/nebtex/menshend/pkg/apis/menshend/v1"
     mutils "github.com/nebtex/menshend/pkg/utils"
     mconfig "github.com/nebtex/menshend/pkg/config"
-    
     "os"
     vault "github.com/hashicorp/vault/api"
     "github.com/ansel1/merry"

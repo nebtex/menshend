@@ -9,7 +9,6 @@ import (
 )
 
 type Redirect struct {
-    
 }
 
 func (r *Redirect) Execute(rs resolvers.Resolver, tokenInfo *vault.Secret) http.Handler {

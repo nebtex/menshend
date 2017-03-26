@@ -7,6 +7,7 @@ import (
     "fmt"
     . "github.com/nebtex/menshend/pkg/utils"
 )
+
 type Backend interface {
     BaseUrl() string
     Headers() map[string]string
@@ -16,7 +17,8 @@ type Backend interface {
 
 type Resolver interface {
     Resolve(tokenData *vault.Secret) Backend
-    SetBody(s string)
+    SetRequest(method string, body string)
+    NeedBody() bool
 }
 
 type YAMLResolver struct {
@@ -33,7 +35,10 @@ type SimpleBackend struct {
     ys *backendValues
 }
 
-func (yr *YAMLResolver) SetBody(s string) {}
+func (yr *YAMLResolver) SetRequest(method string, body string) {}
+func (yr *YAMLResolver) NeedBody() bool {
+    return false
+}
 
 func (ym *SimpleBackend)BaseUrl() string {
     return ym.ys.BaseUrl

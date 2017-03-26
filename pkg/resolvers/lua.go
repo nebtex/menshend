@@ -14,22 +14,29 @@ import (
 )
 
 type LuaResolver struct {
-    Content string `json:"content"`
-    Body    string `json:"-"`
+    Content           string `json:"content"`
+    Request           map[string]string `json:"-"`
+    MakeBodyAvailable bool `json:"makeBodyAvailable"`
 }
 
-func (lr *LuaResolver) SetBody(s string) {
-    lr.Body = s
+func (lr *LuaResolver) SetRequest(method string, body string) {
+    lr.Request = map[string]string{}
+    lr.Request["Method"] = method
+    lr.Request["Body"] = body
 }
-//TODO: add method
-//TODO: end test
+
+func (lr *LuaResolver)NeedBody() bool {
+    return lr.MakeBodyAvailable
+}
+
+
 func (lr *LuaResolver)Resolve(v *vault.Secret) (Backend) {
     
     script := lr.Content
-    script += "\nreturnBackend(getBackend(TokenInfo, Body))"
+    script += "\nreturnBackend(getBackend(TokenInfo, Request))"
     
     l := lua.NewState()
-   
+    
     lua.OpenBase(l)
     lua.OpenString(l)
     lua.OpenTable(l)
@@ -41,7 +48,7 @@ func (lr *LuaResolver)Resolve(v *vault.Secret) (Backend) {
     l.PreloadModule("http", gluahttp.NewHttpModule(&http.Client{}).Loader)
     luajson.Preload(l)
     l.SetGlobal("TokenInfo", st.New(l, v))
-    l.SetGlobal("Body", st.New(l, lr.Body))
+    l.SetGlobal("Request", st.New(l, lr.Request))
     ret := &SimpleBackend{}
     ret.ys = &backendValues{}
     

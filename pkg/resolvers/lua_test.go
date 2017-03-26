@@ -94,19 +94,19 @@ end`
             lr := &LuaResolver{}
             lr.Content = `
 
-function getBackend (tokenInfo, body)
+function getBackend (tokenInfo, request)
     local json = require("json")
     tt = {}
     tt["BaseUrl"] = "http://www.google.com"
     tt["HeaderMap"] = {}
     tt["Passed"] = false
-    tt["HeaderMap"]["X-Operation"] = json.decode(body).operation
+    tt["HeaderMap"]["X-Operation"] = json.decode(request.Body).operation
     return tt
 end`
             
             tokenInfo, err := vc.Auth().Token().LookupSelf()
             So(err, ShouldBeNil)
-            lr.SetBody(`{"operation": "post"}`)
+            lr.SetRequest("GET", `{"operation": "post"}`)
             bi := lr.Resolve(tokenInfo)
             So(bi.Headers()["X-Operation"], ShouldEqual, "post")
             So(bi.Passed(), ShouldEqual, false)
