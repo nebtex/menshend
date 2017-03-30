@@ -5,12 +5,15 @@ spec:
     application: io.menshend.v1alpha
     resource: AdminService
     name: LuaResolver
-    description: define the backend service as a lua script
+    description:
+      short: define the backend service as a lua script
   fields:
   - name: content
     schema: io.omniql.core.v1alpha/String
     required: true
-    description: lua script code
+    description:
+      short: lua script code
   - name: makeBodyAvailable
     schema: io.omniql.core.v1alpha/Boolean
-    description: pass the request body to the lua script for futher analysis, this only work on strategies that support this operation (proxy, redirect)
+    description:
+      short: pass the request body to the lua script for futher analysis, this only work on strategies that support this operation (proxy, redirect)

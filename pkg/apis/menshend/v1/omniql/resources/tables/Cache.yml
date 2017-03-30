@@ -8,5 +8,6 @@ spec:
   fields:
   - name: ttl
     schema: io.omniql.core.v1alpha/Integer
-    description: cache time to live in seconds
+    description:
+      short: cache time to live in seconds
     required: true

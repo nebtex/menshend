@@ -8,7 +8,9 @@ spec:
   fields:
   - name: csrf
     schema: io.omniql.core.v1alpha/Boolean
-    description: active csrf protection on this endpoint
+    description:
+      short: active csrf protection on this endpoint
   - name: cors
     schema: io.menshend.v1alpha/Resource/AdminService/Table/Cors
-    description: enable cross-origin resource sharing
+    description:
+      short: enable cross-origin resource sharing

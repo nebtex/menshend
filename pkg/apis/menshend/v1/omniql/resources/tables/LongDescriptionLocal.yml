@@ -8,4 +8,5 @@ spec:
   fields:
   - name: content
     schema: io.omniql.core.v1alpha/String
-    description: content filled by the user (supports markdown)
+    description:
+      short: content filled by the user (supports markdown)

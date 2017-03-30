@@ -5,3 +5,4 @@ spec:
     application: io.menshend.v1alpha
     resource: AdminService
     name: Redirect
+  field: []

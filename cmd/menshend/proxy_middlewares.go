@@ -7,7 +7,6 @@ import (
     mutils "github.com/nebtex/menshend/pkg/utils"
     mfilters "github.com/nebtex/menshend/pkg/filters"
     mcache "github.com/nebtex/menshend/pkg/resolvers/cache"
-    
     vault "github.com/hashicorp/vault/api"
     "fmt"
     "github.com/nebtex/menshend/pkg/apis/menshend/v1"
@@ -171,6 +170,7 @@ func GetServiceHandler(next http.Handler) http.Handler {
         next.ServeHTTP(w, r.WithContext(ctx))
     })
 }
+
 /*
 //ImpersonateWithinRoleHandler
 func ImpersonateWithinRoleHandler(next http.Handler) http.Handler {

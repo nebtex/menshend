@@ -9,26 +9,33 @@ spec:
   fields:
   - name: id
     schema: io.omniql.core.v1alpha/String
-    description: unique id of the service
+    description:
+      short: unique id of the service
     required: true
   - name: roleId
     schema: io.omniql.core.v1alpha/String
-    description: role unique id
+    description:
+      short: role unique id
   - name: subDomain
     schema: io.omniql.core.v1alpha/String
-    description: should ends in .
+    description:
+      short: should ends in .
   - name: name
     schema: io.omniql.core.v1alpha/String
-    description: human readable service name
+    description:
+      short: human readable service name
   - name: logo
     schema: io.omniql.core.v1alpha/String
-    description:  full url of the service logo a image with 64x64px
+    description:
+      short: full url of the service logo a image with 64x64px
   - name: description
     schema:  io.omniql.core.v1alpha/String
-    description: service description
+    description:
+      short: service description
   - name: tags
     schema: io.omniql.core.v1alpha/Vector
     items: io.omniql.core.v1alpha/String
-    description: tags
+    description:
+      short: tags
   - name: longDescription
     schema: io.menshend.v1alpha/Resource/AdminService/Union/LongDescription

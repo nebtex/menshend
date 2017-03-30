@@ -8,7 +8,9 @@ spec:
   fields:
   - name: url
     schema: io.omniql.core.v1alpha/String
-    description: URL of the README.md file
+    description:
+      short: URL of the README.md file
   - name: content
     schema: io.omniql.core.v1alpha/String
-    description: this will store the README.md contents
+    description:
+      short: this will store the README.md contents
