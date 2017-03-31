@@ -10,11 +10,11 @@ spec:
     - name: impersonateWithinRole
       schema: io.omniql.core.v1alpha/Boolean
       description:
-        short: give to all the users the habilility to change their vault token display_name within this role/service
+        short: "give to all the users the ability to change their vault token display_name within this role/service"
     - name: isActive
       schema: io.omniql.core.v1alpha/Boolean
       description:
-        short: enable/disable this service
+        short: "enable/disable this service"
     - name: secretPaths
       schema: io.omniql.core.v1alpha/Vector
       items: io.omniql.core.v1alpha/string
@@ -23,19 +23,19 @@ spec:
     - name: meta
       schema: io.menshend.v1alpha/Resource/AdminService/Table/Metadata
       description:
-        short: Metadata associate with this service, name, logo, etc.
+        short: "Metadata associate with this service, name, logo, etc."
       required: true
     - name: resolver
       schema: io.menshend.v1alpha/Resource/AdminService/Union/Resolver
       description:
-        short: allow to define services policies programatically (suported: lua and yaml)
+        short: "allow to define services policies programmatically (supported: lua and yaml)"
       required: true
     - name: strategy
       schema: io.menshend.v1alpha/Resource/AdminService/Union/Strategy
       description:
-        short: this  defines how the reverse proxy works
+        short: "this  defines how the reverse proxy works"
       required: true
     - name: cache
       schema: io.menshend.v1alpha/Resource/AdminService/Union/Cache
       description:
-        short: enable cache over the result of a Resolver
+        short: "enable cache over the result of a Resolver"
