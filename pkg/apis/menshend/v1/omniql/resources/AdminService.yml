@@ -36,6 +36,6 @@ spec:
         short: "this  defines how the reverse proxy works"
       required: true
     - name: cache
-      schema: io.menshend.v1alpha/Union/Cache
+      schema: io.menshend.v1alpha/Table/Cache
       description:
         short: "enable cache over the result of a Resolver"
