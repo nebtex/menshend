@@ -6,5 +6,5 @@ spec:
     name: LongDescription
     resource: AdminService
   schemas:
-    - io.menshend.v1alpha/Resource/AdminService/Table/LongDescriptionRemote
-    - io.menshend.v1alpha/Resource/AdminService/Table/LongDescriptionLocal
+    - io.menshend.v1alpha/Table/LongDescriptionRemote
+    - io.menshend.v1alpha/Table/LongDescriptionLocal

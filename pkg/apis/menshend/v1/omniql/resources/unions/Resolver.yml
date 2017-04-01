@@ -6,5 +6,5 @@ spec:
     name: Resolver
     resource: AdminService
   schemas:
-    - io.menshend.v1alpha/Resource/AdminService/Table/LuaResolver
-    - io.menshend.v1alpha/Resource/AdminService/Table/YAMLResolver
+    - io.menshend.v1alpha/Table/LuaResolver
+    - io.menshend.v1alpha/Table/YAMLResolver

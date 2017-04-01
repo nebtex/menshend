@@ -21,21 +21,21 @@ spec:
       description:
         short: vault secrets asociate with this service.
     - name: meta
-      schema: io.menshend.v1alpha/Resource/AdminService/Table/Metadata
+      schema: io.menshend.v1alpha/Table/Metadata
       description:
         short: "Metadata associate with this service, name, logo, etc."
       required: true
     - name: resolver
-      schema: io.menshend.v1alpha/Resource/AdminService/Union/Resolver
+      schema: io.menshend.v1alpha/Union/Resolver
       description:
         short: "allow to define services policies programmatically (supported: lua and yaml)"
       required: true
     - name: strategy
-      schema: io.menshend.v1alpha/Resource/AdminService/Union/Strategy
+      schema: io.menshend.v1alpha/Union/Strategy
       description:
         short: "this  defines how the reverse proxy works"
       required: true
     - name: cache
-      schema: io.menshend.v1alpha/Resource/AdminService/Union/Cache
+      schema: io.menshend.v1alpha/Union/Cache
       description:
         short: "enable cache over the result of a Resolver"

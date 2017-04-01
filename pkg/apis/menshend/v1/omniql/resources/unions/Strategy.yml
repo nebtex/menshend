@@ -6,6 +6,6 @@ spec:
     name: Strategy
     resource: AdminService
   schemas:
-    - io.menshend.v1alpha/Resource/AdminService/Table/Proxy
-    - io.menshend.v1alpha/Resource/AdminService/Table/PortForward
-    - io.menshend.v1alpha/Resource/AdminService/Table/Redirect
+    - io.menshend.v1alpha/Table/Proxy
+    - io.menshend.v1alpha/Table/PortForward
+    - io.menshend.v1alpha/Table/Redirect

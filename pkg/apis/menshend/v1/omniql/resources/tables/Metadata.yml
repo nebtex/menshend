@@ -38,4 +38,4 @@ spec:
     description:
       short: tags
   - name: longDescription
-    schema: io.menshend.v1alpha/Resource/AdminService/Union/LongDescription
+    schema: io.menshend.v1alpha/Union/LongDescription
