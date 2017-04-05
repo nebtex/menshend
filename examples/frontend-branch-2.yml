@@ -1,0 +1,30 @@
+api: http://menshend.lab.local/v1
+kind: AdminService
+spec:
+  meta:
+    roleId: production
+    subDomain: branch-1.dev.
+    name: transactions-api
+    description: branch for the new login features
+    tags:
+    - production
+    longDescription:
+      local:
+        content:  |
+          # new features
+          * support menshend for login
+  resolver:
+    lua:
+      content: |
+        function getBackend (tokenInfo, request)
+            tt = {}
+            tt["BaseUrl"] = "http://branch-1.kuebernetes-dev-namespace"
+            tt["HeaderMap"] = {}
+            tt["HeaderMap"]["X-User"] = tokenInfo.Data.display_name
+            return tt
+        end
+  strategy:
+    redirect: {}
+  secretPaths:
+  - secret/fronted/mongo-password
+  - postgres/creds/developer

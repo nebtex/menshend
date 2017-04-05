@@ -1,4 +1,4 @@
-api: https://lab.example.com/v1
+api: http://menshend.lab.local/v1
 kind: AdminService
 spec:
   meta:
@@ -11,10 +11,8 @@ spec:
     - web app
     - login
     longDescription:
-      local:
-        content:  |
-          # new features
-          * support menshend for login
+      remote:
+        url: https://raw.githubusercontent.com/spf13/hugo/master/README.md
   resolver:
     lua:
       content: |
@@ -33,3 +31,4 @@ spec:
         - "*.dev.lab.example.com"
   secretPaths:
   - secret/fronted/mongo-password
+  - postgres/creds/developer

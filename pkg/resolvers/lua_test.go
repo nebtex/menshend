@@ -4,15 +4,15 @@ import (
     "testing"
     . "github.com/smartystreets/goconvey/convey"
     vault "github.com/hashicorp/vault/api"
-    . "github.com/nebtex/menshend/pkg/utils"
-    "github.com/nebtex/menshend/pkg/config"
+    mutils "github.com/nebtex/menshend/pkg/utils"
     "github.com/ansel1/merry"
+    "os"
 )
 
 func TestService_GetBackend(t *testing.T) {
-    config.VaultConfig.Address = "http://127.0.0.1:8200"
-    vc, err := vault.NewClient(config.VaultConfig)
-    CheckPanic(err)
+    mutils.CheckPanic(os.Setenv(vault.EnvVaultAddress, "http://127.0.0.1:8200"))
+    vc, err := vault.NewClient(vault.DefaultConfig())
+    mutils.CheckPanic(err)
     vc.SetToken("myroot")
     Convey("Should return Full url backend", t, func() {
         
@@ -46,7 +46,7 @@ end`
                 }
                 switch x := r.(type) {
                 case error:
-                    c.So(merry.Is(x, InternalError), ShouldBeTrue)
+                    c.So(merry.Is(x, mutils.InternalError), ShouldBeTrue)
                 default:
                     t.Errorf("%v", x)
                     t.Fail()
@@ -70,7 +70,7 @@ end`
                     }
                     switch x := r.(type) {
                     case error:
-                        c.So(merry.Is(x, InternalError), ShouldBeTrue)
+                        c.So(merry.Is(x, mutils.InternalError), ShouldBeTrue)
                     default:
                         t.Errorf("%v", x)
                         t.Fail()

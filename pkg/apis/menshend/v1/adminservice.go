@@ -202,6 +202,9 @@ func (as *AdminServiceResource)Active() bool {
 }
 
 func getFullUrl(sm *ServiceMetadata) string {
+    if sm==nil{
+        return  ""
+    }
     return mconfig.Config.Scheme() + "://" + sm.SubDomain + mconfig.Config.Host() + "?md-role=" + sm.RoleID
 }
 

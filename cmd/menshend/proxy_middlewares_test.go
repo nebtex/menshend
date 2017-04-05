@@ -332,3 +332,14 @@ func TestPanicHandler(t *testing.T) {
     })
     
 }
+
+
+/*TODO:
+ 1. run without ui and configuration
+ 2. create build.sh
+ 3. add entrypoint
+ 4. add test data to json server
+ 5. add supervisor
+ 6. web ui for test crfs
+ 7. kill tunnel at expiration
+ */

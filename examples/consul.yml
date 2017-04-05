@@ -1,4 +1,4 @@
-api: https://lab.example.com/v1
+api: http://menshend.lab.local/v1
 kind: AdminService
 spec:
   meta:

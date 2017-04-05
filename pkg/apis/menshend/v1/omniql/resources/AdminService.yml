@@ -7,6 +7,9 @@ spec:
     description:
       short: full Service schema
   fields:
+    - name: fullUrl
+      schema: io.omniql.core.v1alpha/String
+      generated: true
     - name: impersonateWithinRole
       schema: io.omniql.core.v1alpha/Boolean
       description:
@@ -17,7 +20,7 @@ spec:
         short: "enable/disable this service"
     - name: secretPaths
       schema: io.omniql.core.v1alpha/Vector
-      items: io.omniql.core.v1alpha/string
+      items: io.omniql.core.v1alpha/String
       description:
         short: vault secrets asociate with this service.
     - name: meta

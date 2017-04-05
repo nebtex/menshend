@@ -31,6 +31,7 @@ func TestCli(t *testing.T) {
         So(ok, ShouldBeTrue)
         
     })
+    
     Convey("create from url", t, func() {
         flag := &APIFlags{}
         flag.api = "http://localhost:31800/v1"

@@ -18,7 +18,7 @@ import (
 func TestCSRFHandler(t *testing.T) {
     mutils.CheckPanic(os.Setenv(vault.EnvVaultAddress, "http://127.0.0.1:8200"))
     config.Config.Uris.BaseUrl = "http://example.com"
-    config.Config.Uris.Api = "lab."
+    config.Config.Uris.MenshendSubdomain = "lab."
     Convey("should always set the csrf cookie and header on get requests", t, func(c C) {
         Convey("Browser request", func(c C) {
             handler := APIHandler()

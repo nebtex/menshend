@@ -102,9 +102,9 @@ func APICSRFHandler(next http.Handler) http.Handler {
         handler = next
         isBrowserRequest := r.Context().Value(mutils.IsBrowserRequest).(bool)
         if r.Method == "GET" || isBrowserRequest {
-            CSRF = csrf.Protect([]byte(config.Config.BlockKey), csrf.Domain(config.Config.Uris.Api + config.Config.HostWithoutPort()))
+            CSRF = csrf.Protect([]byte(config.Config.BlockKey), csrf.Domain(config.Config.Uris.MenshendSubdomain + config.Config.HostWithoutPort()))
             if config.Config.Scheme() == "http" {
-                CSRF = csrf.Protect([]byte(config.Config.BlockKey), csrf.Secure(false), csrf.Domain(config.Config.Uris.Api + config.Config.HostWithoutPort()))
+                CSRF = csrf.Protect([]byte(config.Config.BlockKey), csrf.Secure(false), csrf.Domain(config.Config.Uris.MenshendSubdomain + config.Config.HostWithoutPort()))
             }
             handler = CSRF(NextCSRFHandler(handler))
         }

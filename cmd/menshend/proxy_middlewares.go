@@ -47,7 +47,7 @@ func PanicHandler(next http.Handler) http.Handler {
                 errorMessage = merry.UserMessage(x)
                 errorCode = merry.HTTPCode(x)
             }
-            if (!IsBrowserRequest) {
+            if (!IsBrowserRequest ) {
                 http.Error(w, errorMessage, errorCode)
             } else {
                 // Get a session.
@@ -60,7 +60,7 @@ func PanicHandler(next http.Handler) http.Handler {
                 session.AddFlash(errorMessage)
                 session.Save(r, w)
                 subdomain := getSubDomain(r.Host)
-                http.Redirect(w, r, mconfig.Config.Scheme() + "://" + mconfig.Config.Uris.Api + mconfig.Config.Host() + "/login?subdomain=" + subdomain, 302)
+                http.Redirect(w, r, mconfig.Config.Scheme() + "://" + mconfig.Config.Uris.MenshendSubdomain + mconfig.Config.Host() + "/login?subdomain=" + subdomain, 302)
             }
         }()
         next.ServeHTTP(w, r)
@@ -192,7 +192,7 @@ func ImpersonateWithinRoleHandler(next http.Handler) http.Handler {
     })
 }*/
 
-func ProxyHandlers() http.Handler {
+func ProxyHandler() http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         service := r.Context().Value(mutils.Service).(*v1.AdminServiceResource)
         tokenInfo := r.Context().Value(mutils.TokenInfo).(*vault.Secret)

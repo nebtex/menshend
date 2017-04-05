@@ -31,7 +31,7 @@ func TestCreateEditServiceHandler(t *testing.T) {
                 u.Register(wsContainer)
                 postBody, err := json.Marshal(&AdminServiceResource{
                     Meta:&ServiceMetadata{Name:"gitlab"},
-                    Resolver:&ServiceResolver{Yaml: &resolvers.YAMLResolver{}},
+                    Resolver:&ServiceResolver{Yaml: &resolvers.YAMLResolver{Content:"xx"}},
                     Strategy:&ServiceStrategy{Proxy: &strategy.Proxy{}},
                 })
                 So(err, ShouldBeNil)
@@ -80,7 +80,7 @@ func Test_LoadLongDescriptionFromUrl(t *testing.T) {
                 Meta:&ServiceMetadata{Name:"gitlab",
                     LongDescription: &ServiceLongDescription{
                         Remote:&URLLongDescription{URL: "https://raw.githubusercontent.com/gitlabhq/gitlabhq/master/README.md"}}},
-                Resolver:&ServiceResolver{Yaml: &resolvers.YAMLResolver{}},
+                Resolver:&ServiceResolver{Yaml: &resolvers.YAMLResolver{Content:"xxx"}},
                 Strategy:&ServiceStrategy{Proxy: &strategy.Proxy{}},
             })
         So(err, ShouldBeNil)

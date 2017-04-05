@@ -4,16 +4,17 @@ import (
     "testing"
     . "github.com/smartystreets/goconvey/convey"
     . "github.com/nebtex/menshend/pkg/apis/menshend/v1"
-    . "github.com/nebtex/menshend/pkg/utils"
+    mutils "github.com/nebtex/menshend/pkg/utils"
     "github.com/nebtex/menshend/pkg/resolvers"
     vault "github.com/hashicorp/vault/api"
-    "github.com/nebtex/menshend/pkg/config"
+    "os"
 )
 
 func TestCacheResolver_Resolve(t *testing.T) {
-    config.VaultConfig.Address = "http://127.0.0.1:8200"
-    vc, err := vault.NewClient(config.VaultConfig)
-    CheckPanic(err)
+    mutils.CheckPanic(os.Setenv(vault.EnvVaultAddress, "http://127.0.0.1:8200"))
+    
+    vc, err := vault.NewClient(vault.DefaultConfig())
+    mutils.CheckPanic(err)
     vc.SetToken("myroot")
     Convey("should cache by user and subdomain", t, func() {
         
@@ -38,5 +39,5 @@ func TestCacheResolver_Resolve(t *testing.T) {
         bi := cr.Resolve(tokenInfo)
         So(bi.BaseUrl(), ShouldEqual, "http://www.google.com")
     })
-  
+    
 }

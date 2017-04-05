@@ -1,32 +1,34 @@
 package main
 
 import (
-    . "github.com/nebtex/menshend/pkg/config"
     "net/http"
-    "strings"
     "github.com/gorilla/mux"
+    "github.com/nebtex/menshend/pkg/apis/menshend/v1"
 )
-
+//TODO: prefiling check in server mode check if vault token is present
 
 func mainHandler(response http.ResponseWriter, request *http.Request) {
-
-
-}
-//TODO: add in config read token from custom param
-//Deactivate cache usign query params
-func proxyServer() http.Handler {
-    r := mux.NewRouter()
-    handler := TokenRealmSecurityHandler(RoleHandler(GetServiceHandler(ImpersonateWithinRoleHandler(ProxyHandlers()))))
-    handler = GetSubDomainHandler(DetectBrowser(PanicHandler(NeedLogin(handler))))
-    r.Host("{subdomain:[a-z\\-]+}." + Config.HostWithoutPort()).Handler(handler)
-    return r
+    //detect  menshend host
+    //use proxy server
 }
 
-func uiServer() http.Handler {
+func proxyServer(handler http.Handler) http.Handler {
+    return PanicHandler(GetSubDomainHandler(v1.BrowserDetectorHandler(
+        NeedLogin(RoleHandler(GetServiceHandler(ProxyHandler()))))))
+}
+
+
+func uilogin(){
+    
+}
+
+func menshendServer() http.Handler {
+    // /ui
+    // /uilogin
+    // /uilogout
+    // /v1 - api
     r := mux.NewRouter()
-    handler := TokenRealmSecurityHandler(RoleHandler(GetServiceHandler(ImpersonateWithinRoleHandler(ProxyHandlers()))))
-    handler = GetSubDomainHandler(DetectBrowser(PanicHandler(NeedLogin(handler))))
-    r.Host("{subdomain:[a-z\\-]+}." + Config.HostWithoutPort()).Handler(handler)
+    //r.Host("{subdomain:[a-z\\-]+}." + Config.HostWithoutPort()).Handler(handler)
     return r
 }
 
@@ -71,4 +73,3 @@ func setExpirationTime(u *User, expiresIn int64) *User {
 */
 
 
-//TODO: prefiling check in server mode check if vault token is present

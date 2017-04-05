@@ -12,6 +12,7 @@ spec:
     description:
       short: unique id of the service
     required: true
+    generated: true
   - name: roleId
     schema: io.omniql.core.v1alpha/String
     description:
