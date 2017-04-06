@@ -10,6 +10,7 @@ import (
     "github.com/Sirupsen/logrus"
     "io/ioutil"
     "github.com/ghodss/yaml"
+    "fmt"
 )
 
 type GithubConfig struct {
@@ -101,19 +102,22 @@ func init() {
     }
 }
 
-func LoadConfig() {
+func LoadConfig() error {
     //check if vault token is defined
     if os.Getenv(vault.EnvVaultToken) != "" {
-        logrus.Fatalf("Menshend servar is not allowed to run when %s is defined, please check you environmental variable and delete %s", vault.EnvVaultToken, vault.EnvVaultToken)
+        return fmt.Errorf("Menshend servar is not allowed to run when %s is defined, please check you environmental variable and delete %s", vault.EnvVaultToken, vault.EnvVaultToken)
     }
     //check if file is defined
-    if ConfigFile != nil {
+    if ConfigFile != nil && *ConfigFile!="" {
         //load config from file
         data, err := ioutil.ReadFile(*ConfigFile)
         if err != nil {
-            logrus.Fatal(err)
+           return err
         }
-        yaml.Unmarshal(data, &Config)
+        err = yaml.Unmarshal(data, &Config)
+        if err != nil {
+            return  err
+        }
     }
     //pre-flight check
     if Config.HashKey == "" {
@@ -144,5 +148,5 @@ func LoadConfig() {
     //githubCallbackUrl := fmt.Sprintf("%s://%s/login/github/callback", Config.Scheme, Config.Host)
     //gomniauth.SetSecurityKey(Config.HashKey)
     //gomniauth.WithProviders(github.New(Config.Github.ClientID, Config.Github.ClientSecret, githubCallbackUrl))
-    
+    return nil
 }

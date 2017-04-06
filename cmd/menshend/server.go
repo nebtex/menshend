@@ -2,34 +2,33 @@ package main
 
 import (
     "net/http"
-    "github.com/gorilla/mux"
     "github.com/nebtex/menshend/pkg/apis/menshend/v1"
+    "fmt"
 )
-//TODO: prefiling check in server mode check if vault token is present
 
 func mainHandler(response http.ResponseWriter, request *http.Request) {
     //detect  menshend host
     //use proxy server
 }
 
-func proxyServer(handler http.Handler) http.Handler {
+func proxyServer() http.Handler {
     return PanicHandler(GetSubDomainHandler(v1.BrowserDetectorHandler(
         NeedLogin(RoleHandler(GetServiceHandler(ProxyHandler()))))))
 }
 
-
-func uilogin(){
+func uilogin() {
     
 }
 
-func menshendServer() http.Handler {
+func menshendServer(address, port string) error {
     // /ui
     // /uilogin
     // /uilogout
     // /v1 - api
-    r := mux.NewRouter()
+    http.Handle("/", v1.APIHandler())
+    return http.ListenAndServe(fmt.Sprintf("%s:%s", address, port), nil)
+    
     //r.Host("{subdomain:[a-z\\-]+}." + Config.HostWithoutPort()).Handler(handler)
-    return r
 }
 
 /*

@@ -1,0 +1,23 @@
+version: '2'
+services:
+  vault:
+    image: "vault"
+    environment:
+    - VAULT_DEV_ROOT_TOKEN_ID=myroot
+    - VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200
+    - SKIP_SETCAP=yes
+  menshend:
+    image: "nebtex/menshend:development"
+    links:
+    - vault:vault
+    environment:
+    - VAULT_ADDR=http://vault:8200
+    ports:
+    - 8787:8787
+  menshend-pusher:
+    build:
+      context: .
+      dockerfile: Dockerfile.puller
+    links:
+    - menshend:menshend
+

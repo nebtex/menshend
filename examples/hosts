@@ -4,3 +4,4 @@
 127.0.0.1 terminal.lab.local
 127.0.0.1 spark.lab.local
 127.0.0.1 branch-1.dev.lab.local
+127.0.0.1 localhost

@@ -5,6 +5,7 @@ import (
     "github.com/urfave/cli"
     vault "github.com/hashicorp/vault/api"
     "github.com/nebtex/menshend/pkg/pfclient"
+    mconfig "github.com/nebtex/menshend/pkg/config"
 )
 
 func main() {
@@ -93,6 +94,37 @@ func main() {
                     Flags: apiClientGetFlags(),
                     Action: adminCMDHandler("upsert"),
                 },
+            },
+        },
+        {
+            Name:    "server",
+            Aliases: []string{"run", "start"},
+            Usage:   "run menshend server",
+            Flags: []cli.Flag{
+                cli.StringFlag{
+                    Name: "port, p",
+                    Value: "8787",
+                    Usage: "bind port",
+                },
+                cli.StringFlag{
+                    Name: "config, c",
+                    Value: "",
+                    Usage: "config file",
+                },
+                cli.StringFlag{
+                    Name: "address, a",
+                    Value: "0.0.0.0",
+                    Usage: "bind address",
+                },
+            },
+            Action: func(c *cli.Context) error {
+                config :=  c.String("config")
+                mconfig.ConfigFile = &config
+                err := mconfig.LoadConfig()
+                if err != nil {
+                    return err
+                }
+                return menshendServer(c.String("address"), c.String("port"))
             },
         },
     }

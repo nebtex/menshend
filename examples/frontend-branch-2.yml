@@ -1,4 +1,4 @@
-api: http://menshend.lab.local/v1
+api: http://menshend.lab.local:8787/v1
 kind: AdminService
 spec:
   meta:

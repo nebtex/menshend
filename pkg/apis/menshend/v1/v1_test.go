@@ -66,7 +66,7 @@ func TestCSRFHandler(t *testing.T) {
             handler := APIHandler()
             postBody, err := json.Marshal(&AdminServiceResource{
                 Meta:&ServiceMetadata{Name:"gitlab"},
-                Resolver:&ServiceResolver{Yaml: &resolvers.YAMLResolver{}},
+                Resolver:&ServiceResolver{Yaml: &resolvers.YAMLResolver{Content:"xxx"}},
                 Strategy:&ServiceStrategy{Proxy: &strategy.Proxy{}},
             })
             So(err, ShouldBeNil)

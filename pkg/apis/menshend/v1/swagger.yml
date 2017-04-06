@@ -56,6 +56,9 @@ paths:
       type: "string"
       description: secret path
     get:
+      security:
+      - api_key:
+        - all
       tags:
       - Secrets
       description: return secret associate with a service
@@ -107,6 +110,9 @@ paths:
       type: "string"
       description: filter by role
     get:
+      security:
+      - api_key:
+        - all
       tags:
       - Client
       description: list or search availables services
@@ -146,6 +152,9 @@ paths:
               message:
                 type: string
     delete:
+      security:
+      - api_key:
+        - all
       tags:
       - Auth
       description: login off
@@ -193,6 +202,9 @@ paths:
         type: "string"
         description: service id
     get:
+      security:
+      - api_key:
+        - all
       tags:
       - Admin
       description: returns all the available information of the service
@@ -231,6 +243,9 @@ paths:
               message:
                 type: string
     put:
+      security:
+      - api_key:
+        - all
       parameters:
       - name: "body"
         in: "body"
@@ -275,6 +290,9 @@ paths:
               message:
                 type: string
     delete:
+      security:
+      - api_key:
+        - all
       tags:
       - Admin
       description: delete service
@@ -322,6 +340,9 @@ paths:
         pattern: "^([a-z0-9\\-]+\\.)+$"
         description: subdomain
     get:
+      security:
+      - api_key:
+        - all
       tags:
       - Admin
       description: returns all the available information of the service over all the roles
@@ -361,6 +382,11 @@ paths:
             properties:
               message:
                 type: string
+securityDefinitions:
+  api_key:
+    type: apiKey
+    name: X-Vault-Token
+    in: header
 definitions:
   Space:
     type: object
