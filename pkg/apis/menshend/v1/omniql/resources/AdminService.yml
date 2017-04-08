@@ -9,13 +9,13 @@ spec:
   fields:
     - name: fullUrl
       schema: io.omniql.core.v1alpha/String
-      generated: true
     - name: impersonateWithinRole
       schema: io.omniql.core.v1alpha/Boolean
       description:
         short: "give to all the users the ability to change their vault token display_name within this role/service"
     - name: isActive
       schema: io.omniql.core.v1alpha/Boolean
+      default: true
       description:
         short: "enable/disable this service"
     - name: secretPaths

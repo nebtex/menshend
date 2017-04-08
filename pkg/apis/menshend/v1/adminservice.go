@@ -202,8 +202,8 @@ func (as *AdminServiceResource)Active() bool {
 }
 
 func getFullUrl(sm *ServiceMetadata) string {
-    if sm==nil{
-        return  ""
+    if sm == nil {
+        return ""
     }
     return mconfig.Config.Scheme() + "://" + sm.SubDomain + mconfig.Config.Host() + "?md-role=" + sm.RoleID
 }
@@ -290,6 +290,10 @@ func (as *AdminServiceResource) putServiceHandler(request *restful.Request, resp
     
     nService.Resolver.Validate()
     nService.Strategy.Validate()
+    if nService.IsActive == nil {
+        ia := true
+        nService.IsActive = &ia
+    }
     
     if nService.Meta.LongDescription != nil {
         nService.Meta.LongDescription.Validate()

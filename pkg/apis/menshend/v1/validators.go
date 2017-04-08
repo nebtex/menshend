@@ -20,21 +20,21 @@ func ValidateRegExp(s string, r string) bool {
 //ValidateService validate the service id
 func ValidateService(s string) {
     if !ValidateRegExp(s, "^roles/[a-z0-9\\-]+/([a-z0-9\\-]+\\.)+$") {
-        panic(mutils.BadRequest.WithUserMessage("Invalid service").WithUserMessage(s))
+        panic(mutils.BadRequest.WithUserMessage("Invalid service").WithUserMessage(fmt.Sprintf("Invalid service: %s", s)))
     }
 }
 
 //ValidateSubdomain subdomain should end with . and only contains alphanumeric characters and -
 func ValidateSubdomain(s string) {
     if !ValidateRegExp(s, "^([a-z0-9\\-]+\\.)+$") {
-        panic(mutils.BadRequest.WithUserMessage("Invalid service").WithUserMessage(s))
+        panic(mutils.BadRequest.WithUserMessage("Invalid subdmain").WithUserMessage(fmt.Sprintf("Invalid subdmain: %s", s)))
     }
 }
 
 //ValidateRole validate roles names
 func ValidateRole(s string) {
     if !ValidateRegExp(s, "^[a-z0-9\\-]+$") {
-        panic(mutils.BadRequest.WithUserMessage("Invalid role").WithUserMessage(s))
+        panic(mutils.BadRequest.WithUserMessage("Invalid role").WithUserMessage(fmt.Sprintf("Invalid role: %s", s)))
     }
 }
 

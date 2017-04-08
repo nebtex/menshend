@@ -9,4 +9,4 @@ spec:
   - name: content
     schema: io.omniql.core.v1alpha/String
     description:
-      short: content filled by the user (supports markdown)
+      short: Service long description, it supports markdown !!!;

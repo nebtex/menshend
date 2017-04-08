@@ -10,4 +10,3 @@ spec:
     schema: io.omniql.core.v1alpha/Integer
     description:
       short: cache time to live in seconds
-    required: true
