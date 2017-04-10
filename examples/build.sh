@@ -11,4 +11,4 @@ cd $current_dir
 docker build -t nebtex/menshend:development .
 
 # upload to dockerhub
-docker push nebtex/menshend:development
+#docker push nebtex/menshend:development

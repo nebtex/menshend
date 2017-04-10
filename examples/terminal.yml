@@ -1,6 +1,8 @@
 api: http://menshend.lab.local:8787/v1
 kind: AdminService
 spec:
+  secretPaths:
+  - secret/menshend/roles/admin/terminal.
   meta:
     roleId: admin
     # spark will be accessible on  https://spark.lab.example.com/v1?md-role=secret-lab
