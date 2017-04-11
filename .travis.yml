@@ -10,7 +10,7 @@ go:
   - 1.8
 
 script:
-  - sudo add-apt-repository ppa:masterminds/glide && sudo apt-get update
-  - sudo apt-get install glide
+  - sudo add-apt-repository ppa:masterminds/glide --yes && sudo apt-get update -y
+  - sudo apt-get install glide -y
   - glide install
   - make test
