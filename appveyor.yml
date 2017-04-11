@@ -1,0 +1,21 @@
+version: build-{build}.{branch}
+
+clone_folder: C:\gopath\src\github.com\nebtex\menshend
+shallow_clone: true
+
+environment:
+  GOPATH: C:\gopath
+
+platform:
+  - x64
+
+build: off
+
+install:
+  - go version
+  - go env
+
+test_script:
+  - go test -v -coverpkg=$(go list ./... | grep -v /vendor/)
+
+deploy: off
