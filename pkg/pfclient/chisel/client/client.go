@@ -61,7 +61,6 @@ func Dial(url_, protocol, origin string, port string, token string) (ws *websock
         logrus.Fatal("Please set the VAULT_TOKEN environment variable")
     }
     config.Header.Add("X-Vault-Token", token)
-    config.Header.Add("X-Menshend-Port-Forward", port)
     return websocket.DialConfig(config)
 }
 

@@ -4,6 +4,7 @@ import (
     "strings"
     "time"
     "fmt"
+    "net"
 )
 
 type pfFlags struct {
@@ -24,9 +25,13 @@ func portForward(flags *pfFlags, connect func(v bool, k time.Duration, s string,
     if len(menshendRemote) == 1 {
         chiselRemote = "default.menshend:" + menshendRemote[0]
     } else if len(menshendRemote) == 2 {
+        ip:=net.ParseIP(menshendRemote[0])
+        if ip==nil{
+            return fmt.Errorf("%v", "Unsoported port format, example 192.168.0.5:3000, 3000")
+        }
         chiselRemote = menshendRemote[0] + ":default.menshend:" + menshendRemote[1]
-    } else if len(menshendRemote) == 3 {
-        chiselRemote = menshendRemote[0] + ":" + menshendRemote[1] + ":default.menshend:" + menshendRemote[2]
+    } else {
+        return fmt.Errorf("%v", "Unsoported port format,  example 192.168.0.5:3000, 3000")
     }
     remotes := []string{chiselRemote}
     return connect(flags.verbose, flags.keepAlive, flags.server, flags.token, remotes...)

@@ -57,16 +57,14 @@ func main() {
 	
 	● Examples:
 	    
-	tunneling a mongo database locate in the machine learning lab of the example.com company to the localhost
+	tunneling a mongo database, locate in the machine learning lab of the example.com company to the localhost
 	
 	  ♦ make mongo available on localhost:27017
 	    menshend port-forward   --server https://mongo.ml-lab.example.com  --port 27017
-    ♦ mongo ... localhost:3000
-        menshend port-forward	--server https://mongo.ml-lab.example.com  --port 3000:27017
-    ♦ mongo ... 192.168.0.5:3000
-        menshend port-forward	--server https://labs.example.com  --port 192.168.0.5:3000:27017
-    ♦ mongo ... 192.168.0.5:27017
-         menshend port-forward	--server https://labs.example.com  --port 192.168.0.5:27017`,
+    ♦ ... mongo ... localhost:3000
+        menshend port-forward	--server https://mongo.ml-lab.example.com  --port 3000
+    ♦ ... mongo ... 192.168.0.5:3000
+        menshend port-forward	--server https://labs.example.com  --port 192.168.0.5:3000`,
         },
         {
             Name:    "admin",

@@ -5,7 +5,6 @@ import (
     "net/http"
     mutils "github.com/nebtex/menshend/pkg/utils"
     "net/url"
-    "strings"
     "github.com/nebtex/menshend/pkg/resolvers"
     vault "github.com/hashicorp/vault/api"
 )
@@ -26,8 +25,7 @@ func (r *PortForward) Execute(rs resolvers.Resolver, tokenInfo *vault.Secret) ht
         var err error
         URL, err := url.Parse(b.BaseUrl())
         mutils.HttpCheckPanic(err, mutils.InternalError)
-        host := strings.Split(URL.Host, ":")[0]
-        remote := host + ":" + r.Header.Get("X-Menshend-Port-Forward")
+        remote := URL.Host
         chiselServer, err := chserver.NewServer(&chserver.Config{
             Remote:remote,
         })

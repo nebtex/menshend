@@ -73,3 +73,6 @@ _testmain.go
 vendor/
 
 .idea/
+*.coverprofile
+cover.out
+cover.html

@@ -1,0 +1,14 @@
+sudo: required
+dist: trusty
+
+language: go
+
+services:
+  - docker
+
+go:
+  - 1.8
+
+script:
+  - glide install
+  - make test

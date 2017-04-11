@@ -34,7 +34,7 @@ func TestPortForward_Execute(t *testing.T) {
     Convey("Should forward port", t, func(c C) {
         
         tb := &resolvers.YAMLResolver{}
-        tb.Content = `baseUrl: http://localhost:8200
+        tb.Content = `baseUrl: tcp://localhost:8200
 headersMap:
   h1: t1
   h2: t2`
@@ -42,14 +42,15 @@ headersMap:
         r := PortForward{}
         http.HandleFunc("/", noBrowserHandler(r.Execute(tb, &vault.Secret{})).ServeHTTP)
         go http.ListenAndServe(":9090", nil)
-        go pfclient.PFConnect(true, 0, "http://vault.localhost:9090", "myroot", "25300:8200")
-        go pfclient.PFConnect(true, 0, "http://vault.localhost:9090", "myroot", "25400:8200")
-        go pfclient.PFConnect(true, 0, "http://vault.localhost:9090", "myroot", "25500:8200")
-        go pfclient.PFConnect(true, 0, "http://vault.localhost:9090", "myroot", "25600:8200")
-        go pfclient.PFConnect(true, 0, "http://vault.localhost:9090", "myroot", "25700:8200")
-        go pfclient.PFConnect(true, 0, "http://vault.localhost:9090", "myroot", "25800:8200")
-        
+    
+        go pfclient.PFConnect(true, 0, "http://vault.localhost:9090", "myroot", "25300")
+        go pfclient.PFConnect(true, 0, "http://vault.localhost:9090", "myroot", "25400")
+        go pfclient.PFConnect(true, 0, "http://vault.localhost:9090", "myroot", "25500")
+        go pfclient.PFConnect(true, 0, "http://vault.localhost:9090", "myroot", "25600")
+        go pfclient.PFConnect(true, 0, "http://vault.localhost:9090", "myroot", "25700")
+        go pfclient.PFConnect(true, 0, "http://vault.localhost:9090", "myroot", "25800")
         time.Sleep(5 * time.Second)
+    
         for _, port := range []string{"25300", "25400", "25500", "25600", "25700", "25800"} {
             _, body, err := gorequest.New().Get("http://localhost:" + port + "/v1/sys/seal-status").
                 Set("X-Vault-Token", "myroot").End()
