@@ -1,5 +1,5 @@
 version: build-{build}.{branch}
-image: Visual Studio 2017 RC
+image: Visual Studio 2017
 clone_folder: C:\gopath\src\github.com\nebtex\menshend
 shallow_clone: true
 
