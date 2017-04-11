@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-
-go get gocovmerge
+set -e
+go get github.com/wadey/gocovmerge
 go test -v -coverpkg=$(go list ./... | grep -v /vendor/)
 export PKGS=$(go list ./... | /bin/grep -v /vendor/ | /bin/grep -v apis/client | /bin/grep -v pfclient)
 export PKGS_DELIM=$(echo "$PKGS" | paste -sd "," -)
