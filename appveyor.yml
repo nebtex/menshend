@@ -3,6 +3,9 @@ image: Visual Studio 2017
 clone_folder: C:\gopath\src\github.com\nebtex\menshend
 shallow_clone: true
 
+hosts:
+  vault.localhost: 127.0.0.1
+
 environment:
   GOPATH: C:\gopath
 
