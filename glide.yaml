@@ -57,6 +57,8 @@ import:
 - package: layeh.com/gopher-json
 - package: layeh.com/gopher-luar
 - package: github.com/yuin/gluamapper
+- package: github.com/urfave/cli
+  version: ^1.19.1
 testImport:
 - package: github.com/parnurzeal/gorequest
   version: ^0.2.15

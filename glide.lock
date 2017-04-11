@@ -1,12 +1,10 @@
-hash: 54a351cb19515f9be2562bb65a9ace277c0906fb9bb24712677e2f7defb9d415
-updated: 2017-03-24T12:38:35.366841361-05:00
+hash: 3112ebeaa74dc901177a99fcb17ab75ffdcadb69a4a9f67561eb261dc2a1521b
+updated: 2017-04-10T21:05:07.004072832-05:00
 imports:
 - name: github.com/ansel1/merry
   version: c117be056e0013c04fd7c4141a4dd68672943526
 - name: github.com/cjoudrey/gluahttp
   version: b4bfe0c50fea948dcbf3966e120996d6607bbd89
-- name: github.com/clbanning/x2j
-  version: 15e4c5e8e752cf6b7f819a601917b48a19258928
 - name: github.com/emicklei/go-restful
   version: cf834cf8da5b681af81bde6fa32304e6ce8eec71
   subpackages:
@@ -19,14 +17,6 @@ imports:
   version: 8fa88b06e5974e97fbf9899a7f86a344bfd1f105
 - name: github.com/go-resty/resty
   version: c45c7bcc0000d1a9ac1b119b2e6043c6540eedea
-- name: github.com/google/go-querystring
-  version: 53e6ce116135b80d037921a7fdd5138cf32d7a8a
-  subpackages:
-  - query
-- name: github.com/gopherjs/gopherjs
-  version: 0cc212b4ef1943b61e894a7d56490575b3216439
-  subpackages:
-  - js
 - name: github.com/gorilla/context
   version: 1ea25387ff6f684839d82767c1733ff4d4d15d0a
 - name: github.com/gorilla/csrf
@@ -37,6 +27,8 @@ imports:
   version: 667fe4e3466a040b780561fe9b51a83a3753eefc
 - name: github.com/gorilla/sessions
   version: ca9ada44574153444b00d3fd9c8559e4cc95f896
+- name: github.com/gorilla/websocket
+  version: b258b4fadb573ac412f187b9f31974ea99d32f50
 - name: github.com/hashicorp/errwrap
   version: 7554cd9344cec97297fa6649b055a8c98c2a1e55
 - name: github.com/hashicorp/go-cleanhttp
@@ -68,8 +60,6 @@ imports:
   version: c7c2b24ff411be415ec35077c5ec774b18766fda
   subpackages:
   - share
-- name: github.com/jtolds/gls
-  version: bb0351aa7eb6f322f32667d51375f26a2bca6628
 - name: github.com/levigross/grequests
   version: 3f92c0acb6cd7f2b11aa81f82a33783249fc1bcd
 - name: github.com/mitchellh/go-homedir
@@ -88,48 +78,20 @@ imports:
   version: 2c5fb962da6113d0968907fd81dba3ca35151d1c
 - name: github.com/Sirupsen/logrus
   version: ba1b36c82c5e05c4f912a88eab0dcd91a171688f
-- name: github.com/smartystreets/assertions
-  version: c9ee7d9e9a2aeec0bee7c4a516f3e0ad7cb7e558
-  subpackages:
-  - internal/go-render/render
-  - internal/oglematchers
 - name: github.com/smartystreets/goconvey
   version: d4c757aa9afd1e2fc1832aaab209b5794eb336e1
   subpackages:
   - convey
   - convey/gotest
   - convey/reporting
-- name: github.com/stretchr/codecs
-  version: 8e29b38960a541ed1264b001dcb21701283c590d
-  subpackages:
-  - bson
-  - constants
-  - csv
-  - json
-  - jsonp
-  - msgpack
-  - services
-  - xml
 - name: github.com/stretchr/gomniauth
   version: d89fbe29242917607bee0a8f24279baa0203f975
   subpackages:
-  - common
-  - oauth2
   - providers/github
 - name: github.com/stretchr/objx
   version: 1a9d0bb9f541897e62256577b352fdbc1fb4fd94
-- name: github.com/stretchr/signature
-  version: 168b2a1e1b562bf381d47471e31f5979a2a51cd5
-- name: github.com/stretchr/stew
-  version: 80ef0842b48b329a6120607c817a85aff5a2ec71
-  subpackages:
-  - strings
-- name: github.com/stretchr/tracer
-  version: 66d3696bba973e1697f7d68413b3f19c6d6e2a7c
-- name: github.com/ugorji/go
-  version: ded73eae5db7e7a0ef6f55aace87a2873c5d2b74
-  subpackages:
-  - codec
+- name: github.com/urfave/cli
+  version: 0bdeddeeb0f650497d603c4ad7b20cfe685682f6
 - name: github.com/vulcand/oxy
   version: 12aa65630360a8ab1827975bd46491a358094cd9
   subpackages:
@@ -164,16 +126,23 @@ imports:
   - unix
 - name: gopkg.in/yaml.v2
   version: 53feefa2559fb8dfa8d81baad31be332c97d6c77
-- name: labix.org/v2/mgo
-  version: "287"
-  subpackages:
-  - bson
 - name: layeh.com/gopher-json
   version: c128cc74278be889c4381681712931976fe0d88b
 - name: layeh.com/gopher-luar
   version: ab3f305945becf90dbde5962755dc044cb78acee
 testImports:
+- name: github.com/gopherjs/gopherjs
+  version: 0cc212b4ef1943b61e894a7d56490575b3216439
+  subpackages:
+  - js
+- name: github.com/jtolds/gls
+  version: bb0351aa7eb6f322f32667d51375f26a2bca6628
 - name: github.com/moul/http2curl
   version: 4e24498b31dba4683efb9d35c1c8a91e2eda28c8
 - name: github.com/parnurzeal/gorequest
   version: a578a48e8d6ca8b01a3b18314c43c6716bb5f5a3
+- name: github.com/smartystreets/assertions
+  version: c9ee7d9e9a2aeec0bee7c4a516f3e0ad7cb7e558
+  subpackages:
+  - internal/go-render/render
+  - internal/oglematchers
