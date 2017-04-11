@@ -18,7 +18,7 @@ install:
   - 7z e glide-v0.12.3-windows-amd64.zip -y
   - curl -fsSL -o vault.zip https://releases.hashicorp.com/vault/0.7.0/vault_0.7.0_windows_amd64.zip
   - 7z e vault.zip -y
-  - ps: $VaultProcess = Start-Process vault server -dev -dev-root-token-id=myroot -PassThru
+  - ps: $VaultProcess = Start-Process 'vault server -dev -dev-root-token-id=myroot' -PassThru
 
 on_finish:
   - ps: Stop-Process -Id $VaultProcess.Id
