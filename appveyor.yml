@@ -19,6 +19,6 @@ install:
 
 test_script:
   - glide install
-  - go test -v -coverpkg=$(go list ./... | grep -v /vendor/)
+  - go test -v  ./cmd/menshend ./pkg/apis/menshend/v1 ./pkg/config ./pkg/filters ./pkg/pfclient ./pkg/pfclient/chisel/client ./pkg/pfclient/chisel/server ./pkg/resolvers ./pkg/resolvers/cache ./pkg/strategy ./pkg/utils ./pkg/utils/test
 
 deploy: off
