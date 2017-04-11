@@ -9,8 +9,13 @@ services:
 go:
   - 1.8
 
+addons:
+  hosts:
+    - vault.localhost
+
 script:
   - make create_test_services
+  - sudo
   - sudo add-apt-repository ppa:masterminds/glide --yes && sudo apt-get update -y
   - sudo apt-get install glide -y
   - glide install
