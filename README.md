@@ -57,9 +57,9 @@ To contribute to this project, see [CONTRIBUTING](CONTRIBUTING).
 
 ## RoadMap
 
-at the moment we will be focused on fix small issues, and make the software stable, development of major features  are freeze till we can rewrite the codebase with [omniql](https://github.com/omniql/omniql)
+at the moment we will be focused on fix small issues, and make the software more stable, development of major features  are freeze till we can rewrite the codebase with [omniql](https://github.com/omniql/omniql)
 
-after this future plans consist on:
+some of the planned  futures are:
 
 * natively support tls and acme 
 * add javascript resolver
