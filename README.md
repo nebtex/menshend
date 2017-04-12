@@ -41,7 +41,7 @@ see [similar software](#sds)  and [limitations](#wadas)
 
 ## Thanks 
 
-without the projects in this list, menshend would not exist
+without these projects, menshend would not exist.
 
 - [Vault](https://github.com/hashicorp/vault), that act as the central policy manager
 
@@ -49,7 +49,7 @@ without the projects in this list, menshend would not exist
 
 - [Chisel](https://github.com/jpillora/chisel), we use a adapted version of chisel for create the secure tunnels (port forward strategy) 
 
-- Kubernetes and swagger, the api and the cli tool is inspired on kubernetes and we wrote it with swagger
+- Kubernetes and swagger, the api and the cli tool are inspired on kubernetes and we wrote the api with swagger
 
 ## Contribution
 
