@@ -6,17 +6,20 @@
 | Windows | [![Build status](https://ci.appveyor.com/api/projects/status/q8fewu4op9cyxgd5/branch/master?svg=true)](https://ci.appveyor.com/project/criloz/menshend/branch/master)|
 | OSX | [![Build Status](https://travis-ci.org/nebtex/menshend.svg?branch=master)](https://travis-ci.org/nebtex/menshend)|
 
+#### Links
+
 * **⌘** [Full feature list](#download)
 * **?** [Docs](#download)
 * **⇩** [Download](#download)
 * **⌧** [Docker](#docker) 
 
+#### Resume
 
 menshend is an identity-aware reverse proxy **(tcp/http)** that uses [Vault](https://github.com/hashicorp/vault) as policy manager, you can use it as replacement of VPNs, firewall rules and give access programmatically to organization's members, scripts, external users or third party applications.
 
 menshend was built with the objective of makes easy the creation of `secure laboratories`, facilitating the life of **DevOps/cloud admin** people to whom this product is oriented. :warning: also in order to use effectively menshend you need to already know how to install and operate [Vault](https://github.com/hashicorp/vault).
 
-#### a brief list of thing that you can protect
+#### Brief list of thing that you can protect
 
  * organization internal applications (in-house or open-source)   
  * serverless functions 
