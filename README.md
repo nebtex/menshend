@@ -1,4 +1,9 @@
 ## menshend
+|  Operating system | Status |
+| --- | --- |
+| Linux | [![Build Status](https://travis-ci.org/nebtex/menshend.svg?branch=master)](https://travis-ci.org/nebtex/menshend)|
+| Windows | [![Build status](https://ci.appveyor.com/api/projects/status/q8fewu4op9cyxgd5/branch/master?svg=true)](https://ci.appveyor.com/project/criloz/menshend/branch/master)|
+| OSX | [![Build Status](https://travis-ci.org/nebtex/menshend.svg?branch=master)](https://travis-ci.org/nebtex/menshend)|
 
 [![codecov](https://codecov.io/gh/nebtex/menshend/branch/master/graph/badge.svg)](https://codecov.io/gh/nebtex/menshend)
 
@@ -18,33 +23,47 @@ menshend was built with the objective of makes easy the creation of `secure labo
  * serverless functions 
  * connect your applications (postgres, redshift, etc.) across different vpc on aws, without the need of a vpn, vpc peering, etc. 
  * secure external app for small or medium size sites.
- * give secure access to scripts, other machines, third party applications, web-hooks, in-house slack bots, etc.
+ * give secure access to scripts, other machines, third party applications, web-hooks, in-house slack bots.
  * deploy to kubernetes in a controlled and secure way from your ci pipeline (travis, gitlab, circle, drone, etc.)
  * and [much more](#sdsd)..., the usage is endless because this is a programmable proxy
 
 see [similar software](#sds)  and [some limitations](#wadas)
 
-## Supported os
-
-|  Operating system | Status |
-| --- | --- |
-| Linux | [![Build Status](https://travis-ci.org/nebtex/menshend.svg?branch=master)](https://travis-ci.org/nebtex/menshend)|
-| Windows | [![Build status](https://ci.appveyor.com/api/projects/status/q8fewu4op9cyxgd5/branch/master?svg=true)](https://ci.appveyor.com/project/criloz/menshend/branch/master)|
-| OSX | [![Build Status](https://travis-ci.org/nebtex/menshend.svg?branch=master)](https://travis-ci.org/nebtex/menshend)|
-
 ## download
+
 
 ## docker
 
 
 ## Thanks 
 
+especial thanks to the below projects, without them menshend would not exist
+
 vault
+
 vulcan
+
 chisel
-kubernetes
+
 swagger
 
+kubernetes
+
+## Contribution
+
+To contribute to this project, see [CONTRIBUTING](CONTRIBUTING).
+
+## RoadMap
+
+at the moment we will be focused on fix small issues, and make the software stable, development of major features  are freeze till we can rewrite the codebase with [omniql](https://github.com/omniql/omniql)
+
+after this future plans consist on:
+
+* natively support tls and acme 
+* add javascript resolver
+* reduce the hits to vault
+* distributed cache for the resolvers
+* improve the performance and make it viable for protecting any kind of external or user facing app
 
 ## Licensing
 
