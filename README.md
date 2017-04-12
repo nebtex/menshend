@@ -1,16 +1,15 @@
-## menshend
+## menshend [![codecov](https://codecov.io/gh/nebtex/menshend/branch/master/graph/badge.svg)](https://codecov.io/gh/nebtex/menshend)
+
 |  Operating system | Status |
 | --- | --- |
 | Linux | [![Build Status](https://travis-ci.org/nebtex/menshend.svg?branch=master)](https://travis-ci.org/nebtex/menshend)|
 | Windows | [![Build status](https://ci.appveyor.com/api/projects/status/q8fewu4op9cyxgd5/branch/master?svg=true)](https://ci.appveyor.com/project/criloz/menshend/branch/master)|
 | OSX | [![Build Status](https://travis-ci.org/nebtex/menshend.svg?branch=master)](https://travis-ci.org/nebtex/menshend)|
 
-[![codecov](https://codecov.io/gh/nebtex/menshend/branch/master/graph/badge.svg)](https://codecov.io/gh/nebtex/menshend)
-
-* :1234: [Full feature list](#download)
-* :page_facing_up: [Docs](#download)
-* :arrow_down: [Download](#download)
-* :package: [Docker](#docker) 
+* **⌘** [Full feature list](#download)
+* **?** [Docs](#download)
+* **⇩** [Download](#download)
+* **⌧** [Docker](#docker) 
 
 
 menshend is an identity-aware reverse proxy **(tcp/http)** that uses [Vault](https://github.com/hashicorp/vault) as policy manager, you can use it as replacement of VPNs, firewall rules and give access programmatically to organization's members, scripts, external users or third party applications.
@@ -29,10 +28,10 @@ menshend was built with the objective of makes easy the creation of `secure labo
 
 see [similar software](#sds)  and [some limitations](#wadas)
 
-## download
+## Download
 
 
-## docker
+## Docker
 
 
 ## Thanks 
