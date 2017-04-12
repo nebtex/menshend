@@ -19,6 +19,8 @@ menshend is an identity-aware reverse proxy **(tcp/http)** that uses [Vault](htt
 
 menshend was built with the objective of makes easy the creation of `secure laboratories`, facilitating the life of **DevOps/cloud admin** people to whom this product is oriented. :warning: also in order to use effectively you need to already know how to install and operate [Vault](https://github.com/hashicorp/vault).
 
+it also comes with a beautiful and functional ui, that will make that your team mates start to loving you.
+
 #### Brief list of thing that you can protect or do.
 
  * organization internal applications (in-house or open-source)   
@@ -29,7 +31,7 @@ menshend was built with the objective of makes easy the creation of `secure labo
  * deploy to kubernetes in a controlled and secure way from your ci pipeline (travis, gitlab, circle, drone, etc.)
  * and [much more](#sdsd)..., the usage is endless because this is a programmable proxy
 
-see [similar software](#sds)  and [some limitations](#wadas)
+see [similar software](#sds)  and [limitations](#wadas)
 
 ## Download
 
@@ -39,17 +41,15 @@ see [similar software](#sds)  and [some limitations](#wadas)
 
 ## Thanks 
 
-especial thanks to the below projects, without them menshend would not exist
+without the projects in this list, menshend would not exist
 
-vault
+- [Vault](https://github.com/hashicorp/vault), that act as the central policy manager
 
-vulcan
+- [Oxy](https://github.com/vulcand/oxy),  the heart of the proxy strategy
 
-chisel
+- [Chisel](https://github.com/jpillora/chisel), we use a adapted version of chisel for create the secure tunnels (port forward strategy) 
 
-swagger
-
-kubernetes
+- Kubernetes and swagger, the api and the cli tool is inspired on kubernetes and we wrote it with swagger
 
 ## Contribution
 
