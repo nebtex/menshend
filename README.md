@@ -10,7 +10,7 @@
 
 menshend is a identity-aware proxy tcp/http that uses [Vault](https://github.com/hashicorp/vault) as policy manager, it can  programmatically give access to organization's members, scripts, external users or third party applications, you can use it as replacement of vpns, firewall rules, etc.
 
-the main objective of menshend is make easy the creation of `secure laboratories`, facilitating the life of devops/cloud admin people to whom this product is oriented. also in order to use effectively menshend you need to already know vault.
+the main objective of menshend is make easy the creation of `secure laboratories`, facilitating the life of **devops/cloud admin** people to whom this product is oriented. :warning: also in order to use effectively menshend you need to already know vault.
 
 a brief list of thing that you can protected
 
@@ -49,6 +49,8 @@ chisel
 kubernetes
 swagger
 
+
 ## Licensing
+
 *menshend* is licensed under the Apache License, Version 2.0. See [LICENSE]() for the full license text.
 
