@@ -14,11 +14,11 @@ menshend  was build with the objective of make easy the creation of `secure labo
 
 #### a brief list of thing that you can protected
 
- * organisation internal applications (on-house or open-source)   
+ * organisation internal applications (in-house or open-source)   
  * serverless functions 
  * connect to applications (postgres, redshift, etc.) across diferent vpc on aws, without the need of a vpn, vpc peering, etc. 
  * secure external app for small or medium size sites.
- * give secure access to script, other machines, third party application, web-hooks, on-house slack bots, etc.
+ * give secure access to script, other machines, third party application, web-hooks, in-house slack bots, etc.
  * deploy to kubernetes in a controlled and secure way from your ci pipeline (travis, gitlab, circle, drone, etc.)
  * and [much more ..](#sdsd)
 
