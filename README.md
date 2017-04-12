@@ -3,8 +3,8 @@
 [![codecov](https://codecov.io/gh/nebtex/menshend/branch/master/graph/badge.svg)](https://codecov.io/gh/nebtex/menshend)
 
 * [Full feature list](#download)
-* [Docs](#download)
-* [Download](#download)
+* :page_facing_up: [Docs](#download)
+* :arrow_down: [Download](#download)
 * [Docker](#docker) 
 
 
