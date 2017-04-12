@@ -2,10 +2,10 @@
 
 [![codecov](https://codecov.io/gh/nebtex/menshend/branch/master/graph/badge.svg)](https://codecov.io/gh/nebtex/menshend)
 
-* [Full feature list](#download)
+* :1234: [Full feature list](#download)
 * :page_facing_up: [Docs](#download)
 * :arrow_down: [Download](#download)
-* [Docker](#docker) 
+* :package: [Docker](#docker) 
 
 
 menshend is an identity-aware proxy **(tcp/http)** that uses [Vault](https://github.com/hashicorp/vault) as policy manager, you can use it as replacement of vpns, firewall rules and give access  programmatically to organisation's members, scripts, external users or third party applications.
