@@ -2,6 +2,8 @@
 [![GitHub release](http://img.shields.io/github/release/nebtex/menshend.svg?style=flat-square)][release]
 [![codecov](https://codecov.io/gh/nebtex/menshend/branch/master/graph/badge.svg)](https://codecov.io/gh/nebtex/menshend)
 
+[release]: https://github.com/nebtex/menshend/releases
+
 |  Operating system | Status |
 | --- | --- |
 | Linux | [![Build Status](https://travis-ci.org/nebtex/menshend.svg?branch=master)](https://travis-ci.org/nebtex/menshend)|
