@@ -23,7 +23,7 @@ Menshend is an identity-aware reverse proxy **(TCP/HTTP)** that uses [Vault](htt
 
 Menshend was built with the objective of making the `secure laboratories` creation easy, facilitating the life of **DevOps/cloud admin** engineers, whom this product is oriented to. 
 
-:warning: In order to use it effectively, you already need to know how to install and operate [Vault] (https://github.com/hashicorp/vault).
+:warning: In order to use it effectively, you already need to know how to install and operate [Vault](https://github.com/hashicorp/vault).
 
 It does also come with a beautiful and functional UI which makes it simple to manage the services, login to them from the browser, share secrets, etc.
 
