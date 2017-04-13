@@ -1,4 +1,8 @@
-## Menshend	门神 [![codecov](https://codecov.io/gh/nebtex/menshend/branch/master/graph/badge.svg)](https://codecov.io/gh/nebtex/menshend)
+## menshend	门神 
+[![GitHub release](http://img.shields.io/github/release/nebtex/menshend.svg?style=flat-square)][release]
+[![codecov](https://codecov.io/gh/nebtex/menshend/branch/master/graph/badge.svg)](https://codecov.io/gh/nebtex/menshend)
+
+[release]: https://github.com/nebtex/menshend/releases
 
 |  Operating system | Status |
 | --- | --- |
