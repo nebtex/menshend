@@ -1,9 +1,29 @@
-image: golang:1.8
+image: cr.genos.nebtex.com/publicdev/golang:1.8
+
+before_script:
+  - mkdir -p /go/src /go/bin /go/src/github.com/nebtex
+  - export GOPATH=/go
+  - export PATH=$PATH:/go/bin
+  - ln -s /builds/publicdev/menshend  /go/src/github.com/nebtex/menshend
+  - cd /go/src/github.com/nebtex/menshend
+  - echo $PWD
+  - add-apt-repository ppa:masterminds/glide --yes &&  apt-get update -y
+  - apt-get install glide make curl zip unzip -y
+
+services:
+  - vault:latest
+
+variables:
+  VAULT_DEV_ROOT_TOKEN_ID: "myroot"
+  VAULT_DEV_LISTEN_ADDRESS: "0.0.0.0:8200"
+  SKIP_SETCAP: "yes"
+
 cache:
   key: "$CI_COMMIT_REF_NAME"
   paths:
   - vendor/
   untracked: true
+
 stages:
   - deps
   - test
@@ -11,15 +31,16 @@ stages:
 deps:
   stage: deps
   script:
-    - sudo add-apt-repository ppa:masterminds/glide --yes && sudo apt-get update -y
-    - sudo apt-get install glide -y
     - glide install
-test:
-  stage: test
-  script:
-    - make create_test_services
-    - make test
-test:
+#test:
+#  stage: test
+#  script:
+#    - make test
+
+build_master:
   stage: build
+  only:
+    - master
   script:
+    - export MENSHEND_RELEASE=latest
     - make build

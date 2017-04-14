@@ -1,24 +1,9 @@
 #!/usr/bin/env bash
-# set version
-if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
-  echo "building binaries and docker images"
-else
-  echo "Skipping build"
-  exit 0
-fi
-
-if [ "$CI" == "true" ]; then
-
-else
-  MENSHEND_RELEASE=latest
-fi
-
 go get github.com/mitchellh/gox
 cd cmd/menshend
-mkdir -p dist
-curl -fsL https://github.com/gliderlabs/sigil/releases/download/v0.4.0/sigil_0.4.0_Linux_x86_64.tgz  | tar -zx
-mv sigil dist
-./dist/sigil -p -f version.tmpl MENSHEND_RELEASE=$MENSHEND_RELEASE > version.go
+mkdir -p dist dist/bin
+curl -fsL https://github.com/gliderlabs/sigil/releases/download/v0.4.0/sigil_0.4.0_Linux_x86_64.tgz  | tar -zxC dist/bin
+./dist/bin/sigil -p -f version.tmpl MENSHEND_RELEASE=$MENSHEND_RELEASE > version.go
 gox -output dist/menshend_{{.OS}}_{{.Arch}}
 cd dist
 dist=$(pwd)
@@ -44,9 +29,5 @@ do
         cd $dist
     fi
 done
-
 go get -u github.com/tcnksm/ghr
-ghr -u nebtex -replace latest release
-
-
-
+ghr -u nebtex -replace $MENSHEND_RELEASE release
