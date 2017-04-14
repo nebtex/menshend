@@ -12,6 +12,9 @@ configure_vault:
 test:
 	bash scripts/test.sh
 
+build:
+	bash scripts/build.sh
+
 test_env: create_test_services  create_test_dbs
 
 remove_test_env: remove_test_services

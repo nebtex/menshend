@@ -1,4 +1,9 @@
-## menshend	门神 [![codecov](https://codecov.io/gh/nebtex/menshend/branch/master/graph/badge.svg)](https://codecov.io/gh/nebtex/menshend)
+## menshend	门神 
+[![GitHub release](http://img.shields.io/github/release/nebtex/menshend.svg?style=flat-square)][release]
+[![codecov](https://codecov.io/gh/nebtex/menshend/branch/master/graph/badge.svg)](https://codecov.io/gh/nebtex/menshend)
+
+[release]: https://github.com/nebtex/menshend/releases
+
 
 |  Operating system | Status |
 | --- | --- |
@@ -15,23 +20,26 @@
 
 #### Resume
 
-menshend is an identity-aware reverse proxy **(tcp/http)** that uses [Vault](https://github.com/hashicorp/vault) as policy manager, you can use it as replacement of VPNs, firewall rules and give access programmatically to organization's members, scripts, external users or third party applications.
+Menshend is an identity-aware reverse proxy **(TCP/HTTP)** that uses [Vault](https://github.com/hashicorp/vault) as policy manager. You can use it as replacement for VPNs, firewall rules and to give access programmatically to organization's members, scripts, external users or third party applications.
 
-menshend was built with the objective of makes easy the creation of `secure laboratories`, facilitating the life of **DevOps/cloud admin** people to whom this product is oriented. :warning: also in order to use effectively you need to already know how to install and operate [Vault](https://github.com/hashicorp/vault).
+Menshend was built with the objective of making the `secure laboratories` creation easy, facilitating the life of **DevOps/cloud admin** engineers, whom this product is oriented to. 
 
-it also comes with a beautiful and functional ui, that make easy to manage the services, login to them from the browser, share secrets, etc.
+:warning: In order to use it effectively, you already need to know how to install and operate [Vault](https://github.com/hashicorp/vault).
 
-#### Brief list of thing that you can protect or do.
+It does also come with a beautiful and functional UI which makes it simple to manage the services, login to them from the browser, share secrets, etc.
 
- * organization internal applications (in-house or open-source)   
- * serverless functions 
- * connect your applications (postgres, redshift, etc.) across different vpc on aws, without the need of a vpn, vpc peering, etc. 
- * secure external app for small or medium size sites.
- * give secure access to scripts, other machines, third party applications, web-hooks, in-house slack bots.
- * deploy to kubernetes in a controlled and secure way from your ci pipeline (travis, gitlab, circle, drone, etc.)
- * and [much more](#sdsd)..., the usage is endless because this is a programmable proxy
+#### Brief list of things you can protect or do:
 
-see [similar software](#sds)  and [limitations](#wadas)
+ * Organization internal applications (in-house or open-source).
+ * Serverless functions.
+ * Connect your applications (PostgreSQL, Redshift, etc.) across different VPCs on AWS, without the need of a VPN, VPC peering, etc. 
+ * Secure external APPs for small or medium size sites.
+ * Give secure access to scripts, other machines, third party applications, web-hooks, in-house slack bots.
+ * Deploy to Kubernetes in a controlled and secure way from your CI pipelines (Travis CI, Gitlab, CircleCI, Drone, etc.).
+ * and [much more](#sdsd)..., its usages are endless because of being a programmable proxy.
+
+See [similar software](#sds)  and [limitations](#wadas)
+
 
 ## Download
 
@@ -41,15 +49,16 @@ see [similar software](#sds)  and [limitations](#wadas)
 
 ## Thanks 
 
-without these projects, menshend would not exist.
+Without these projects, menshend would not exist.
 
-- [Vault](https://github.com/hashicorp/vault), that act as the central policy manager
+- [Vault](https://github.com/hashicorp/vault), as the central policy manager.
 
-- [Oxy](https://github.com/vulcand/oxy),  the heart of the proxy strategy
+- [Oxy](https://github.com/vulcand/oxy), the heart of the proxying strategy.
 
-- [Chisel](https://github.com/jpillora/chisel), we use a adapted version of chisel for create the secure tunnels (port forward strategy) 
+- [Chisel](https://github.com/jpillora/chisel), we use an adapted version of Chisel to create secured tunnels (port forwarding strategy).
 
-- Kubernetes and swagger, the api and the cli tool are inspired on kubernetes and we wrote the api with swagger
+- Kubernetes and Swagger, the API and CLI tools are inspired on Kubernetes, and we implemented the API with Swagger.
+
 
 ## Contribution
 
@@ -57,15 +66,16 @@ To contribute to this project, see [CONTRIBUTING](CONTRIBUTING).
 
 ## RoadMap
 
-at the moment we will be focused on fix small issues, and make the software more stable, development of major features  are freeze till we can rewrite the codebase with [omniql](https://github.com/omniql/omniql)
+At the moment we will be focused on fixing small issues and making the software more stable. Development of major features is froze till we can rewrite the codebase with [OmniQL](https://github.com/omniql/omniql).
 
-some of the planned  futures are:
+Some of the planned features are:
 
-* natively support tls and acme 
-* add javascript resolver
-* reduce the hits to vault
-* distributed cache for the resolvers
-* improve the performance and make it viable for protecting any kind of external or user facing app
+* Natively support TLS and ACME.
+* Add Javascript resolver.
+* Reduce the hits to Vault.
+* Distributed cache for the resolvers.
+* Improve the performance and make it viable for protecting any kind of external or user facing APP.
+
 
 ## Licensing
 
