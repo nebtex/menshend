@@ -31,3 +31,10 @@ do
 done
 go get -u github.com/tcnksm/ghr
 ghr -u nebtex -replace $MENSHEND_RELEASE release
+
+cd ..
+docker docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
+
+docker build -t nebtex/menshend:$MENSHEND_RELEASE .
+# upload to dockerhub
+docker push nebtex/menshend:$MENSHEND_RELEASE
