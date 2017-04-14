@@ -11,6 +11,10 @@ import (
 
 func main() {
     app := cli.NewApp()
+    app.Name = "menshend"
+    app.Usage = ""
+    app.Version = Version
+    app.Authors = []cli.Author{{"nebtex", "publicdev@nebtex.com"}}
     
     app.Commands = []cli.Command{
         {
@@ -33,7 +37,7 @@ func main() {
                 cli.StringFlag{
                     Name: "port, p",
                     Value: "",
-                    Usage: "[local-host]:[local-port]:<remote-port>",
+                    Usage: "[local-host]:<local-port>",
                 },
                 cli.StringFlag{
                     Name: "token, t",
@@ -43,9 +47,8 @@ func main() {
                 },
                 cli.DurationFlag{
                     Name: "keepalive, k",
-                    Usage: "An optional keepalive interval. Since the underlying" +
-                        "transport is HTTP, in many instances we'll be traversing through" +
-                        "proxies, often these proxies will close idle connections. You must" +
+                    Usage: "An optional keepalive interval. Since the underlying \n transport is HTTP, in many instances we'll be traversing through " +
+                        "proxies, often these proxies will close idle connections. \n You must" +
                         "specify a time with a unit, for example '30s' or '2m'. Defaults" +
                         "to '0s' (disabled)",
                 },
@@ -54,18 +57,19 @@ func main() {
                     Usage: "verbose debug",
                 },
             },
-            Usage:   `this command is based on the chisel project https://github.com/jpillora/chisel
-	
-	● Examples:
-	    
-	tunneling a mongo database, locate in the machine learning lab of the example.com company to the localhost
-	
-	  ♦ make mongo available on localhost:27017
-	    menshend port-forward   --server https://mongo.ml-lab.example.com  --port 27017
-    ♦ ... mongo ... localhost:3000
-        menshend port-forward	--server https://mongo.ml-lab.example.com  --port 3000
-    ♦ ... mongo ... 192.168.0.5:3000
-        menshend port-forward	--server https://labs.example.com  --port 192.168.0.5:3000`,
+            Usage:  "Create secure tunnels",
+            Description:`this command is adapted from the chisel project https://github.com/jpillora/chisel
+							 
+ ● Examples:
+     
+ tunneling a mongo database, locate in some of the laboratories of the example.com organization to the localhost
+ 
+ ♦ make mongo available on localhost:27017
+     menshend port-forward   --server https://mongo.ml-lab.example.com  --port 27017
+ ♦ ... mongo ... localhost:3000
+     menshend port-forward	--server https://mongo.ml-lab.example.com  --port 3000
+ ♦ ... mongo ... 192.168.0.5:3000
+     menshend port-forward	--server https://labs.example.com  --port 192.168.0.5:3000`,
         },
         {
             Name:    "admin",
