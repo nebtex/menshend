@@ -44,3 +44,12 @@ build_master:
   script:
     - export MENSHEND_RELEASE=latest
     - make build
+
+build_tags:
+  stage: build
+  only:
+    - tags
+  script:
+    - export prefix=v
+    - export MENSHEND_RELEASE=${CI_COMMIT_TAG#$prefix}
+    - make build
