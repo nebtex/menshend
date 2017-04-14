@@ -49,5 +49,4 @@ go get -u github.com/tcnksm/ghr
 ghr -u nebtex -replace latest release
 
 
-## build docker image and publish
 
