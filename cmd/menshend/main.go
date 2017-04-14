@@ -6,6 +6,7 @@ import (
     vault "github.com/hashicorp/vault/api"
     "github.com/nebtex/menshend/pkg/pfclient"
     mconfig "github.com/nebtex/menshend/pkg/config"
+    "fmt"
 )
 
 func main() {
@@ -116,13 +117,22 @@ func main() {
                 },
             },
             Action: func(c *cli.Context) error {
-                config :=  c.String("config")
+                config := c.String("config")
                 mconfig.ConfigFile = &config
                 err := mconfig.LoadConfig()
                 if err != nil {
                     return err
                 }
                 return menshendServer(c.String("address"), c.String("port"))
+            },
+        },
+        {
+            Name:    "version",
+            Aliases: []string{"release"},
+            Usage:   "get binary version",
+            Action: func(c *cli.Context) error {
+                fmt.Println(Version)
+                return nil
             },
         },
     }

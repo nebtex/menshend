@@ -1,0 +1,25 @@
+image: golang:1.8
+cache:
+  key: "$CI_COMMIT_REF_NAME"
+  paths:
+  - vendor/
+  untracked: true
+stages:
+  - deps
+  - test
+  - build
+deps:
+  stage: deps
+  script:
+    - sudo add-apt-repository ppa:masterminds/glide --yes && sudo apt-get update -y
+    - sudo apt-get install glide -y
+    - glide install
+test:
+  stage: test
+  script:
+    - make create_test_services
+    - make test
+test:
+  stage: build
+  script:
+    - make build

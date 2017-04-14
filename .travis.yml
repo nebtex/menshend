@@ -19,4 +19,3 @@ script:
   - sudo apt-get install glide -y
   - glide install
   - make test
-  - make build
