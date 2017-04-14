@@ -4,6 +4,7 @@
 
 [release]: https://github.com/nebtex/menshend/releases
 
+
 |  Operating system | Status |
 | --- | --- |
 | Linux | [![Build Status](https://travis-ci.org/nebtex/menshend.svg?branch=master)](https://travis-ci.org/nebtex/menshend)|
@@ -39,6 +40,7 @@ It does also come with a beautiful and functional UI which makes it simple to ma
 
 See [similar software](#sds)  and [limitations](#wadas)
 
+
 ## Download
 
 
@@ -57,6 +59,7 @@ Without these projects, menshend would not exist.
 
 - Kubernetes and Swagger, the API and CLI tools are inspired on Kubernetes, and we implemented the API with Swagger.
 
+
 ## Contribution
 
 To contribute to this project, see [CONTRIBUTING](CONTRIBUTING).
@@ -72,6 +75,7 @@ Some of the planned features are:
 * Reduce the hits to Vault.
 * Distributed cache for the resolvers.
 * Improve the performance and make it viable for protecting any kind of external or user facing APP.
+
 
 ## Licensing
 
