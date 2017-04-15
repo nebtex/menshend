@@ -15,7 +15,7 @@
 
 * **⌘** [Full feature list](#download)
 * **?** [Docs](#download)
-* **⇩** [Download](#download)
+* **⇩** [Download](#binaries)
 * **⌧** [Docker](#docker) 
 
 #### Resume
