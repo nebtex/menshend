@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 go get github.com/mitchellh/gox
 cd cmd/menshend
 build_dir=$(pwd)
@@ -37,8 +38,9 @@ else
   ghr -u nebtex -replace "v${MENSHEND_RELEASE}" release
 fi
 
-cd build_dir
-docker docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
+cd $build_dir
+
+docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
 
 docker build -t nebtex/menshend:$MENSHEND_RELEASE .
 # upload to dockerhub
