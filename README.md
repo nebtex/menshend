@@ -70,12 +70,12 @@ full list of downloads for other platforms [here][release]
 [![](https://images.microbadger.com/badges/image/nebtex/menshend.svg)](https://microbadger.com/images/nebtex/menshend "Get your own image badge on microbadger.com")
 [![Docker Pulls](https://img.shields.io/docker/pulls/nebtex/menshend.svg)](https://hub.docker.com/r/nebtex/menshend/)
 
-full list of configurations and options can be found [here](https://hub.docker.com/r/nebtex/menshend/)  
+full list of tags, configurations and options can be found [here](https://hub.docker.com/r/nebtex/menshend/)  
 
 ### linux amd64
 
 ```shell 
-docker pull nebtex/menshend 
+docker pull nebtex/menshend:$(curl -s https://raw.githubusercontent.com/nebtex/menshend/master/stable.txt)
 ``` 
 
 ## Thanks 
