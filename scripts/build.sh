@@ -31,7 +31,11 @@ do
     fi
 done
 go get -u github.com/tcnksm/ghr
-ghr -u nebtex -replace "v${MENSHEND_RELEASE}" release
+if [ "${MENSHEND_RELEASE}" == "latest" ]; then
+  ghr -u nebtex -replace "${MENSHEND_RELEASE}" release
+else
+  ghr -u nebtex -replace "v${MENSHEND_RELEASE}" release
+fi
 
 cd build_dir
 docker docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
