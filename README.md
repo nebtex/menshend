@@ -50,12 +50,13 @@ curl -LO https://github.com/nebtex/menshend/releases/download/$(curl -s https://
 
 #### Linux
 ```shell
-curl -LO https://github.com/nebtex/menshend/releases/download/$(curl -s https://raw.githubusercontent.com/nebtex/menshend/master/stable.txt)/bin/menshend_linux_amd64.zip
+curl -LO https://github.com/nebtex/menshend/releases/download/$(curl -s https://raw.githubusercontent.com/nebtex/menshend/master/stable.txt)/menshend_linux_amd64.zip
 ```
 
 #### Windows
 
-```shell curl -LO https://github.com/nebtex/menshend/releases/download/$(curl -s https://raw.githubusercontent.com/nebtex/menshend/master/stable.txt)/menshend_windows_amd64.zip
+```shell 
+curl -LO https://github.com/nebtex/menshend/releases/download/$(curl -s https://raw.githubusercontent.com/nebtex/menshend/master/stable.txt)/menshend_windows_amd64.zip
 ```
 
 full list of downloads, for other OS (here)[release]
