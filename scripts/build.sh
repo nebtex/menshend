@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 go get github.com/mitchellh/gox
 cd cmd/menshend
+build_dir=$(pwd)
 mkdir -p dist dist/bin
 curl -fsL https://github.com/gliderlabs/sigil/releases/download/v0.4.0/sigil_0.4.0_Linux_x86_64.tgz  | tar -zxC dist/bin
 ./dist/bin/sigil -p -f version.tmpl MENSHEND_RELEASE=$MENSHEND_RELEASE > version.go
@@ -32,7 +33,7 @@ done
 go get -u github.com/tcnksm/ghr
 ghr -u nebtex -replace $MENSHEND_RELEASE release
 
-cd ..
+cd build_dir
 docker docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
 
 docker build -t nebtex/menshend:$MENSHEND_RELEASE .
