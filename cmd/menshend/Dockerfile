@@ -15,7 +15,8 @@ RUN wget -O /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/
 RUN chmod +x /usr/local/bin/dumb-init
 
 # add menshend
-ADD dist/menshend_linux_amd64 /bin/menshend && chmod +x /bin/menshend
+ADD dist/menshend_linux_amd64 /bin/menshend
+RUN chmod +x /bin/menshend
 
 # copy menshend config
 ADD menshend.yml /etc/menshend.yml
