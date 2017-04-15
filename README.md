@@ -66,7 +66,7 @@ To contribute to this project, see [CONTRIBUTING](CONTRIBUTING).
 
 ## RoadMap
 
-At the moment we will be focused on fixing small issues and making the software more stable. Development of major features is froze till we can rewrite the codebase with [OmniQL](https://github.com/omniql/omniql).
+At the moment we will be focused on fixing small issues and making the software more stable. Development of major features is froze till we can rewrite the codebase with [omniql](https://github.com/nebtex/omniql).
 
 Some of the planned features are:
 
