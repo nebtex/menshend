@@ -63,7 +63,7 @@ curl -LO https://github.com/nebtex/menshend/releases/download/$(curl -s https://
 
 unzip and make the menshend binary executable and move it to your PATH 
 
-full list of downloads for other platforms (here)[release]
+full list of downloads for other platforms [here][release]
 
 ## Docker
 
