@@ -44,16 +44,16 @@ See [similar software](#sds)  and [limitations](#wadas)
 ## Download
 
 #### OS X 
-
-  curl -LO https://github.com/nebtex/menshend/releases/download/$(curl -s https://raw.githubusercontent.com/nebtex/menshend/master/stable.txt)/menshend_darwin_amd64.zip
+```shell
+curl -LO https://github.com/nebtex/menshend/releases/download/$(curl -s https://raw.githubusercontent.com/nebtex/menshend/master/stable.txt)/menshend_darwin_amd64.zip```
 
 #### Linux
-
-  curl -LO https://github.com/nebtex/menshend/releases/download/$(curl -s https://raw.githubusercontent.com/nebtex/menshend/master/stable.txt)/bin/menshend_linux_amd64.zip
+```shell
+curl -LO https://github.com/nebtex/menshend/releases/download/$(curl -s https://raw.githubusercontent.com/nebtex/menshend/master/stable.txt)/bin/menshend_linux_amd64.zip```
 
 #### Windows
 
-  curl -LO https://github.com/nebtex/menshend/releases/download/$(curl -s https://raw.githubusercontent.com/nebtex/menshend/master/stable.txt)/menshend_windows_amd64.zip
+```shell curl -LO https://github.com/nebtex/menshend/releases/download/$(curl -s https://raw.githubusercontent.com/nebtex/menshend/master/stable.txt)/menshend_windows_amd64.zip```
 
 full list of downloads, for other OS (here)[release]
 
