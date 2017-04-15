@@ -41,7 +41,9 @@ It does also come with a beautiful and functional UI which makes it simple to ma
 See [similar software](#sds)  and [limitations](#wadas)
 
 
-## Download
+## Binaries
+
+[![Releases](https://img.shields.io/github/downloads/nebtex/menshend/total.svg)][release]
 
 #### OS X 
 ```shell
@@ -59,7 +61,9 @@ curl -LO https://github.com/nebtex/menshend/releases/download/$(curl -s https://
 curl -LO https://github.com/nebtex/menshend/releases/download/$(curl -s https://raw.githubusercontent.com/nebtex/menshend/master/stable.txt)/menshend_windows_amd64.zip
 ```
 
-full list of downloads, for other OS (here)[release]
+unzip and make the menshend binary executable and move it to your PATH 
+
+full list of downloads for other platforms (here)[release]
 
 ## Docker
 
