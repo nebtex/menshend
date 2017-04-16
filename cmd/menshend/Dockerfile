@@ -23,5 +23,6 @@ ADD menshend.yml /etc/menshend.yml
 ADD entrypoint.sh /bin/entrypoint.sh
 RUN chmod +x /bin/entrypoint.sh
 
+EXPOSE 8787
 # run entrypoint
 ENTRYPOINT ["/bin/entrypoint.sh"]
