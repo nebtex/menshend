@@ -1,6 +1,6 @@
 FROM alpine:3.5
 MAINTAINER Cristian Lozano <criscalovis@gmail.com> (@criloz)
-ENV MENSHEND_CONFIG /etc/menshend.yml
+ENV MENSHEND_CONFIG_FILE /etc/menshend.yml
 # Create a  user and group first so the IDs get set the same way, even as
 # the rest of this may change over time.
 RUN addgroup menshend && adduser -S -G menshend menshend
@@ -20,6 +20,8 @@ RUN chmod +x /bin/menshend
 
 # copy menshend config
 ADD menshend.yml /etc/menshend.yml
+ADD entrypoint.sh /bin/entrypoint.sh
+RUN chmod +x /bin/entrypoint.sh
 
 # run entrypoint
-ENTRYPOINT ["menshend", "server", "-config", ${MENSHEND_CONFIG}]
+ENTRYPOINT ["/bin/entrypoint.sh"]

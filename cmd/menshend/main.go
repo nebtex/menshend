@@ -33,6 +33,7 @@ func main() {
                     Name: "server, s",
                     Value: "",
                     Usage: "full http(s) url of the service under the Menshend space wanted to be tunneled, ip addresses are not allowed",
+                    EnvVar: "PORT_FORWARD_ENDPOINT",
                 },
                 cli.StringFlag{
                     Name: "port, p",
@@ -113,6 +114,7 @@ func main() {
                     Name: "config, c",
                     Value: "",
                     Usage: "config file",
+                    EnvVar: "MENSHEND_CONFIG_FILE",
                 },
                 cli.StringFlag{
                     Name: "address, a",
