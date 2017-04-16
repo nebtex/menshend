@@ -4,6 +4,7 @@ import (
     "net/http"
     "github.com/nebtex/menshend/pkg/apis/menshend/v1"
     "fmt"
+    "github.com/Sirupsen/logrus"
 )
 
 func mainHandler(response http.ResponseWriter, request *http.Request) {
@@ -26,6 +27,7 @@ func menshendServer(address, port string) error {
     // /uilogout
     // /v1 - api
     http.Handle("/", v1.APIHandler())
+    logrus.Infof("Server listing on %s:%s", address, port)
     return http.ListenAndServe(fmt.Sprintf("%s:%s", address, port), nil)
     
     //r.Host("{subdomain:[a-z\\-]+}." + Config.HostWithoutPort()).Handler(handler)
