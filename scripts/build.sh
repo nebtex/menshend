@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
 set -e
-go get github.com/rakyll/statik
 go get github.com/mitchellh/gox
 #pack static files
-statik -src=ui
 cd cmd/menshend
 build_dir=$(pwd)
 mkdir -p dist dist/bin

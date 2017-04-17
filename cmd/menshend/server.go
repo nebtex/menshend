@@ -25,7 +25,7 @@ func proxyServer() http.Handler {
 func ui() http.Handler {
     r := mux.NewRouter()
     statikFS, _ := fs.New()
-    r.PathPrefix("/login").Handler(http.FileServer(statikFS))
+    r.PathPrefix("/static").Handler(http.FileServer(statikFS))
     r.PathPrefix("/services").Handler(http.FileServer(statikFS))
     r.PathPrefix("/").Handler(http.FileServer(statikFS))
     return r

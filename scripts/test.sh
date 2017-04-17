@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 set -e
 go get github.com/mitchellh/gox
-#pack static files
-statik -src=ui
 go get github.com/wadey/gocovmerge
 go test -v -coverpkg=$(go list ./... | grep -v /vendor/)
 export PKGS=$(go list ./... | /bin/grep -v /vendor/ | /bin/grep -v apis/client | /bin/grep -v pfclient)

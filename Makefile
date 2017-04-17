@@ -15,6 +15,9 @@ test:
 build:
 	bash scripts/build.sh
 
+bundle_react:
+	bash scripts/bundle_react.sh
+
 test_env: create_test_services  create_test_dbs
 
 remove_test_env: remove_test_services
