@@ -26,7 +26,7 @@ Menshend was built with the objective of making the `secure laboratories` creati
 
 :warning: In order to use it effectively, you already need to know how to install and operate [Vault](https://github.com/hashicorp/vault).
 
-It does also come with a beautiful and functional UI which makes it simple to manage the services, login to them from the browser, share secrets, etc.
+It does also come with a beautiful and functional UI which makes it simple to login to services from the browser, share secrets, etc.
 
 #### Brief list of things you can protect or do:
 

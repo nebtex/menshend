@@ -20,7 +20,8 @@ type ClientServiceResource struct {
     ImpersonateWithinRole bool              `json:"impersonateWithinRole"`
     IsActive              *bool             `json:"isActive"`
     SecretPaths           []string          `json:"secretPaths"`
-    FullURL               string           `json:"fullUrl"`
+    FullURL               string            `json:"fullUrl"`
+    
     
 }
 
