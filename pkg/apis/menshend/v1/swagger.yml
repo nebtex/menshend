@@ -597,6 +597,8 @@ definitions:
         type: boolean
       fullUrl:
         type: string
+      needPortForward:
+        type: boolean
       isActive:
         type: boolean
       secretPaths:

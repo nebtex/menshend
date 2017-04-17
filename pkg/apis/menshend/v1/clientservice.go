@@ -21,8 +21,7 @@ type ClientServiceResource struct {
     IsActive              *bool             `json:"isActive"`
     SecretPaths           []string          `json:"secretPaths"`
     FullURL               string            `json:"fullUrl"`
-    
-    
+    NeedPortForward       bool              `json:"needPortForward"`
 }
 
 //Register ...
@@ -69,9 +68,13 @@ func (cs *ClientServiceResource) listServiceHandler(request *restful.Request, re
         mutils.HttpCheckPanic(err, mutils.PermissionError)
         CheckSecretFailIfIsNull(secret)
         nService := &ClientServiceResource{}
+        aService := &AdminServiceResource{}
         err = mapstructure.Decode(secret.Data, nService)
         mutils.HttpCheckPanic(err, mutils.InternalError.WithUserMessage("error decoding service"))
+        err = mapstructure.Decode(secret.Data, aService)
+        mutils.HttpCheckPanic(err, mutils.InternalError.WithUserMessage("error decoding service"))
         nService.FullURL = getFullUrl(nService.Meta)
+        nService.NeedPortForward = aService.Strategy.PortForward != nil
         ret = append(ret, nService)
         mutils.HttpCheckPanic(response.WriteEntity(ret), mutils.InternalError)
         return
@@ -112,8 +115,13 @@ func (cs *ClientServiceResource) listServiceHandler(request *restful.Request, re
                 sSecret, err := vaultClient.Logical().Read(sKey)
                 if !(err != nil || sSecret == nil || sSecret.Data == nil) {
                     cs := &ClientServiceResource{}
+                    aService := &AdminServiceResource{}
                     err := mapstructure.Decode(sSecret.Data, cs)
+                    err = mapstructure.Decode(sSecret.Data, aService)
+                    
                     cs.FullURL = getFullUrl(cs.Meta)
+                    cs.NeedPortForward = aService.Strategy.PortForward != nil
+                    
                     mutils.HttpCheckPanic(err, mutils.InternalError.WithUserMessage("there is something really wrong contact your admin"))
                     ret = append(ret, cs)
                 }
@@ -146,6 +154,10 @@ func getServiceByRole(user string, role string) []*ClientServiceResource {
             err = mapstructure.Decode(secret.Data, nService)
             mutils.HttpCheckPanic(err, mutils.InternalError.WithUserMessage("there is something really wrong contact your admin"))
             nService.FullURL = getFullUrl(nService.Meta)
+            aService := &AdminServiceResource{}
+            err = mapstructure.Decode(secret.Data, aService)
+            mutils.HttpCheckPanic(err, mutils.InternalError.WithUserMessage("there is something really wrong contact your admin"))
+            nService.NeedPortForward = aService.Strategy.PortForward != nil
             ret = append(ret, nService)
         }
         
@@ -178,6 +190,11 @@ func getServiceBySubdomain(user string, subDomain string) []*ClientServiceResour
             err = mapstructure.Decode(secret.Data, nService)
             mutils.HttpCheckPanic(err, mutils.InternalError.WithUserMessage("there is something really wrong contact your admin"))
             nService.FullURL = getFullUrl(nService.Meta)
+            aService := &AdminServiceResource{}
+            err = mapstructure.Decode(secret.Data, aService)
+            mutils.HttpCheckPanic(err, mutils.InternalError.WithUserMessage("there is something really wrong contact your admin"))
+            nService.NeedPortForward = aService.Strategy.PortForward != nil
+            
             ret = append(ret, nService)
         }
         
