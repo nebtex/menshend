@@ -4,7 +4,7 @@ import (
     "log"
     "net/http"
     "time"
-    "github.com/jpillora/chisel/share"
+    "github.com/nebtex/menshend/pkg/pfclient/chisel/share"
     "golang.org/x/crypto/ssh"
     "golang.org/x/net/websocket"
     "io"

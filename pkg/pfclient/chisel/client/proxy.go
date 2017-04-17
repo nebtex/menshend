@@ -17,7 +17,7 @@ THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 import (
     "io"
     "net"
-    "github.com/jpillora/chisel/share"
+    "github.com/nebtex/menshend/pkg/pfclient/chisel/share"
 )
 
 type Proxy struct {

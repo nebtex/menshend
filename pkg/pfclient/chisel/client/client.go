@@ -21,7 +21,7 @@ import (
     "strings"
     "time"
     "github.com/jpillora/backoff"
-    "github.com/jpillora/chisel/share"
+    "github.com/nebtex/menshend/pkg/pfclient/chisel/share"
     "golang.org/x/crypto/ssh"
     "golang.org/x/net/websocket"
     "github.com/Sirupsen/logrus"

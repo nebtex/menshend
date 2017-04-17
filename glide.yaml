@@ -59,6 +59,10 @@ import:
 - package: github.com/yuin/gluamapper
 - package: github.com/urfave/cli
   version: ^1.19.1
+- package: github.com/rakyll/statik
+  version: ^0.1.0
+  subpackages:
+  - fs
 testImport:
 - package: github.com/parnurzeal/gorequest
   version: ^0.2.15

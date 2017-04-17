@@ -5,11 +5,16 @@ import (
     "github.com/nebtex/menshend/pkg/apis/menshend/v1"
     "fmt"
     "github.com/Sirupsen/logrus"
+    "github.com/rakyll/statik/fs"
+    
+    _ "github.com/nebtex/menshend/statik"
+    "github.com/gorilla/mux"
 )
 
 func mainHandler(response http.ResponseWriter, request *http.Request) {
     //detect  menshend host
     //use proxy server
+    
 }
 
 func proxyServer() http.Handler {
@@ -17,8 +22,13 @@ func proxyServer() http.Handler {
         NeedLogin(RoleHandler(GetServiceHandler(ProxyHandler()))))))
 }
 
-func uilogin() {
-    
+func ui() http.Handler {
+    r := mux.NewRouter()
+    statikFS, _ := fs.New()
+    r.PathPrefix("/login").Handler(http.FileServer(statikFS))
+    r.PathPrefix("/services").Handler(http.FileServer(statikFS))
+    r.PathPrefix("/").Handler(http.FileServer(statikFS))
+    return r
 }
 
 func menshendServer(address, port string) error {
@@ -26,7 +36,9 @@ func menshendServer(address, port string) error {
     // /uilogin
     // /uilogout
     // /v1 - api
-    http.Handle("/", v1.APIHandler())
+    //http.Handle("/api", v1.APIHandler())
+    http.Handle("/", ui())
+    
     logrus.Infof("Server listing on %s:%s", address, port)
     return http.ListenAndServe(fmt.Sprintf("%s:%s", address, port), nil)
     

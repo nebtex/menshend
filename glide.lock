@@ -1,5 +1,5 @@
-hash: 3112ebeaa74dc901177a99fcb17ab75ffdcadb69a4a9f67561eb261dc2a1521b
-updated: 2017-04-10T21:05:07.004072832-05:00
+hash: 121772a75a43c34b7f956bddac71df7633135983f83ded8c58dc3c7f073fe9a4
+updated: 2017-04-16T23:55:04.934093237-05:00
 imports:
 - name: github.com/ansel1/merry
   version: c117be056e0013c04fd7c4141a4dd68672943526
@@ -27,8 +27,6 @@ imports:
   version: 667fe4e3466a040b780561fe9b51a83a3753eefc
 - name: github.com/gorilla/sessions
   version: ca9ada44574153444b00d3fd9c8559e4cc95f896
-- name: github.com/gorilla/websocket
-  version: b258b4fadb573ac412f187b9f31974ea99d32f50
 - name: github.com/hashicorp/errwrap
   version: 7554cd9344cec97297fa6649b055a8c98c2a1e55
 - name: github.com/hashicorp/go-cleanhttp
@@ -57,7 +55,7 @@ imports:
 - name: github.com/jpillora/backoff
   version: 06c7a16c845dc8e0bf575fafeeca0f5462f5eb4d
 - name: github.com/jpillora/chisel
-  version: c7c2b24ff411be415ec35077c5ec774b18766fda
+  version: ef4bd3df29f9a8a8578eb345ff5edf0658af0cc8
   subpackages:
   - share
 - name: github.com/levigross/grequests
@@ -70,6 +68,10 @@ imports:
   version: 1881a9bccb818787f68c52bfba648c6cf34c34fa
 - name: github.com/pkg/errors
   version: ff09b135c25aae272398c51a07235b90a75aa4f0
+- name: github.com/rakyll/statik
+  version: 274df120e9065bdd08eb1120e0375e3dc1ae8465
+  subpackages:
+  - fs
 - name: github.com/rs/cors
   version: a62a804a8a009876ca59105f7899938a1349f4b3
 - name: github.com/rs/xhandler

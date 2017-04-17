@@ -76,3 +76,4 @@ vendor/
 *.coverprofile
 cover.out
 cover.html
+statik/
