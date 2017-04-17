@@ -74,7 +74,11 @@ func (cs *ClientServiceResource) listServiceHandler(request *restful.Request, re
         err = mapstructure.Decode(secret.Data, aService)
         mutils.HttpCheckPanic(err, mutils.InternalError.WithUserMessage("error decoding service"))
         nService.FullURL = getFullUrl(nService.Meta)
-        nService.NeedPortForward = aService.Strategy.PortForward != nil
+        fmt.Printf("%v", aService)
+        nService.NeedPortForward = false
+        if (aService.Strategy != nil) {
+            nService.NeedPortForward = aService.Strategy.PortForward != nil
+        }
         ret = append(ret, nService)
         mutils.HttpCheckPanic(response.WriteEntity(ret), mutils.InternalError)
         return
@@ -120,7 +124,11 @@ func (cs *ClientServiceResource) listServiceHandler(request *restful.Request, re
                     err = mapstructure.Decode(sSecret.Data, aService)
                     
                     cs.FullURL = getFullUrl(cs.Meta)
-                    cs.NeedPortForward = aService.Strategy.PortForward != nil
+                    cs.NeedPortForward = false
+                    if(aService.Strategy!=nil){
+                        cs.NeedPortForward = aService.Strategy.PortForward != nil
+    
+                    }
                     
                     mutils.HttpCheckPanic(err, mutils.InternalError.WithUserMessage("there is something really wrong contact your admin"))
                     ret = append(ret, cs)
@@ -157,7 +165,10 @@ func getServiceByRole(user string, role string) []*ClientServiceResource {
             aService := &AdminServiceResource{}
             err = mapstructure.Decode(secret.Data, aService)
             mutils.HttpCheckPanic(err, mutils.InternalError.WithUserMessage("there is something really wrong contact your admin"))
-            nService.NeedPortForward = aService.Strategy.PortForward != nil
+            nService.NeedPortForward = false
+            if (aService.Strategy != nil) {
+                nService.NeedPortForward = aService.Strategy.PortForward != nil
+            }
             ret = append(ret, nService)
         }
         
@@ -193,8 +204,10 @@ func getServiceBySubdomain(user string, subDomain string) []*ClientServiceResour
             aService := &AdminServiceResource{}
             err = mapstructure.Decode(secret.Data, aService)
             mutils.HttpCheckPanic(err, mutils.InternalError.WithUserMessage("there is something really wrong contact your admin"))
-            nService.NeedPortForward = aService.Strategy.PortForward != nil
-            
+            nService.NeedPortForward = false
+            if (aService.Strategy != nil) {
+                nService.NeedPortForward = aService.Strategy.PortForward != nil
+            }
             ret = append(ret, nService)
         }
         
