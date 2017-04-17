@@ -13,10 +13,11 @@
 
 #### Links
 
-* **⌘** [Full feature list](#download)
+* **⌘** [Full feature list](https://menshend.io)
 * **?** [Docs](#download)
 * **⇩** [Download](#binaries)
 * **⌧** [Docker](#docker) 
+* **❁** [Swagger api](https://app.swaggerhub.com/apis/nebtex/Menshend/1.0.0)
 
 #### Resume
 
