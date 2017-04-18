@@ -18,4 +18,5 @@ script:
   - sudo add-apt-repository ppa:masterminds/glide --yes && sudo apt-get update -y
   - sudo apt-get install glide -y
   - glide install
+  - bash scripts/bundle_react.sh
   - make test
