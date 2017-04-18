@@ -14,7 +14,7 @@
 #### Links
 
 * **⌘** [Full feature list](https://menshend.io)
-* **?** [Docs](#download)
+* **?** [Docs](http://nebtex.github.io/menshend)
 * **⇩** [Download](#binaries)
 * **⌧** [Docker](#docker) 
 * **❁** [Swagger api](https://app.swaggerhub.com/apis/nebtex/Menshend/1.0.0)
