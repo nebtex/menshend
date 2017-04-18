@@ -54,6 +54,7 @@ build_tags:
   script:
     - export prefix=v
     - export MENSHEND_RELEASE=${CI_COMMIT_TAG#$prefix}
+    - bash scripts/bundle_react.sh
     - make build
 
 deploy:
