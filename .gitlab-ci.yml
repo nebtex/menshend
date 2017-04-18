@@ -29,6 +29,7 @@ stages:
   - test
   - build
   - deploy
+  - publish
 deps:
   stage: deps
   script:
