@@ -7,7 +7,7 @@ import (
     "github.com/Sirupsen/logrus"
     "github.com/rakyll/statik/fs"
     
-    _ "github.com/nebtex/menshend/statik"
+    . "github.com/nebtex/menshend/statik"
     "github.com/gorilla/mux"
 )
 
@@ -26,11 +26,18 @@ func ui() http.Handler {
     r := mux.NewRouter()
     statikFS, _ := fs.New()
     r.PathPrefix("/static").Handler(http.FileServer(statikFS))
-    r.PathPrefix("/services").Handler(http.FileServer(statikFS))
-    r.PathPrefix("/").Handler(http.FileServer(statikFS))
+    r.PathPrefix("/").Handler(Index())
     return r
 }
-
+func uiLogin(){
+    //add csfr protection
+    // use flash for error
+    // redirect to service
+    //check same origin policy
+    //read form, if github use gomniauth
+    //token use token login
+    //vault, rados, ldap
+}
 func menshendServer(address, port string) error {
     // /ui
     // /uilogin
@@ -38,7 +45,7 @@ func menshendServer(address, port string) error {
     // /v1 - api
     //http.Handle("/api", v1.APIHandler())
     http.Handle("/", ui())
-    
+     
     logrus.Infof("Server listing on %s:%s", address, port)
     return http.ListenAndServe(fmt.Sprintf("%s:%s", address, port), nil)
     

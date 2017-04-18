@@ -18,8 +18,11 @@ build:
 bundle_react:
 	bash scripts/bundle_react.sh
 
+docs:
+	bash scripts/build_and_publish_docs.sh
+
 test_env: create_test_services  create_test_dbs
 
 remove_test_env: remove_test_services
 
-.PHONY: deps run_test_services create_test_dbs remove_test_services test_env remove_test_env
+.PHONY: deps run_test_services create_test_dbs remove_test_services test_env remove_test_env docs
