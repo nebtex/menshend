@@ -1,5 +1,5 @@
-hash: 121772a75a43c34b7f956bddac71df7633135983f83ded8c58dc3c7f073fe9a4
-updated: 2017-04-16T23:55:04.934093237-05:00
+hash: dd6c9d644ab3dbd308db797510ea401c7bd082d92eb568875bf5259b24342561
+updated: 2017-04-18T13:19:14.948581433-05:00
 imports:
 - name: github.com/ansel1/merry
   version: c117be056e0013c04fd7c4141a4dd68672943526
@@ -60,6 +60,8 @@ imports:
   - share
 - name: github.com/levigross/grequests
   version: 3f92c0acb6cd7f2b11aa81f82a33783249fc1bcd
+- name: github.com/markbates/goth
+  version: 488a04ae13f57b10e55e1a32c8cd62f9cc66c671
 - name: github.com/mitchellh/go-homedir
   version: b8bc1bf767474819792c23f32d8286a45736f1c6
 - name: github.com/mitchellh/mapstructure
