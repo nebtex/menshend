@@ -45,6 +45,7 @@ build_master:
     - master
   script:
     - export MENSHEND_RELEASE=latest
+    - bash scripts/bundle_react.sh
     - make build
 
 build_tags:
