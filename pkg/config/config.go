@@ -121,7 +121,7 @@ func init() {
     // when using OpenID Connect , since this can contain a large amount of extra information in the id_token
     
     // Note, when using the FilesystemStore only the session.ID is written to a browser cookie, so this is explicit for the storage on disk
-    store.MaxLength(int(math.MaxInt64))
+    store.MaxLength(int(math.MaxInt32))
     
     gothic.Store = store
 }
@@ -186,7 +186,7 @@ func LoadConfig() error {
     //TODO: check menshend subdomain
     
     store := sessions.NewFilesystemStore(os.TempDir(), []byte(Config.HashKey), []byte(Config.BlockKey))
-    store.MaxLength(int(math.MaxInt64))
+    store.MaxLength(int(math.MaxInt32))
     gothic.Store = store
     return nil
 }
