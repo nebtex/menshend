@@ -60,7 +60,7 @@ func PanicHandler(next http.Handler) http.Handler {
                 session.AddFlash(errorMessage)
                 session.Save(r, w)
                 subdomain := getSubDomain(r.Host)
-                http.Redirect(w, r, mconfig.Config.Scheme() + "://" + mconfig.Config.Uris.MenshendSubdomain + mconfig.Config.Host() + "/login?subdomain=" + subdomain, 302)
+                http.Redirect(w, r, mconfig.Config.Scheme() + "://" + mconfig.Config.Uris.MenshendSubdomain + mconfig.Config.Host() + "/login?subdomain=" + subdomain, http.StatusTemporaryRedirect)
             }
         }()
         next.ServeHTTP(w, r)

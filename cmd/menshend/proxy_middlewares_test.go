@@ -12,6 +12,7 @@ import (
     vault "github.com/hashicorp/vault/api"
     "github.com/ansel1/merry"
     testutils "github.com/nebtex/menshend/pkg/utils/test"
+    "fmt"
 )
 
 func TestNeedLogin(t *testing.T) {
@@ -306,7 +307,7 @@ func TestPanicHandler(t *testing.T) {
             return http.HandlerFunc(fn)
         }
         GetSubDomainHandler(v1.BrowserDetectorHandler(PanicHandler(NeedLogin(RoleHandler(GetServiceHandler(testHandler())))))).ServeHTTP(httpWriter, httpReq)
-        So(httpWriter.Header().Get("location"), ShouldEqual, "http://menshend.menshend.com/login?subdomain=consul.")
+        So(httpWriter.Header().Get("location"), ShouldEqual, fmt.Sprintf("%s?subdomain=consul.", mconfig.Config.GetLoginPath()))
     })
     
     Convey("if is a request from other source should return the status error code and the message in the body", t, func(c C) {

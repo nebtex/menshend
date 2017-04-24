@@ -1,7 +1,9 @@
-Uris:
-  BaseUrl: http://lab.local:8787
-  MenshendSubdomain: menshend.
-Space:
-  Name: Local lab
-  Logo: https://upload.wikimedia.org/wikipedia/commons/9/97/The_Earth_seen_from_Apollo_17.jpg
-  Description: Local laboratory
+uris:
+  baseUrl: http://localhost:8787
+space:
+  name: Local lab
+  logo: https://upload.wikimedia.org/wikipedia/commons/9/97/The_Earth_seen_from_Apollo_17.jpg
+  description: Local laboratory
+github:
+  clientId: xxx
+  clientSecret: xxxx-test

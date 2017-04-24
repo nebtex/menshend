@@ -82,7 +82,7 @@ func TestLogout(t *testing.T) {
         vc, err := vault.NewClient(vault.DefaultConfig())
         So(err, ShouldBeNil)
         vc.SetToken("myroot")
-        secret, err := vc.Auth().Token().Create(nil)
+        secret, err := vc.Auth().Token().Create(&vault.TokenCreateRequest{Policies:[]string{"default"}})
         So(err, ShouldBeNil)
         
         wsContainer := restful.NewContainer()

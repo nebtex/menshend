@@ -8,6 +8,7 @@ import (
     mutils "github.com/nebtex/menshend/pkg/utils"
     "encoding/json"
     "time"
+    "github.com/mitchellh/mapstructure"
 )
 
 //AuthResource ...
@@ -50,6 +51,17 @@ func (a *AuthResource) logout(request *restful.Request, response *restful.Respon
     vc, err := vault.NewClient(vault.DefaultConfig())
     mutils.HttpCheckPanic(err, mutils.InternalError)
     vc.SetToken(user)
+    secret, err := vc.Auth().Token().LookupSelf()
+    mutils.HttpCheckPanic(err, mutils.PermissionError)
+    CheckSecretFailIfIsNull(secret)
+    type pls struct {
+        Policies []string `json:"policies"`
+    }
+    p := &pls{}
+    mapstructure.Decode(secret.Data, p)
+    if mutils.SliceStringContains(p.Policies, "root") {
+        panic(mutils.BadRequest.WithUserMessage("menshend can't destroy root tokens use vault instead"))
+    }
     err = vc.Auth().Token().RevokeSelf(user)
     mutils.HttpCheckPanic(err, mutils.PermissionError)
 }
