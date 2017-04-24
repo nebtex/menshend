@@ -1,5 +1,5 @@
 hash: dd6c9d644ab3dbd308db797510ea401c7bd082d92eb568875bf5259b24342561
-updated: 2017-04-18T13:19:14.948581433-05:00
+updated: 2017-04-24T05:03:13.522212729-05:00
 imports:
 - name: github.com/ansel1/merry
   version: c117be056e0013c04fd7c4141a4dd68672943526
@@ -17,6 +17,10 @@ imports:
   version: 8fa88b06e5974e97fbf9899a7f86a344bfd1f105
 - name: github.com/go-resty/resty
   version: c45c7bcc0000d1a9ac1b119b2e6043c6540eedea
+- name: github.com/golang/protobuf
+  version: 4bd1920723d7b7c925de087aa32e2187708897f7
+  subpackages:
+  - proto
 - name: github.com/gorilla/context
   version: 1ea25387ff6f684839d82767c1733ff4d4d15d0a
 - name: github.com/gorilla/csrf
@@ -62,6 +66,9 @@ imports:
   version: 3f92c0acb6cd7f2b11aa81f82a33783249fc1bcd
 - name: github.com/markbates/goth
   version: 488a04ae13f57b10e55e1a32c8cd62f9cc66c671
+  subpackages:
+  - gothic
+  - providers/github
 - name: github.com/mitchellh/go-homedir
   version: b8bc1bf767474819792c23f32d8286a45736f1c6
 - name: github.com/mitchellh/mapstructure
@@ -100,6 +107,7 @@ imports:
   version: 12aa65630360a8ab1827975bd46491a358094cd9
   subpackages:
   - forward
+  - testutils
   - utils
 - name: github.com/yuin/gluamapper
   version: d836955830e75240d46ce9f0e6d148d94f2e1d3a
@@ -124,10 +132,24 @@ imports:
   - lex/httplex
   - publicsuffix
   - websocket
+- name: golang.org/x/oauth2
+  version: 3c3a985cb79f52a3190fbc056984415ca6763d01
+  subpackages:
+  - internal
 - name: golang.org/x/sys
   version: 99f16d856c9836c42d24e7ab64ea72916925fa97
   subpackages:
   - unix
+- name: google.golang.org/appengine
+  version: 4f7eeb5305a4ba1966344836ba4af9996b7b4e05
+  subpackages:
+  - internal
+  - internal/base
+  - internal/datastore
+  - internal/log
+  - internal/remote_api
+  - internal/urlfetch
+  - urlfetch
 - name: gopkg.in/yaml.v2
   version: 53feefa2559fb8dfa8d81baad31be332c97d6c77
 - name: layeh.com/gopher-json

@@ -19,4 +19,5 @@ script:
   - sudo apt-get install glide -y
   - glide install
   - bash scripts/bundle_react.sh
+  - bash scripts/configure_vault.sh
   - make test
