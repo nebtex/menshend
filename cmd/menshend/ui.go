@@ -274,7 +274,14 @@ func loginRouters() http.Handler {
     return router
 }
 
+func getUiCSRF() func(http.Handler )http.Handler  {
+    if mconfig.Config.Scheme()=="http"{
+        return csrf.Protect([]byte(mconfig.Config.BlockKey), csrf.Secure(false), csrf.Path("/"), csrf.Domain(mconfig.Config.Uris.MenshendSubdomain + mconfig.Config.HostWithoutPort()))
+    }
+    return csrf.Protect([]byte(mconfig.Config.BlockKey), csrf.Path("/"), csrf.Domain(mconfig.Config.Uris.MenshendSubdomain + mconfig.Config.HostWithoutPort()))
+}
+
 func uiHandler() http.Handler {
-    CSRF := csrf.Protect([]byte(mconfig.Config.BlockKey), csrf.Domain(mconfig.Config.Uris.MenshendSubdomain + mconfig.Config.HostWithoutPort()))
+    CSRF := getUiCSRF()
     return UiPanicHandler(SameOriginHandler(CSRF(loginRouters()), mconfig.Config.Uris.MenshendSubdomain))
 }

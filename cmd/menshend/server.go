@@ -10,6 +10,7 @@ import (
     
     "github.com/gorilla/mux"
     . "github.com/nebtex/menshend/statik"
+
 )
 
 func mainHandler(response http.ResponseWriter, request *http.Request) {
@@ -34,9 +35,15 @@ func react() http.Handler {
 func menshendServer(address, port string) error {
     // /v1 - api
     //http.Handle("/api", v1.APIHandler())
+    CSRF := getUiCSRF()
     r := mux.NewRouter()
     r.PathPrefix("/ui").Handler(uiHandler())
+    r.PathPrefix("/v1").Handler(v1.APIHandler())
+    r.PathPrefix("/").Handler(CSRF(react()))
+    
     http.Handle("/", r)
+    
+    
     logrus.Infof("Server listing on %s:%s", address, port)
     return http.ListenAndServe(fmt.Sprintf("%s:%s", address, port), nil)
     

@@ -1,5 +1,7 @@
 uris:
-  baseUrl: http://localhost:8787
+  baseUrl: http://lab.local:8787
+hashKey: a6a8a000c6a440bfa71db30f0477c67c
+blockKey: e8eb5fb1c8bd4d97b21a01f39aeba108
 space:
   name: Local lab
   logo: https://upload.wikimedia.org/wikipedia/commons/9/97/The_Earth_seen_from_Apollo_17.jpg
