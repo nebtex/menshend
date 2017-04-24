@@ -14,6 +14,10 @@ addons:
     - vault.localhost
 
 script:
+  - wget https://releases.hashicorp.com/vault/0.7.0/vault_0.7.0_linux_amd64.zip
+  - unzip vault_0.7.0_linux_amd64.zip
+  - mv vault /bin/vault
+  - chmod +x /bin/vault
   - make create_test_services
   - sudo add-apt-repository ppa:masterminds/glide --yes && sudo apt-get update -y
   - sudo apt-get install glide -y
