@@ -258,6 +258,8 @@ func uiLogoutHandler()http.Handler{
         }
     
         http.SetCookie(res, ct)
+        http.Redirect(res, req, mconfig.Config.GetLoginPath(), http.StatusTemporaryRedirect)
+    
     })
 }
 
