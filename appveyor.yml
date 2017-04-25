@@ -27,6 +27,11 @@ on_finish:
   - ps: Stop-Process -Id $VaultProcess.Id
 
 test_script:
+  - set VAULT_ADDR=http://localhost:8200
+  - set VAULT_TOKEN=myroot
+  - vault auth-enable userpass
+  - vault auth-enable github
+  - vault write auth/userpass/users/menshend password=test ttl=72h
   - glide install
   - go get github.com/rakyll/statik
   - ls C:\gopath\bin
