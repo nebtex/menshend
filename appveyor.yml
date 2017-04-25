@@ -29,6 +29,7 @@ on_finish:
 test_script:
   - glide install
   - go get github.com/rakyll/statik
+  - ls C:\gopath\bin
   - rm -rf statik
   - statik -src=ui
   - |
