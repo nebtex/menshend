@@ -40,9 +40,13 @@ func CleanVault() {
         if err != nil {
             continue
         }
+        if (rSecret == nil) || (rSecret.Data == nil) {
+            return
+        }
         
         sr := &ListResult{}
         err = mapstructure.Decode(rSecret.Data, sr)
+        
         mutils.CheckPanic(err)
         
         serviceList := sr.Keys
