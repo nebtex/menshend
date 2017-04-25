@@ -175,8 +175,7 @@ func LoadConfig() error {
     }
     //TODO: check menshend subdomain
     
-    store := sessions.NewFilesystemStore(os.TempDir(), []byte(Config.HashKey), []byte(Config.BlockKey))
-    store.MaxLength(int(math.MaxInt32))
+    store := sessions.NewCookieStore([]byte(Config.HashKey), []byte(Config.BlockKey))
     gothic.Store = store
     return nil
 }
