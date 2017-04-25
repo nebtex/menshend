@@ -9,7 +9,6 @@ import (
     . "github.com/smartystreets/goconvey/convey"
     "encoding/json"
     mutils "github.com/nebtex/menshend/pkg/utils"
-
 )
 
 func addFlashHandlerHelper(w http.ResponseWriter, r *http.Request){
@@ -50,7 +49,8 @@ func Test_Flashes(t *testing.T) {
         err = json.Unmarshal(jsres, result)
         So(err, ShouldBeNil)
         So(len(result.Flashes), ShouldEqual, 6)
-        So(len(httpWriter.Result().Cookies()), ShouldEqual, 1)
+        //flashes + csrf token
+        So(len(httpWriter.Result().Cookies()), ShouldEqual, 2)
         
     })
     
