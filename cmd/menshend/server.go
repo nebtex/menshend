@@ -11,6 +11,7 @@ import (
     
     "github.com/gorilla/mux"
     . "github.com/nebtex/menshend/statik"
+    "strings"
 )
 
 func proxyServer() http.Handler {
@@ -28,29 +29,31 @@ func react() http.Handler {
 
 func menshendServer(address, port string) error {
     CSRF := getUiCSRF()
-    r := mux.NewRouter()
-    r.PathPrefix("/status").HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-        response.WriteHeader(200)
-        response.Write([]byte("OK"))
-    })
     
-    
-    
-    r.Host("{subdomain:[a-z\\-]+}." + mconfig.Config.HostWithoutPort()).HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-        subdomain := getSubDomain(request.Host)
-        if subdomain == mconfig.Config.Uris.MenshendSubdomain {
-            subrouter := mux.NewRouter()
-            subrouter.PathPrefix("/ui").Handler(uiHandler())
-            subrouter.PathPrefix("/v1").Handler(v1.APIHandler())
-            subrouter.PathPrefix("/").Handler(CSRF(react()))
-            subrouter.ServeHTTP(response, request)
+    http.HandleFunc("/", func(response http.ResponseWriter, request *http.Request) {
+        if strings.HasSuffix(request.Host, mconfig.Config.Host()) {
+            subdomain := getSubDomain(request.Host)
+            if subdomain == mconfig.Config.Uris.MenshendSubdomain {
+                subrouter := mux.NewRouter()
+                subrouter.PathPrefix("/ui").Handler(uiHandler())
+                subrouter.PathPrefix("/v1").Handler(v1.APIHandler())
+                subrouter.PathPrefix("/").Handler(CSRF(react()))
+                subrouter.ServeHTTP(response, request)
+                return
+            }
+            proxyServer().ServeHTTP(response, request)
             return
         }
-        proxyServer().ServeHTTP(response, request)
+        
+        health := mux.NewRouter()
+        health.PathPrefix("/status").HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+            response.WriteHeader(200)
+            response.Write([]byte("OK"))
+        })
+        health.ServeHTTP(response, request)
         
     })
     
-    http.Handle("/", r)
     logrus.Infof("Server listing on %s:%s", address, port)
     return http.ListenAndServe(fmt.Sprintf("%s:%s", address, port), nil)
     

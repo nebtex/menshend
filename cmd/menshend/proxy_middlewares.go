@@ -31,7 +31,11 @@ func GetSubDomainHandler(next http.Handler) http.Handler {
 //PanicHandler
 func PanicHandler(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        IsBrowserRequest := r.Context().Value(mutils.IsBrowserRequest).(bool)
+        IsBrowserRequest := false
+        if r.Context().Value(mutils.IsBrowserRequest) != nil {
+            IsBrowserRequest = r.Context().Value(mutils.IsBrowserRequest).(bool)
+            
+        }
         defer func() {
             rec := recover()
             if (rec == nil) {
