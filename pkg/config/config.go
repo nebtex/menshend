@@ -11,7 +11,6 @@ import (
     "io/ioutil"
     "github.com/ghodss/yaml"
     "fmt"
-    "math"
     "github.com/markbates/goth/gothic"
     "github.com/markbates/goth/providers/github"
     "github.com/markbates/goth"
