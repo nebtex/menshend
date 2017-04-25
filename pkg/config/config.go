@@ -114,16 +114,16 @@ func init() {
         FlashStore.Options.Secure = false
     }
     
-    store := sessions.NewFilesystemStore(os.TempDir(), []byte(Config.HashKey), []byte(Config.BlockKey))
+    //store := sessions.NewFilesystemStore(os.TempDir(), []byte(Config.HashKey), []byte(Config.BlockKey))
     
     // set the maxLength of the cookies stored on the disk to a larger number to prevent issues with:
     // securecookie: the value is too long
     // when using OpenID Connect , since this can contain a large amount of extra information in the id_token
     
     // Note, when using the FilesystemStore only the session.ID is written to a browser cookie, so this is explicit for the storage on disk
-    store.MaxLength(int(math.MaxInt32))
+    //store.MaxLength(int(math.MaxInt32))
     
-    gothic.Store = store
+    //gothic.Store = store
 }
 
 func LoadConfig() error {
