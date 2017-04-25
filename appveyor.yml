@@ -32,13 +32,7 @@ test_script:
   - ls C:\gopath\bin
   - rm -rf statik
   - C:\gopath\bin\statik.exe -src=ui
-  - |
-    echo "package statik
-    func Index() http.Handler {
-        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-        })
-    }" > statik/index.go
+  - move C:\gopath\src\github.com\nebtex\menshend\index_appvenyor.go.tmpl C:\gopath\src\github.com\nebtex\menshend\statik\index.go
   - go test -v  ./cmd/menshend ./pkg/apis/menshend/v1 ./pkg/config ./pkg/filters ./pkg/pfclient ./pkg/pfclient/chisel/client ./pkg/pfclient/chisel/server ./pkg/resolvers ./pkg/resolvers/cache ./pkg/strategy ./pkg/utils ./pkg/utils/test
 
 deploy: off
