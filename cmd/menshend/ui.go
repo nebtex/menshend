@@ -130,6 +130,16 @@ func providerRedirect() http.Handler {
         // try to get the user without re-authenticating
         if gothUser, err := gothic.CompleteUserAuth(res, req); err == nil {
             setToken(getTokenFromGithub(gothUser.AccessToken), githubProvider, res)
+            if subdomain != "" {
+                if !strings.HasSuffix(subdomain, ".") {
+                    subdomain += "."
+                }
+                v1.ValidateSubdomain(subdomain)
+            }
+            if subdomain == "" {
+                http.Redirect(res, req, mconfig.Config.GetServicePath(), http.StatusTemporaryRedirect)
+            }
+            http.Redirect(res, req, mconfig.Config.GetSubdomainFullUrl(subdomain), http.StatusTemporaryRedirect)
         } else {
             url, err := gothic.GetAuthURL(res, req)
             mutils.HttpCheckPanic(err, LoginError.WithHTTPCode(404).WithUserMessage("Bad request, github is not enabled").WithValue("type", githubProvider))

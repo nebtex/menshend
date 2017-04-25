@@ -7,16 +7,11 @@ import (
     "github.com/Sirupsen/logrus"
     "github.com/nebtex/menshend/pkg/apis/menshend/v1"
     "github.com/rakyll/statik/fs"
+    mconfig "github.com/nebtex/menshend/pkg/config"
     
     "github.com/gorilla/mux"
     . "github.com/nebtex/menshend/statik"
-
 )
-
-func mainHandler(response http.ResponseWriter, request *http.Request) {
-    //detect menshend host
-    //use proxy server
-}
 
 func proxyServer() http.Handler {
     return PanicHandler(GetSubDomainHandler(v1.BrowserDetectorHandler(
@@ -31,23 +26,34 @@ func react() http.Handler {
     return r
 }
 
-
 func menshendServer(address, port string) error {
-    // /v1 - api
-    //http.Handle("/api", v1.APIHandler())
     CSRF := getUiCSRF()
     r := mux.NewRouter()
-    r.PathPrefix("/ui").Handler(uiHandler())
-    r.PathPrefix("/v1").Handler(v1.APIHandler())
-    r.PathPrefix("/").Handler(CSRF(react()))
+    r.PathPrefix("/status").HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+        response.WriteHeader(200)
+        response.Write([]byte("OK"))
+    })
+    
+    
+    
+    r.Host("{subdomain:[a-z\\-]+}." + mconfig.Config.HostWithoutPort()).HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+        subdomain := getSubDomain(request.Host)
+        if subdomain == mconfig.Config.Uris.MenshendSubdomain {
+            subrouter := mux.NewRouter()
+            subrouter.PathPrefix("/ui").Handler(uiHandler())
+            subrouter.PathPrefix("/v1").Handler(v1.APIHandler())
+            subrouter.PathPrefix("/").Handler(CSRF(react()))
+            subrouter.ServeHTTP(response, request)
+            return
+        }
+        proxyServer().ServeHTTP(response, request)
+        
+    })
     
     http.Handle("/", r)
-    
-    
     logrus.Infof("Server listing on %s:%s", address, port)
     return http.ListenAndServe(fmt.Sprintf("%s:%s", address, port), nil)
     
-    //r.Host("{subdomain:[a-z\\-]+}." + Config.HostWithoutPort()).Handler(handler)
 }
 
 

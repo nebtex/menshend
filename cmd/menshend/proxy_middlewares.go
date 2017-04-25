@@ -18,7 +18,6 @@ import (
 
 func getSubDomain(s string) string {
     return strings.TrimSuffix(s, mconfig.Config.Host())
-    
 }
 
 func GetSubDomainHandler(next http.Handler) http.Handler {
