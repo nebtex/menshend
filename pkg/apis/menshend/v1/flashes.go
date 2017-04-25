@@ -36,5 +36,6 @@ func (f *FlashResource) get(request *restful.Request, response *restful.Response
     }
     fn := &FlashResource{}
     fn.Flashes = flashes
+    session.Save(request.Request, response.ResponseWriter)
     mutils.HttpCheckPanic(response.WriteEntity(fn), mutils.InternalError)
 }
