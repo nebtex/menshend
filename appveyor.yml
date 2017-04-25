@@ -31,7 +31,7 @@ test_script:
   - go get github.com/rakyll/statik
   - ls C:\gopath\bin
   - rm -rf statik
-  - statik -src=ui
+  - C:\gopath\bin\statik.exe -src=ui
   - |
     echo "package statik
     func Index() http.Handler {
