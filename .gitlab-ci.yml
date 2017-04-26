@@ -73,12 +73,11 @@ deploy:
 
 
 publish docs:
-  image: node:6
+  image: cr.genos.nebtex.com/publicdev/gitbook:v2.3.0
   only:
     - master
   stage: publish
   script:
-    - npm install gitbook-cli -g
     - mkdir -p $HOME/.ssh
     - ssh-keyscan github.com >> ~/.ssh/known_hosts
     - git config --global user.name "nebot"
