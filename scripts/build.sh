@@ -34,9 +34,9 @@ do
 done
 go get -u github.com/tcnksm/ghr
 if [ "${MENSHEND_RELEASE}" == "latest" ]; then
-  ghr -u nebtex -replace "${MENSHEND_RELEASE}" release
+  ghr -parallel=1 -u nebtex -replace "${MENSHEND_RELEASE}" release
 else
-  ghr -u nebtex -replace "v${MENSHEND_RELEASE}" release
+  ghr -parallel=1 -u nebtex -replace "v${MENSHEND_RELEASE}" release
 fi
 
 cd $build_dir
