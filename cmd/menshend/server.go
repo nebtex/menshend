@@ -15,7 +15,7 @@ import (
 )
 
 func proxyServer() http.Handler {
-    return PanicHandler(GetSubDomainHandler(v1.BrowserDetectorHandler(
+    return v1.BrowserDetectorHandler(PanicHandler(GetSubDomainHandler(
         NeedLogin(RoleHandler(GetServiceHandler(ProxyHandler()))))))
 }
 

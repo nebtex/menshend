@@ -12,6 +12,7 @@ import (
     "github.com/gorilla/csrf"
     "github.com/rs/cors"
     "github.com/Sirupsen/logrus"
+    "fmt"
 )
 
 type errorHandler struct {
@@ -76,6 +77,7 @@ func (ps *Proxy) Execute(rs resolvers.Resolver, tokenInfo *vault.Secret) http.Ha
         var handler http.Handler
         IsBrowserRequest := r.Context().Value(mutils.IsBrowserRequest).(bool)
         subdomain := r.Context().Value(mutils.Subdomain).(string)
+        
         Fwd, err := forward.New(forward.ErrorHandler(&errorHandler{}))
         mutils.HttpCheckPanic(err, mutils.InternalError)
         
@@ -125,6 +127,7 @@ func (ps *Proxy) Execute(rs resolvers.Resolver, tokenInfo *vault.Secret) http.Ha
                 handler = crs.Handler(handler)
             }
         }
+        fmt.Println(r.Form)
         handler.ServeHTTP(w, r)
     })
 }

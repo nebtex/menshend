@@ -104,7 +104,7 @@ func NeedLogin(next http.Handler) http.Handler {
 func RoleHandler(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         mdRole := r.Header.Get("md-role")
-        mdRoleQ := r.FormValue("md-role")
+        mdRoleQ := r.URL.Query().Get("md-role")
         if r.PostForm.Get("md-role") != "" {
             mdRoleQ = r.PostForm.Get("md-role")
         }
