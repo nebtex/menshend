@@ -137,7 +137,6 @@ func cmdAPIHandler(flags *APIFlags) (response interface{}, ok bool) {
         }
     } else {
         if !fileInfo.IsDir() {
-            //list all the files
             payload, err := ioutil.ReadFile(flags.filename)
             for err == nil {
                 return parsePayload(payload, flags)

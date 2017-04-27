@@ -10,7 +10,6 @@ import (
     "github.com/gorilla/csrf"
     "github.com/nebtex/menshend/pkg/config"
     mutils "github.com/nebtex/menshend/pkg/utils"
-    "github.com/mssola/user_agent"
 )
 
 
@@ -82,16 +81,10 @@ func BrowserDetectorHandler(next http.Handler) http.Handler {
             }
         }
         
-        //check user agent
-        if r.UserAgent() != "" {
-            ua := user_agent.New(r.UserAgent())
-            name, _ := ua.Browser()
-            if name != "" {
-                ibr = true
-            }
-            
+        if len(r.Cookies()) > 0 {
+            ibr = true
         }
-        
+    
         ctx := context.WithValue(r.Context(), mutils.IsBrowserRequest, ibr)
         next.ServeHTTP(w, r.WithContext(ctx))
     })
