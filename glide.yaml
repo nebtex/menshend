@@ -65,6 +65,8 @@ import:
   - fs
 - package: github.com/markbates/goth
   version: ^1.38.0
+- package: github.com/mssola/user_agent
+  version: ^0.4.1
 testImport:
 - package: github.com/parnurzeal/gorequest
   version: ^0.2.15

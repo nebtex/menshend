@@ -10,7 +10,7 @@ import (
     "github.com/gorilla/csrf"
     "github.com/nebtex/menshend/pkg/config"
     mutils "github.com/nebtex/menshend/pkg/utils"
-
+    "github.com/mssola/user_agent"
 )
 
 
@@ -45,7 +45,7 @@ func APIPanicHandler(rec interface{}, w http.ResponseWriter) {
     switch x := rec.(type) {
     case merry.Error:
         logrus.Errorln(merry.Details(x))
-    
+        
         errorMessage = merry.UserMessage(x)
         errorCode = merry.HTTPCode(x)
     }
@@ -53,7 +53,9 @@ func APIPanicHandler(rec interface{}, w http.ResponseWriter) {
     w.WriteHeader(errorCode)
     
     _, err := w.Write([]byte(fmt.Sprintf(`{"message": "%s"}`, errorMessage)))
-    if (err != nil) { logrus.Error(err)}
+    if (err != nil) {
+        logrus.Error(err)
+    }
     w.Header().Set("Content-Type", "application/json")
 }
 
@@ -79,6 +81,17 @@ func BrowserDetectorHandler(next http.Handler) http.Handler {
                 }
             }
         }
+        
+        //check user agent
+        if r.UserAgent() != "" {
+            ua := user_agent.New(r.UserAgent())
+            name, _ := ua.Browser()
+            if name != "" {
+                ibr = true
+            }
+            
+        }
+        
         ctx := context.WithValue(r.Context(), mutils.IsBrowserRequest, ibr)
         next.ServeHTTP(w, r.WithContext(ctx))
     })

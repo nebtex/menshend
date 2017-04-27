@@ -1,5 +1,5 @@
-hash: dd6c9d644ab3dbd308db797510ea401c7bd082d92eb568875bf5259b24342561
-updated: 2017-04-24T05:03:13.522212729-05:00
+hash: b4b630c291fdb4d24a3eb5d9fee59304f6541d1e217587d59db13d3a03ff5cf9
+updated: 2017-04-27T03:49:07.935489069-05:00
 imports:
 - name: github.com/ansel1/merry
   version: c117be056e0013c04fd7c4141a4dd68672943526
@@ -73,6 +73,8 @@ imports:
   version: b8bc1bf767474819792c23f32d8286a45736f1c6
 - name: github.com/mitchellh/mapstructure
   version: 53818660ed4955e899c0bcafa97299a388bd7c8e
+- name: github.com/mssola/user_agent
+  version: 85b2f5798558a46fc23443c596e781712f4b7792
 - name: github.com/patrickmn/go-cache
   version: 1881a9bccb818787f68c52bfba648c6cf34c34fa
 - name: github.com/pkg/errors
