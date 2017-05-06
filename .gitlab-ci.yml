@@ -61,15 +61,6 @@ build_tags:
     - bash scripts/bundle_react.sh
     - make build
 
-deploy:
-  stage: deploy
-  only:
-    - master
-  script:
-    - apt-get update -y && apt-get install curl -y
-    - curl --request POST --form token=$MENSHEND_TRIGGER_TOKEN --form ref=master https://git.genos.nebtex.com/api/v4/projects/181/trigger/pipeline
-
-
 publish docs:
   image: cr.genos.nebtex.com/publicdev/gitbook:v2.3.0
   only:
