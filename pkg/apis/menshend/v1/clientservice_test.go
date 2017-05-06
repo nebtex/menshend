@@ -36,6 +36,10 @@ func listServices(c C, path string) []ClientServiceResource {
 
 func Test_ListClientService(t *testing.T) {
     mutils.CheckPanic(os.Setenv(vault.EnvVaultAddress, "http://127.0.0.1:8200"))
+    testutils.CleanVault()
+    
+    testutils.PopulateVault()
+    
     Convey("get by role", t, func(c C) {
         ret:=listServices(c, "/v1/clientServices?subdomain=gitlab.&role=ml-team")
         So(len(ret), ShouldEqual, 1)
