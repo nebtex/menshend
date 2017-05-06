@@ -84,6 +84,10 @@ func TestProviderRedirect(t *testing.T) {
     mconfig.Config.Github.ClientID = "test"
     mconfig.Config.Github.ClientSecret = "test-test"
     mconfig.LoadConfig()
+    callback := mconfig.Config.Scheme() + "://" + mconfig.Config.Uris.MenshendSubdomain + mconfig.Config.Host() + "/ui" + "/auth/github/callback"
+    goth.UseProviders(
+        github.New("test", "test-test", callback, "read:org"),
+    )
     Convey("if not subdamin was provided should not set the redirect_uri property", t, func(c C) {
         rt:=  loginRouters()
         httpWriter := httptest.NewRecorder()
@@ -111,8 +115,9 @@ func TestProviderRedirect(t *testing.T) {
 func TestTokenLogin(t *testing.T) {
     mconfig.LoadConfig()
     mutils.CheckPanic(os.Setenv(vault.EnvVaultAddress, "http://127.0.0.1:8200"))
+    callback := mconfig.Config.Scheme() + "://" + mconfig.Config.Uris.MenshendSubdomain + mconfig.Config.Host() + "/ui" + "/auth/github/callback"
     goth.UseProviders(
-        github.New("test", "test-test", "read:org"),
+        github.New("test", "test-test", callback, "read:org"),
     )
     Convey("test login method, without subdomain", t, func(c C) {
         rt:=  loginRouters()
@@ -152,8 +157,9 @@ func TestTokenLogin(t *testing.T) {
 func TestTokenUsername(t *testing.T) {
     mconfig.LoadConfig()
     mutils.CheckPanic(os.Setenv(vault.EnvVaultAddress, "http://127.0.0.1:8200"))
+    callback := mconfig.Config.Scheme() + "://" + mconfig.Config.Uris.MenshendSubdomain + mconfig.Config.Host() + "/ui" + "/auth/github/callback"
     goth.UseProviders(
-        github.New("test", "test-test", "read:org"),
+        github.New("test", "test-test", callback, "read:org"),
     )
     Convey("test user/pass  method", t, func(c C) {
         rt:=  loginRouters()
@@ -179,8 +185,9 @@ func TestSameOriginHandler(t *testing.T) {
     mconfig.Config.Github.ClientSecret = ""
     mconfig.LoadConfig()
     mutils.CheckPanic(os.Setenv(vault.EnvVaultAddress, "http://127.0.0.1:8200"))
+    callback := mconfig.Config.Scheme() + "://" + mconfig.Config.Uris.MenshendSubdomain + mconfig.Config.Host() + "/ui" + "/auth/github/callback"
     goth.UseProviders(
-        github.New("test", "test-test", "read:org"),
+        github.New("test", "test-test", callback, "read:org"),
     )
     Convey("should ignore same origin policy with method=get", t, func(c C) {
         rt:=  uiHandler()
