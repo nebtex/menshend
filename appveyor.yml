@@ -39,6 +39,17 @@ test_script:
   - rm -rf statik
   - C:\gopath\bin\statik.exe -src=ui
   - move C:\gopath\src\github.com\nebtex\menshend\index_appvenyor.go.tmpl C:\gopath\src\github.com\nebtex\menshend\statik\index.go
-  - go test -v  ./cmd/menshend ./pkg/apis/menshend/v1 ./pkg/config ./pkg/filters ./pkg/pfclient ./pkg/pfclient/chisel/client ./pkg/pfclient/chisel/server ./pkg/resolvers ./pkg/resolvers/cache ./pkg/strategy ./pkg/utils ./pkg/utils/test
+  - go test -v ./cmd/menshend
+  - go test -v ./pkg/apis/menshend/v1
+  - go test -v ./pkg/config
+  - go test -v ./pkg/filters
+  - go test -v ./pkg/pfclient
+  - go test -v ./pkg/pfclient/chisel/client
+  - go test -v ./pkg/pfclient/chisel/server
+  - go test -v ./pkg/resolvers
+  - go test -v ./pkg/resolvers/cache
+  - go test -v ./pkg/strategy
+  - go test -v ./pkg/utils
+  - go test -v ./pkg/utils/test
 
 deploy: off

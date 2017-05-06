@@ -172,6 +172,7 @@ func LoadConfig() error {
             github.New(Config.Github.ClientID, Config.Github.ClientSecret, callback, "read:org"),
         )
     }
+    
     //TODO: check menshend subdomain
     
     store := sessions.NewCookieStore([]byte(Config.HashKey), []byte(Config.BlockKey))
