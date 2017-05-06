@@ -46,7 +46,7 @@ func main() {
                 }
                 
                 if fl.role == "" {
-                    return fmt.Errorf("%v", "Please set the role flag, or the MD-ROLE environment variable")
+                    return fmt.Errorf("%v", "Please set the role flag, or the MD_ROLE environment variable")
                 }
                 
                 //test that the server is returning a ok response
@@ -92,7 +92,7 @@ func main() {
                     Name: "role, r",
                     Value: "",
                     Usage: "service role",
-                    EnvVar: "MD-ROLE",
+                    EnvVar: "MD_ROLE",
                 },
                 cli.DurationFlag{
                     Name: "keepalive, k",
