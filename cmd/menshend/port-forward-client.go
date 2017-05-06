@@ -13,9 +13,10 @@ type pfFlags struct {
     token     string
     server    string
     port      string
+    role      string
 }
 
-func portForward(flags *pfFlags, connect func(v bool, k time.Duration, s string, token string, r ...string) error) error {
+func portForward(flags *pfFlags, connect func(v bool, k time.Duration, s string, token string, role string, r ...string) error) error {
     
     if flags.server == "" || flags.port == "" {
         return fmt.Errorf("%v", "A server and one port is required")
@@ -25,8 +26,8 @@ func portForward(flags *pfFlags, connect func(v bool, k time.Duration, s string,
     if len(menshendRemote) == 1 {
         chiselRemote = "default.menshend:" + menshendRemote[0]
     } else if len(menshendRemote) == 2 {
-        ip:=net.ParseIP(menshendRemote[0])
-        if ip==nil{
+        ip := net.ParseIP(menshendRemote[0])
+        if ip == nil {
             return fmt.Errorf("%v", "Unsoported port format, example 192.168.0.5:3000, 3000")
         }
         chiselRemote = menshendRemote[0] + ":default.menshend:" + menshendRemote[1]
@@ -34,5 +35,5 @@ func portForward(flags *pfFlags, connect func(v bool, k time.Duration, s string,
         return fmt.Errorf("%v", "Unsoported port format,  example 192.168.0.5:3000, 3000")
     }
     remotes := []string{chiselRemote}
-    return connect(flags.verbose, flags.keepAlive, flags.server, flags.token, remotes...)
+    return connect(flags.verbose, flags.keepAlive, flags.server, flags.token, flags.role, remotes...)
 }

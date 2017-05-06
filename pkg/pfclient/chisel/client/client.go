@@ -35,6 +35,7 @@ type Config struct {
     Server      string
     Remotes     []string
     Token       string
+    Role        string
 }
 
 type Client struct {
@@ -48,7 +49,7 @@ type Client struct {
     runningc  chan error
 }
 
-func Dial(url_, protocol, origin string, port string, token string) (ws *websocket.Conn, err error) {
+func Dial(url_, protocol, origin string, port string, token string, role string) (ws *websocket.Conn, err error) {
     config, err := websocket.NewConfig(url_, origin)
     if err != nil {
         return nil, err
@@ -61,6 +62,8 @@ func Dial(url_, protocol, origin string, port string, token string) (ws *websock
         logrus.Fatal("Please set the VAULT_TOKEN environment variable")
     }
     config.Header.Add("X-Vault-Token", token)
+    config.Header.Add("md-role", role)
+    
     return websocket.DialConfig(config)
 }
 
@@ -166,7 +169,7 @@ func (c *Client) start() {
             time.Sleep(d)
         }
         
-        ws, err := Dial(c.server, chshare.ProtocolVersion, "http://menshend.io/", c.config.shared.Remotes[0].RemotePort, c.config.Token)
+        ws, err := Dial(c.server, chshare.ProtocolVersion, "http://menshend.io/", c.config.shared.Remotes[0].RemotePort, c.config.Token, c.config.Role)
         if err != nil {
             connerr = err
             continue

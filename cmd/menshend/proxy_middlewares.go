@@ -13,11 +13,19 @@ import (
     "github.com/mitchellh/mapstructure"
     "github.com/ansel1/merry"
     "github.com/Sirupsen/logrus"
-    "strings"
+    "regexp"
 )
 
 func getSubDomain(s string) string {
-    return strings.TrimSuffix(s, mconfig.Config.Host())
+    var re = regexp.MustCompile(`(.+\.)?`+mconfig.Config.HostWithoutPort()+`(:[0-9]+)?`)
+    all:= re.FindAllStringSubmatch(s, -1)
+    if len(all)==0{
+        return ""
+    }
+    if len(all[0])<2{
+        return ""
+    }
+    return all[0][1]
 }
 
 func GetSubDomainHandler(next http.Handler) http.Handler {

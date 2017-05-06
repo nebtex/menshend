@@ -6,10 +6,6 @@ spec:
     resource: AdminService
     name: Proxy
   fields:
-  - name: csrf
-    schema: io.omniql.core.v1alpha/Boolean
-    description:
-      short: active csrf protection on this endpoint
   - name: cors
     schema: io.menshend.v1alpha/Table/Cors
     description:

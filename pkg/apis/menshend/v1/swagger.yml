@@ -504,8 +504,6 @@ definitions:
     properties:
       cors:
         $ref: '#/definitions/Cors'
-      csrf:
-        type: boolean
   Redirect:
     type: object
   PortForward:
