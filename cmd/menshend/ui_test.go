@@ -12,6 +12,9 @@ import (
     "net/http/httptest"
     "github.com/ansel1/merry"
     "net/url"
+    "github.com/markbates/goth"
+    "github.com/markbates/goth/providers/github"
+
 )
 
 func TestSetToken(t *testing.T) {
@@ -108,7 +111,9 @@ func TestProviderRedirect(t *testing.T) {
 func TestTokenLogin(t *testing.T) {
     mconfig.LoadConfig()
     mutils.CheckPanic(os.Setenv(vault.EnvVaultAddress, "http://127.0.0.1:8200"))
-    
+    goth.UseProviders(
+        github.New("test", "test-test", "read:org"),
+    )
     Convey("test login method, without subdomain", t, func(c C) {
         rt:=  loginRouters()
         httpWriter := httptest.NewRecorder()
@@ -147,7 +152,9 @@ func TestTokenLogin(t *testing.T) {
 func TestTokenUsername(t *testing.T) {
     mconfig.LoadConfig()
     mutils.CheckPanic(os.Setenv(vault.EnvVaultAddress, "http://127.0.0.1:8200"))
-    
+    goth.UseProviders(
+        github.New("test", "test-test", "read:org"),
+    )
     Convey("test user/pass  method", t, func(c C) {
         rt:=  loginRouters()
         httpWriter := httptest.NewRecorder()
@@ -172,7 +179,9 @@ func TestSameOriginHandler(t *testing.T) {
     mconfig.Config.Github.ClientSecret = ""
     mconfig.LoadConfig()
     mutils.CheckPanic(os.Setenv(vault.EnvVaultAddress, "http://127.0.0.1:8200"))
-    
+    goth.UseProviders(
+        github.New("test", "test-test", "read:org"),
+    )
     Convey("should ignore same origin policy with method=get", t, func(c C) {
         rt:=  uiHandler()
         httpWriter := httptest.NewRecorder()
