@@ -6,7 +6,7 @@ image: registry.gitlab.com/nebtex/golang:master
     - mkdir -p /go/src /go/bin /go/src/github.com/nebtex
     - export GOPATH=/go
     - export PATH=$PATH:/go/bin
-    - ln -s /builds/publicdev/menshend  /go/src/github.com/nebtex/menshend
+    - ln -s /builds/nebtex/menshend  /go/src/github.com/nebtex/menshend
     - cd /go/src/github.com/nebtex/menshend
     - echo $PWD
 
