@@ -7,6 +7,8 @@ import (
     "github.com/nebtex/menshend/pkg/pfclient"
     mconfig "github.com/nebtex/menshend/pkg/config"
     "fmt"
+    "net/url"
+    "net/http"
 )
 
 func main() {
@@ -25,6 +27,46 @@ func main() {
                 fl.port = c.String("port")
                 fl.verbose = c.Bool("verbose")
                 fl.server = c.String("server")
+                //calculate role
+                URL, err := url.Parse(fl.server)
+                
+                if err != nil {
+                    return err
+                }
+                query := URL.Query()
+                fl.role = query.Get("md-role")
+                query.Del("md-role")
+                URL.RawQuery = query.Encode()
+                fl.server = URL.String()
+                if c.String("role") != "" {
+                    fl.role = c.String("role")
+                }
+                if fl.token == "" {
+                    return fmt.Errorf("%v", "Please set token flag, or the VAULT_TOKEN environment variable")
+                }
+                
+                if fl.role == "" {
+                    return fmt.Errorf("%v", "Please set the role flag, or the MD-ROLE environment variable")
+                }
+                
+                //test that the server is returning a ok response
+                nr, err := http.NewRequest("GET", fl.server, nil)
+                if err != nil {
+                    return err
+                }
+                nr.Header.Set("X-Vault-Token", fl.token)
+                nr.Header.Set("md-role", fl.role)
+                
+                client := &http.Client{}
+                resp, err := client.Do(nr)
+                if err != nil {
+                    return err
+                }
+                
+                if resp.StatusCode != 200 {
+                    return fmt.Errorf("%v", resp.Status)
+                }
+                
                 return portForward(fl, pfclient.PFConnect)
             },
             Name:    "port-forward",
@@ -45,6 +87,12 @@ func main() {
                     Value: "",
                     Usage: "vault token",
                     EnvVar: vault.EnvVaultToken,
+                },
+                cli.StringFlag{
+                    Name: "role, r",
+                    Value: "",
+                    Usage: "service role",
+                    EnvVar: "MD-ROLE",
                 },
                 cli.DurationFlag{
                     Name: "keepalive, k",

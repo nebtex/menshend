@@ -61,6 +61,7 @@ func (s *Server) Close() error {
 }
 
 func (s *Server) HandleHTTP(w http.ResponseWriter, r *http.Request) {
+    
     // websockets upgrade AND has chisel prefix
     if r.Header.Get("Upgrade") == "websocket" &&
         r.Header.Get("Sec-WebSocket-Protocol") == chshare.ProtocolVersion {
@@ -68,7 +69,7 @@ func (s *Server) HandleHTTP(w http.ResponseWriter, r *http.Request) {
         return
     }
     //missing :O
-    w.WriteHeader(404)
+    w.WriteHeader(200)
 }
 func (s *Server) authUser(c ssh.ConnMetadata, pass []byte) (*ssh.Permissions, error) {
     return nil, nil

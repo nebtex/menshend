@@ -7,6 +7,7 @@ import (
     "net/url"
     "github.com/nebtex/menshend/pkg/resolvers"
     vault "github.com/hashicorp/vault/api"
+    "net"
 )
 
 type PortForward struct {
@@ -26,6 +27,15 @@ func (r *PortForward) Execute(rs resolvers.Resolver, tokenInfo *vault.Secret) ht
         URL, err := url.Parse(b.BaseUrl())
         mutils.HttpCheckPanic(err, mutils.InternalError)
         remote := URL.Host
+        
+        //test the remote
+        conn, err := net.Dial(URL.Scheme, URL.Host)
+        if err != nil {
+            panic(mutils.BadGateway.Append(err.Error()).WithUserMessage("The backend is not online"))
+        } else {
+            conn.Close()
+        }
+        
         chiselServer, err := chserver.NewServer(&chserver.Config{
             Remote:remote,
         })
