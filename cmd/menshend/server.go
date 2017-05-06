@@ -9,7 +9,7 @@ import (
     mconfig "github.com/nebtex/menshend/pkg/config"
     "github.com/gorilla/mux"
     . "github.com/nebtex/menshend/statik"
-    "strings"
+    "regexp"
 )
 
 func proxyServer() http.Handler {
@@ -29,8 +29,11 @@ func menshendServer(address, port string) error {
     CSRF := getUiCSRF()
     
     http.HandleFunc("/", func(response http.ResponseWriter, request *http.Request) {
+        var re = regexp.MustCompile(`(.+\.)?`+mconfig.Config.HostWithoutPort()+`(:[0-9]+)?`)
+        var str = request.Host
+        all:= re.FindAllStringSubmatch(str, -1)
         
-        if strings.HasSuffix(request.Host, mconfig.Config.Host()) {
+        if len(all)>0 {
             subdomain := getSubDomain(request.Host)
             if subdomain == mconfig.Config.Uris.MenshendSubdomain {
                 subrouter := mux.NewRouter()
@@ -43,13 +46,16 @@ func menshendServer(address, port string) error {
             proxyServer().ServeHTTP(response, request)
             return
         }
-        
-        health := mux.NewRouter()
-        health.PathPrefix("/status").HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+    
+        subrouter2 := mux.NewRouter()
+        subrouter2.PathPrefix("/status").HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
             response.WriteHeader(200)
             response.Write([]byte("OK"))
         })
-        health.ServeHTTP(response, request)
+        subrouter2.PathPrefix("/ui").Handler(uiHandler())
+        subrouter2.PathPrefix("/v1").Handler(v1.APIHandler())
+        subrouter2.PathPrefix("/").Handler(CSRF(react()))
+        subrouter2.ServeHTTP(response, request)
     })
     
     logrus.Infof("Server listing on %s:%s", address, port)
