@@ -1,4 +1,4 @@
-image: cr.genos.nebtex.com/publicdev/golang:1.8
+image: registry.gitlab.com/nebtex/golang
 
 # This is NOT a job and will be ignored by GitLab-CI
 .shared_hidden_key: &shared  # This is an anchor
@@ -9,8 +9,6 @@ image: cr.genos.nebtex.com/publicdev/golang:1.8
     - ln -s /builds/publicdev/menshend  /go/src/github.com/nebtex/menshend
     - cd /go/src/github.com/nebtex/menshend
     - echo $PWD
-    - add-apt-repository ppa:masterminds/glide --yes &&  apt-get update -y
-    - apt-get install glide make curl zip unzip -y
 
 services:
   - vault:latest
