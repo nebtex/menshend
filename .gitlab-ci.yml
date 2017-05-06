@@ -1,4 +1,4 @@
-image: registry.gitlab.com/nebtex/golang
+image: registry.gitlab.com/nebtex/golang:master
 
 # This is NOT a job and will be ignored by GitLab-CI
 .shared_hidden_key: &shared  # This is an anchor
