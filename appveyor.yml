@@ -29,6 +29,7 @@ on_finish:
 test_script:
   - set VAULT_ADDR=http://localhost:8200
   - set VAULT_TOKEN=myroot
+  - set SESSION_SECRET=d59e18b46eb24c5ca57b20925acba47a
   - vault auth-enable userpass
   - vault auth-enable github
   - vault write auth/userpass/users/menshend password=test ttl=72h
