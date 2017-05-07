@@ -10,7 +10,7 @@
 
 #### Options
 
-| Flag        | shorthand | Environmental Variable | Description |
+| Flag        | Shorthand | Environmental Variable | Description |
 | ------      | ------    | --- | -----|
 | server    |  s       |  PORT_FORWARD_ENDPOINT   | Full http(s) url of the service under the Menshend space wanted to be tunneled, ip addresses are not allowed |
 | role    |  r       |  MD_ROLE  | service role |
