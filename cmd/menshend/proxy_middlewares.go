@@ -42,7 +42,7 @@ func PanicHandler(next http.Handler) http.Handler {
         IsBrowserRequest := false
         if r.Context().Value(mutils.IsBrowserRequest) != nil {
             IsBrowserRequest = r.Context().Value(mutils.IsBrowserRequest).(bool)
-            
+
         }
         defer func() {
             rec := recover()
@@ -71,7 +71,8 @@ func PanicHandler(next http.Handler) http.Handler {
                 session.AddFlash(errorMessage)
                 session.Save(r, w)
                 subdomain := getSubDomain(r.Host)
-                http.Redirect(w, r, mconfig.Config.Scheme() + "://" + mconfig.Config.Uris.MenshendSubdomain + mconfig.Config.Host() + "/login?subdomain=" + subdomain, http.StatusTemporaryRedirect)
+                http.Redirect(w, r, mconfig.Config.Scheme() + "://" + mconfig.Config.Uris.MenshendSubdomain + mconfig.Config.Host() + "/login?subdomain=" + subdomain+"&r=", http.StatusTemporaryRedirect)
+                //store the current url for redirection
             }
         }()
         next.ServeHTTP(w, r)
@@ -82,7 +83,7 @@ func GetTokenFromRequest(r *http.Request) string {
     bearerToken, _ := mfilters.ParseBearerAuth(r.Header.Get("Authorization"))
     vaultToken := r.Header.Get("X-Vault-Token")
     r.Header.Del("X-Vault-Token")
-    
+
     if bearerToken != "" {
         if vaultToken == "" {
             vaultToken = bearerToken
@@ -126,12 +127,12 @@ func RoleHandler(next http.Handler) http.Handler {
                 next.ServeHTTP(w, r.WithContext(ctx))
                 return
             }
-            
+
             ctx := context.WithValue(r.Context(), mutils.Role, mconfig.Config.DefaultRole)
             next.ServeHTTP(w, r.WithContext(ctx))
             return
         }
-        
+
         if mdRole != "" {
             ct := &http.Cookie{
                 Path: "/",
@@ -139,7 +140,7 @@ func RoleHandler(next http.Handler) http.Handler {
                 Value: mdRole,
                 HttpOnly:true,
                 Domain: r.Host }
-            
+
             http.SetCookie(w, ct)
             q := r.URL.Query()
             q.Del("md-role")
@@ -147,7 +148,7 @@ func RoleHandler(next http.Handler) http.Handler {
             http.Redirect(w, r, r.URL.String(), 302)
             return
         }
-        
+
         ck, err := r.Cookie("md-role")
         if err == nil {
             ctx := context.WithValue(r.Context(), mutils.Role, ck.Value)
@@ -188,13 +189,13 @@ func ImpersonateWithinRoleHandler(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         service := r.Context().Value(mutils.Service).(*v1.AdminServiceResource)
         tokenInfo := r.Context().Value(mutils.TokenInfo).(*vault.Secret)
-        
+
         md
         if service.ImpersonateWithinRole {
             if r.URL.Query().Get("md-user") != "" {
                 user.Menshend.Username = r.URL.Query().Get("md-user")
             }
-            
+
             if len(r.URL.Query()["md-groups"]) > 0 {
                 user.Menshend.Groups = r.URL.Query()["md-groups"]
             }
