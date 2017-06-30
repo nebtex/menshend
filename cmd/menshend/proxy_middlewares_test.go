@@ -17,17 +17,17 @@ import (
 
 func TestNeedLogin(t *testing.T) {
     mutils.CheckPanic(os.Setenv(vault.EnvVaultAddress, "http://127.0.0.1:8200"))
-    
+
     Convey("Should pass if token is defined, and delete the menshend header", t, func(c C) {
         httpReq, err := http.NewRequest("PUT", "/v1/adminServices/roles/ml-team/gitlab.", nil)
         So(err, ShouldBeNil)
         httpReq.Header.Set("Content-Type", "application/json")
         So(err, ShouldBeNil)
         ct := &http.Cookie{Path: "/", Name: "X-Vault-Token", Value: "myroot"}
-        
+
         httpReq.AddCookie(ct)
         httpWriter := httptest.NewRecorder()
-        
+
         testHandler := func() http.HandlerFunc {
             fn := func(rw http.ResponseWriter, req *http.Request) {
                 c.So(req.Context().Value(mutils.VaultToken).(string), ShouldNotBeNil)
@@ -38,9 +38,9 @@ func TestNeedLogin(t *testing.T) {
             return http.HandlerFunc(fn)
         }
         v1.BrowserDetectorHandler((NeedLogin(testHandler()))).ServeHTTP(httpWriter, httpReq)
-        
+
     })
-    
+
     Convey("Should fail if the user is not defined", t, func(c C) {
         defer func() {
             r := recover()
@@ -56,38 +56,38 @@ func TestNeedLogin(t *testing.T) {
                 t.Fail()
             }
         }()
-        
+
         httpReq, err := http.NewRequest("PUT", "/v1/adminServices/roles/ml-team/gitlab.", nil)
         So(err, ShouldBeNil)
         httpReq.Header.Set("Content-Type", "application/json")
         httpWriter := httptest.NewRecorder()
-        
+
         testHandler := func() http.HandlerFunc {
             fn := func(rw http.ResponseWriter, req *http.Request) {
             }
             return http.HandlerFunc(fn)
         }
         v1.BrowserDetectorHandler(NeedLogin(testHandler())).ServeHTTP(httpWriter, httpReq)
-        
+
     })
-    
+
 }
 
 func TestRoleHandler(t *testing.T) {
     mutils.CheckPanic(os.Setenv(vault.EnvVaultAddress, "http://127.0.0.1:8200"))
-    
+
     Convey("if role is defined on cookie should use it", t, func(c C) {
         httpReq, err := http.NewRequest("PUT", "/v1/adminServices/roles/ml-team/gitlab.", nil)
         So(err, ShouldBeNil)
         httpReq.Header.Set("Content-Type", "application/json")
         ct := &http.Cookie{Path: "/", Name: "X-Vault-Token", Value: "myroot"}
         cm := &http.Cookie{Path: "/", Name: "md-role", Value: "admin"}
-        
+
         httpReq.AddCookie(ct)
         httpReq.AddCookie(cm)
-        
+
         httpWriter := httptest.NewRecorder()
-        
+
         testHandler := func() http.HandlerFunc {
             fn := func(rw http.ResponseWriter, req *http.Request) {
                 c.So(req.Context().Value(mutils.Role).(string), ShouldEqual, "admin")
@@ -95,19 +95,19 @@ func TestRoleHandler(t *testing.T) {
             return http.HandlerFunc(fn)
         }
         v1.BrowserDetectorHandler(NeedLogin(RoleHandler(testHandler()))).ServeHTTP(httpWriter, httpReq)
-        
+
     })
-    
+
     Convey("if role is not defined should used the default role", t, func(c C) {
         httpReq, err := http.NewRequest("PUT", "/v1/adminServices/roles/ml-team/gitlab.", nil)
         So(err, ShouldBeNil)
         httpReq.Header.Set("Content-Type", "application/json")
         ct := &http.Cookie{Path: "/", Name: "X-Vault-Token", Value: "myroot"}
-        
+
         httpReq.AddCookie(ct)
-        
+
         httpWriter := httptest.NewRecorder()
-        
+
         testHandler := func() http.HandlerFunc {
             fn := func(rw http.ResponseWriter, req *http.Request) {
                 c.So(req.Context().Value(mutils.Role).(string), ShouldEqual, mconfig.Config.DefaultRole)
@@ -115,18 +115,18 @@ func TestRoleHandler(t *testing.T) {
             return http.HandlerFunc(fn)
         }
         v1.BrowserDetectorHandler(NeedLogin(RoleHandler(testHandler()))).ServeHTTP(httpWriter, httpReq)
-        
+
     })
-    
+
     Convey("[not browser ]if role is not defined should used the default role", t, func(c C) {
         httpReq, err := http.NewRequest("PUT", "/v1/adminServices/roles/ml-team/gitlab.", nil)
         So(err, ShouldBeNil)
         httpReq.Header.Set("Content-Type", "application/json")
-        
+
         httpReq.Header.Set("X-Vault-Token", "myroot")
-        
+
         httpWriter := httptest.NewRecorder()
-        
+
         testHandler := func() http.HandlerFunc {
             fn := func(rw http.ResponseWriter, req *http.Request) {
                 c.So(req.Context().Value(mutils.Role).(string), ShouldEqual, mconfig.Config.DefaultRole)
@@ -134,7 +134,7 @@ func TestRoleHandler(t *testing.T) {
             return http.HandlerFunc(fn)
         }
         v1.BrowserDetectorHandler(NeedLogin(RoleHandler(testHandler()))).ServeHTTP(httpWriter, httpReq)
-        
+
     })
     Convey("[not browser ]if role is defined in the query menshend should use it", t, func(c C) {
         httpReq, err := http.NewRequest("PUT", "/v1/adminServices/roles/ml-team/gitlab.?md-role=frontend", nil)
@@ -149,20 +149,20 @@ func TestRoleHandler(t *testing.T) {
             return http.HandlerFunc(fn)
         }
         v1.BrowserDetectorHandler(NeedLogin(RoleHandler(testHandler()))).ServeHTTP(httpWriter, httpReq)
-        
+
     })
-    
+
     Convey("if role if defined in the query should make redirection and set the cookie", t, func(c C) {
         httpReq, err := http.NewRequest("PUT", "http://consul.menshend.local?md-role=admin&token=xxxx", nil)
         So(err, ShouldBeNil)
         httpReq.Header.Set("Content-Type", "application/json")
         So(err, ShouldBeNil)
         ct := &http.Cookie{Path: "/", Name: "X-Vault-Token", Value: "myroot"}
-        
+
         httpReq.AddCookie(ct)
-        
+
         httpWriter := httptest.NewRecorder()
-        
+
         testHandler := func() http.HandlerFunc {
             fn := func(rw http.ResponseWriter, req *http.Request) {
             }
@@ -172,9 +172,9 @@ func TestRoleHandler(t *testing.T) {
         So(httpWriter.Result().Header.Get("Location"), ShouldEqual, "http://consul.menshend.local?token=xxxx")
         So(httpWriter.Result().StatusCode, ShouldEqual, 302)
         So(httpWriter.Result().Cookies()[0].Value, ShouldEqual, "admin")
-        
+
     })
-    
+
 }
 
 func TestGetServiceHandler(t *testing.T) {
@@ -183,19 +183,19 @@ func TestGetServiceHandler(t *testing.T) {
     Convey("Should select and service", t, func(c C) {
         testutils.CleanVault()
         testutils.PopulateVault()
-        
+
         httpReq, err := http.NewRequest("PUT", "http://consul.menshend.com", nil)
         So(err, ShouldBeNil)
         httpReq.Header.Set("Content-Type", "application/json")
         So(err, ShouldBeNil)
         ct := &http.Cookie{Path: "/", Name: "X-Vault-Token", Value: "myroot"}
         cm := &http.Cookie{Path: "/", Name: "md-role", Value: "ml-team"}
-        
+
         httpReq.AddCookie(ct)
         httpReq.AddCookie(cm)
-        
+
         httpWriter := httptest.NewRecorder()
-        
+
         testHandler := func() http.HandlerFunc {
             fn := func(rw http.ResponseWriter, req *http.Request) {
                 c.So(req.Context().Value(mutils.Service).(*v1.AdminServiceResource).Meta.SubDomain, ShouldEqual, "consul.")
@@ -203,9 +203,9 @@ func TestGetServiceHandler(t *testing.T) {
             return http.HandlerFunc(fn)
         }
         GetSubDomainHandler(v1.BrowserDetectorHandler(NeedLogin(RoleHandler(GetServiceHandler(testHandler()))))).ServeHTTP(httpWriter, httpReq)
-        
+
     })
-    
+
     Convey("Should fail if service is not activated", t, func(c C) {
         testutils.CleanVault()
         testutils.PopulateVault()
@@ -229,21 +229,21 @@ func TestGetServiceHandler(t *testing.T) {
         So(err, ShouldBeNil)
         ct := &http.Cookie{Path: "/", Name: "X-Vault-Token", Value: "myroot"}
         cm := &http.Cookie{Path: "/", Name: "md-role", Value: "ml-team"}
-        
+
         httpReq.AddCookie(ct)
         httpReq.AddCookie(cm)
-        
+
         httpWriter := httptest.NewRecorder()
-        
+
         testHandler := func() http.HandlerFunc {
             fn := func(rw http.ResponseWriter, req *http.Request) {
             }
             return http.HandlerFunc(fn)
         }
         GetSubDomainHandler(v1.BrowserDetectorHandler(NeedLogin(RoleHandler(GetServiceHandler(testHandler()))))).ServeHTTP(httpWriter, httpReq)
-        
+
     })
-    
+
 }
 
 /*
@@ -298,31 +298,31 @@ func TestPanicHandler(t *testing.T) {
         cm := &http.Cookie{Path: "/", Name: "md-role", Value: "ml-team"}
         httpReq.AddCookie(ct)
         httpReq.AddCookie(cm)
-        
+
         httpWriter := httptest.NewRecorder()
-        
+
         testHandler := func() http.HandlerFunc {
             fn := func(rw http.ResponseWriter, req *http.Request) {
             }
             return http.HandlerFunc(fn)
         }
         GetSubDomainHandler(v1.BrowserDetectorHandler(PanicHandler(NeedLogin(RoleHandler(GetServiceHandler(testHandler())))))).ServeHTTP(httpWriter, httpReq)
-        So(httpWriter.Header().Get("location"), ShouldEqual, fmt.Sprintf("%s?subdomain=consul.", mconfig.Config.GetLoginPath()))
+        So(httpWriter.Header().Get("location"), ShouldEqual, fmt.Sprintf("%s?subdomain=consul.&r=", mconfig.Config.GetLoginPath()))
     })
-    
+
     Convey("if is a request from other source should return the status error code and the message in the body", t, func(c C) {
         testutils.CleanVault()
         testutils.PopulateVault()
-        
+
         httpReq, err := http.NewRequest("PUT", "http://consul.menshend.com?md-user=other&md-groups=amazon&md-groups=ikea", nil)
         So(err, ShouldBeNil)
         httpReq.Header.Set("Content-Type", "application/json")
         httpReq.Header.Set("X-Vault-Token", "invalid-token")
-        
-        
-        
+
+
+
         httpWriter := httptest.NewRecorder()
-        
+
         testHandler := func() http.HandlerFunc {
             fn := func(rw http.ResponseWriter, req *http.Request) {
             }
@@ -331,7 +331,7 @@ func TestPanicHandler(t *testing.T) {
         GetSubDomainHandler(v1.BrowserDetectorHandler(PanicHandler(NeedLogin(RoleHandler(GetServiceHandler(testHandler())))))).ServeHTTP(httpWriter, httpReq)
         So(httpWriter.Result().StatusCode, ShouldEqual, 403)
     })
-    
+
 }
 
 
