@@ -6,11 +6,12 @@ import (
     "github.com/vulcand/oxy/forward"
     "net/url"
     mutils "github.com/nebtex/menshend/pkg/utils"
+    mconfig "github.com/nebtex/menshend/pkg/config"
+
     vault "github.com/hashicorp/vault/api"
     "io/ioutil"
     "github.com/rs/cors"
     "github.com/Sirupsen/logrus"
-    "fmt"
 )
 
 type errorHandler struct {
@@ -107,7 +108,7 @@ func (ps *Proxy) Execute(rs resolvers.Resolver, tokenInfo *vault.Secret) http.Ha
                 handler = crs.Handler(handler)
             }
         }
-        fmt.Println(r.Form)
+        r.Header.Set(forward.XForwardedProto, mconfig.Config.Scheme())
         handler.ServeHTTP(w, r)
     })
 }
