@@ -14,7 +14,7 @@ import (
 )
 
 type errorHandler struct {
-    
+
 }
 // Options is a configuration container to setup the CORS middleware.
 type CorsOptions struct {
@@ -64,10 +64,10 @@ func (ps *Proxy) Execute(rs resolvers.Resolver, tokenInfo *vault.Secret) http.Ha
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         var handler http.Handler
         IsBrowserRequest := r.Context().Value(mutils.IsBrowserRequest).(bool)
-        
-        Fwd, err := forward.New(forward.ErrorHandler(&errorHandler{}))
+
+        Fwd, err := forward.New(forward.ErrorHandler(&errorHandler{}), forward.PassHostHeader(true))
         mutils.HttpCheckPanic(err, mutils.InternalError)
-        
+
         if rs.NeedBody() {
             data, err := ioutil.ReadAll(r.Body)
             mutils.HttpCheckPanic(err, mutils.InternalError)
@@ -75,13 +75,13 @@ func (ps *Proxy) Execute(rs resolvers.Resolver, tokenInfo *vault.Secret) http.Ha
         } else {
             rs.SetRequest(r.Method, "")
         }
-        
+
         b := rs.Resolve(tokenInfo)
-        
+
         if !b.Passed() {
             panic(mutils.NotAuthorized.WithUserMessage(b.Error().Error()))
         }
-        
+
         for key, value := range b.Headers() {
             r.Header.Set(key, value)
         }
