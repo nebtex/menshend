@@ -10,6 +10,7 @@ import (
     "github.com/gorilla/mux"
     . "github.com/nebtex/menshend/statik"
     "regexp"
+    "github.com/vulcand/oxy/utils"
 )
 
 func proxyServer() http.Handler {
@@ -27,13 +28,21 @@ func react() http.Handler {
 
 func menshendServer(address, port string) error {
     CSRF := getUiCSRF()
-    
+
     http.HandleFunc("/", func(response http.ResponseWriter, request *http.Request) {
-        var re = regexp.MustCompile(`(.+\.)?`+mconfig.Config.HostWithoutPort()+`(:[0-9]+)?`)
+        if request.URL.Scheme != mconfig.Config.Scheme() {
+            newUrl := utils.CopyURL(request.URL)
+            newUrl.Scheme = mconfig.Config.Scheme()
+            http.Redirect(response, request, newUrl.String(), http.StatusTemporaryRedirect)
+
+            return
+        }
+
+        var re = regexp.MustCompile(`(.+\.)?` + mconfig.Config.HostWithoutPort() + `(:[0-9]+)?`)
         var str = request.Host
-        all:= re.FindAllStringSubmatch(str, -1)
-        
-        if len(all)>0 {
+        all := re.FindAllStringSubmatch(str, -1)
+
+        if len(all) > 0 {
             subdomain := getSubDomain(request.Host)
             if subdomain == mconfig.Config.Uris.MenshendSubdomain {
                 subrouter := mux.NewRouter()
@@ -46,7 +55,7 @@ func menshendServer(address, port string) error {
             proxyServer().ServeHTTP(response, request)
             return
         }
-    
+
         subrouter2 := mux.NewRouter()
         subrouter2.PathPrefix("/status").HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
             response.WriteHeader(200)
@@ -57,10 +66,8 @@ func menshendServer(address, port string) error {
         subrouter2.PathPrefix("/").Handler(CSRF(react()))
         subrouter2.ServeHTTP(response, request)
     })
-    
+
     logrus.Infof("Server listing on %s:%s", address, port)
     return http.ListenAndServe(fmt.Sprintf("%s:%s", address, port), nil)
-    
+
 }
-
-
