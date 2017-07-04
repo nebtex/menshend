@@ -35,7 +35,7 @@ func menshendServer(address, port string) error {
             if proto != mconfig.Config.Scheme() {
                 newUrl := utils.CopyURL(request.URL)
                 newUrl.Scheme = mconfig.Config.Scheme()
-                newUrl.Host = mconfig.Config.Host()
+                newUrl.Host = request.Host
                 logrus.Info("redirecting to: ", newUrl.String())
                 http.Redirect(response, request, newUrl.String(), http.StatusTemporaryRedirect)
                 return
