@@ -10,6 +10,7 @@ import (
     "github.com/gorilla/mux"
     . "github.com/nebtex/menshend/statik"
     "regexp"
+    "github.com/vulcand/oxy/forward"
     "github.com/vulcand/oxy/utils"
 )
 
@@ -30,12 +31,15 @@ func menshendServer(address, port string) error {
     CSRF := getUiCSRF()
 
     http.HandleFunc("/", func(response http.ResponseWriter, request *http.Request) {
-        if request.URL.Scheme != mconfig.Config.Scheme() {
-            newUrl := utils.CopyURL(request.URL)
-            newUrl.Scheme = mconfig.Config.Scheme()
-            http.Redirect(response, request, newUrl.String(), http.StatusTemporaryRedirect)
-
-            return
+        if proto := request.Header.Get(forward.XForwardedProto); proto != "" {
+            if proto != mconfig.Config.Scheme() {
+                newUrl := utils.CopyURL(request.URL)
+                newUrl.Scheme = mconfig.Config.Scheme()
+                newUrl.Host = mconfig.Config.Host()
+                logrus.Info("redirecting to: ", newUrl.String())
+                http.Redirect(response, request, newUrl.String(), http.StatusTemporaryRedirect)
+                return
+            }
         }
 
         var re = regexp.MustCompile(`(.+\.)?` + mconfig.Config.HostWithoutPort() + `(:[0-9]+)?`)
