@@ -31,7 +31,10 @@ func menshendServer(address, port string) error {
     CSRF := getUiCSRF()
 
     http.HandleFunc("/", func(response http.ResponseWriter, request *http.Request) {
+        logrus.Info("XForwardedProto: ", forward.XForwardedProto)
         if proto := request.Header.Get(forward.XForwardedProto); proto != "" {
+            logrus.Info("scheme: ", mconfig.Config.Scheme(), proto != mconfig.Config.Scheme())
+
             if proto != mconfig.Config.Scheme() {
                 newUrl := utils.CopyURL(request.URL)
                 newUrl.Scheme = mconfig.Config.Scheme()
