@@ -12,11 +12,12 @@ import (
     "io/ioutil"
     "github.com/rs/cors"
     "github.com/Sirupsen/logrus"
+    "strings"
 )
 
 type errorHandler struct {
-
 }
+
 // Options is a configuration container to setup the CORS middleware.
 type CorsOptions struct {
     // AllowedOrigins is a list of origins a cross-domain request can be executed from.
@@ -25,32 +26,32 @@ type CorsOptions struct {
     // (i.e.: http://*.domain.com). Usage of wildcards implies a small performance penality.
     // Only one wildcard can be used per origin.
     // Default value is ["*"]
-    AllowedOrigins     []string
+    AllowedOrigins []string
     // AllowedMethods is a list of me thods the client is allowed to use with
     // cross-domain requests. Default value is simple methods (GET and POST)
-    AllowedMethods     []string
+    AllowedMethods []string
     // AllowedHeaders is list of non simple headers the client is allowed to use with
     // cross-domain requests.
     // If the special "*" value is present in the list, all headers will be allowed.
     // Default value is [] but "Origin" is always appended to the list.
-    AllowedHeaders     []string
+    AllowedHeaders []string
     // ExposedHeaders indicates which headers are safe to expose to the API of a CORS
     // API specification
-    ExposedHeaders     []string
+    ExposedHeaders []string
     // AllowCredentials indicates whether the request can include user credentials like
     // cookies, HTTP authentication or client side SSL certificates.
-    AllowCredentials   bool
+    AllowCredentials bool
     // MaxAge indicates how long (in seconds) the results of a preflight request
     // can be cached
-    MaxAge             int
+    MaxAge int
     // OptionsPassthrough instructs preflight to let other potential next handlers to
     // process the OPTIONS method. Turn this on if your application handles OPTIONS.
     OptionsPassthrough bool
     // Debugging flag adds additional output to debug server side CORS issues
-    Debug              bool
+    Debug bool
 }
 
-func (*errorHandler)ServeHTTP(w http.ResponseWriter, req *http.Request, err error) {
+func (*errorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, err error) {
     logrus.Error(err.Error())
     panic(mutils.BadGateway.WithUserMessage("backend is not responding"))
 }
@@ -58,7 +59,6 @@ func (*errorHandler)ServeHTTP(w http.ResponseWriter, req *http.Request, err erro
 type Proxy struct {
     Cors *CorsOptions `json:"cors"`
 }
-
 
 //ProxyHandler forward request to the backend services
 func (ps *Proxy) Execute(rs resolvers.Resolver, tokenInfo *vault.Secret) http.Handler {
@@ -91,18 +91,23 @@ func (ps *Proxy) Execute(rs resolvers.Resolver, tokenInfo *vault.Secret) http.Ha
         r.URL.Host = bUrl.Host
         r.URL.User = bUrl.User
         r.URL.Scheme = bUrl.Scheme
+        if bUrl.Path != "" {
+            base_path := strings.Trim(bUrl.Path, "/")
+            r.URL.Path = "/" + base_path + r.URL.Path
+        }
+
         handler = Fwd
         if IsBrowserRequest {
             if ps.Cors != nil {
                 co := cors.Options{
-                    AllowedOrigins:ps.Cors.AllowedOrigins,
-                    AllowedMethods:ps.Cors.AllowedMethods,
-                    AllowedHeaders:ps.Cors.AllowedHeaders,
-                    ExposedHeaders:ps.Cors.ExposedHeaders,
-                    AllowCredentials:ps.Cors.AllowCredentials,
-                    MaxAge:ps.Cors.MaxAge,
-                    OptionsPassthrough:ps.Cors.OptionsPassthrough,
-                    Debug:ps.Cors.Debug,
+                    AllowedOrigins:     ps.Cors.AllowedOrigins,
+                    AllowedMethods:     ps.Cors.AllowedMethods,
+                    AllowedHeaders:     ps.Cors.AllowedHeaders,
+                    ExposedHeaders:     ps.Cors.ExposedHeaders,
+                    AllowCredentials:   ps.Cors.AllowCredentials,
+                    MaxAge:             ps.Cors.MaxAge,
+                    OptionsPassthrough: ps.Cors.OptionsPassthrough,
+                    Debug:              ps.Cors.Debug,
                 }
                 crs := cors.New(co)
                 handler = crs.Handler(handler)
