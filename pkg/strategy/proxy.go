@@ -93,7 +93,9 @@ func (ps *Proxy) Execute(rs resolvers.Resolver, tokenInfo *vault.Secret) http.Ha
         r.URL.Scheme = bUrl.Scheme
         if bUrl.Path != "" {
             base_path := strings.Trim(bUrl.Path, "/")
-            r.URL.Path = "/" + base_path + r.URL.Path
+            if r.URL.Path != "/" {
+                r.URL.Path = "/" + base_path + r.URL.Path
+            }
         }
 
         handler = Fwd
