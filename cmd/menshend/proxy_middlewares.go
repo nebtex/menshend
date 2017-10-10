@@ -80,7 +80,7 @@ func PanicHandler(next http.Handler) http.Handler {
 }
 
 func GetTokenFromRequest(r *http.Request) string {
-    bearerToken, _ := mfilters.ParseBearerAuth(r.Header.Get("Authorization"))
+    bearerToken, _ := mfilters.ParseAuth(r.Header.Get("Authorization"))
     vaultToken := r.Header.Get("X-Vault-Token")
     r.Header.Del("X-Vault-Token")
 

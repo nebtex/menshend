@@ -8,26 +8,39 @@ import (
     "github.com/emicklei/go-restful"
     "strings"
 )
+import b64 "encoding/base64"
 
-func ParseBearerAuth(auth string) (string, bool) {
-    const prefix = "Bearer "
+func ParseAuth(auth string) (string, bool) {
+    prefix := "Bearer "
     if !strings.HasPrefix(auth, prefix) {
-        return "", false
+        prefix = "Basic "
+        if !strings.HasPrefix(auth, prefix) {
+            return "", false
+        } else {
+            ts, err := b64.StdEncoding.DecodeString(auth[len(prefix):])
+            if err != nil {
+                return "", false
+            }
+            up := strings.Split(string(ts), ":")
+            if len(up) < 2 {
+                return "", false
+            }
+            return up[1], true
+        }
     }
     return auth[len(prefix):], true
 }
 
 func GetTokenFromRequest(r *restful.Request) string {
-    bearerToken, _ := ParseBearerAuth(r.Request.Header.Get("Authorization"))
+    bearerToken, _ := ParseAuth(r.Request.Header.Get("Authorization"))
     vaultToken := r.HeaderParameter("X-Vault-Token")
-    
+
     if bearerToken != "" {
         if vaultToken == "" {
             vaultToken = bearerToken
         }
     }
-    
-    
+
     return vaultToken
 }
 
@@ -77,7 +90,6 @@ func CheckImpersonatePermission(vaultToken string, vc *vault.Config) {
     }
 }
 
-
 //IsAdmin ...
 func IsAdmin(vaultToken string) bool {
     ret := true
@@ -108,24 +120,21 @@ func CanImpersonate(vaultToken string) bool {
     return ret
 }
 
-
 //AdminFilter fail if the user is not an admin
 func AdminFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
     CheckAdminPermission(GetTokenFromContext(req), vault.DefaultConfig())
     chain.ProcessFilter(req, resp)
 }
 
-
 //LoginFilter fail if the user is not logged in
 func LoginFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
     vaultToken := GetTokenFromRequest(req)
-    if vaultToken==""{
+    if vaultToken == "" {
         panic(NotAuthorized)
     }
     req.SetAttribute("VaultToken", vaultToken)
     chain.ProcessFilter(req, resp)
 }
-
 
 //ImpersonateFilter ....
 func ImpersonateFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
