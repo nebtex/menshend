@@ -6,3 +6,5 @@
   * [security](security.md)
 * [CLI]()
   * [port-forward](cli/port-forward.md)
+  * [admin](cli/admin.md)
+  * [server](cli/server.md)
